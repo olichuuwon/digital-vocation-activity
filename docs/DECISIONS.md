@@ -3,7 +3,7 @@
 | Date | Item | Decision / default used | Owner to confirm? |
 |------|------|-------------------------|-------------------|
 |      | D1–D17 | See GAME_SPEC.md §0 | Yes |
-| 2026-10-06 | D11 Hosting `[FILL]` | No default in spec. Placeholder: GitHub Pages via `.github/workflows/deploy.yml` (`BASE_PATH` env handles the sub-path). Not deployed yet: there is no git remote and no host has been chosen. | **Yes** |
+| 2026-10-06 | D11 Hosting | **Owner chose Vercel.** `vercel.json` added (Vite preset, SPA rewrite for `/host` etc., no-cache on `sw.js`, immutable `/assets`). Deploys via Vercel's Git integration once the owner creates the repo. GitHub Pages workflow removed. | Done |
 | 2026-10-06 | D1 Game name `[FILL]` | Using working title "Ship It" in `src/content/copy.json`. | Yes |
 | 2026-10-06 | D2 Brand colours | Not in the decisions table; using spec §9 discipline colours. Added darker "-ink" variants for text contrast (4.5:1). | Yes |
 | 2026-10-06 | Q1 Branding | No logos. Text only. | Yes |
@@ -30,4 +30,4 @@ _None yet._
 - QA fixes: bad saves no longer blank the screen; debug reload resumes mid-stage; sw returns a network error instead of `undefined`.
 - a11y fixes: header survives 200% text; focus moves to each new screen heading; tab titles per screen; shared polite live region (`useAnnouncer`); current pipeline stage has ▶ + bold + underline; borders ≥3:1; decorative emoji hidden; "Coming soon" buttons stay focusable (`aria-disabled`).
 - Carried to M2+: wire `MotionConfig reducedMotion="user"` and `useRelaxed()` into timers once they exist.
-- "Deploys" acceptance is **blocked on D11**: workflow is ready, needs a host + git remote.
+- "Deploys" acceptance waits on the owner creating the git repo and importing it into Vercel.
