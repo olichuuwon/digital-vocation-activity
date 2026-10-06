@@ -1,0 +1,138 @@
+{
+  "stages": [
+    {
+      "stage": 1,
+      "discipline": "data",
+      "specialisation": "Data Science",
+      "short": "Data",
+      "title": "Clean the Data",
+      "icon": "📊",
+      "colour": "#0FA595",
+      "levels": [
+        {
+          "id": "data-tutorial",
+          "name": "Tutorial",
+          "bonus": false
+        },
+        {
+          "id": "data-l1",
+          "name": "Keep or Trash",
+          "bonus": false
+        },
+        {
+          "id": "data-l2",
+          "name": "Keep, Fix or Trash",
+          "bonus": false
+        },
+        {
+          "id": "data-l3",
+          "name": "Spot the Outlier",
+          "bonus": true
+        }
+      ]
+    },
+    {
+      "stage": 2,
+      "discipline": "ai",
+      "specialisation": "Artificial Intelligence Engineering",
+      "short": "AI",
+      "title": "Teach the Machine to See",
+      "icon": "🧠",
+      "colour": "#7C4DFF",
+      "levels": [
+        {
+          "id": "ai-tutorial",
+          "name": "Tutorial",
+          "bonus": false
+        },
+        {
+          "id": "ai-l1",
+          "name": "Build the Training Set",
+          "bonus": false
+        },
+        {
+          "id": "ai-l2",
+          "name": "Covered Up",
+          "bonus": false
+        },
+        {
+          "id": "ai-l3",
+          "name": "Draw the Box",
+          "bonus": true
+        },
+        {
+          "id": "ai-l4",
+          "name": "Audit the AI",
+          "bonus": false
+        }
+      ]
+    },
+    {
+      "stage": 3,
+      "discipline": "logic",
+      "specialisation": "Software Development",
+      "short": "Software",
+      "title": "Build the Logic",
+      "icon": "🧩",
+      "colour": "#E8950C",
+      "levels": [
+        {
+          "id": "logic-tutorial",
+          "name": "Tutorial",
+          "bonus": false
+        },
+        {
+          "id": "logic-l1",
+          "name": "Order the Steps",
+          "bonus": false
+        },
+        {
+          "id": "logic-l2",
+          "name": "Say It Shorter",
+          "bonus": false
+        },
+        {
+          "id": "logic-l3",
+          "name": "Choose the Road",
+          "bonus": false
+        },
+        {
+          "id": "logic-l4",
+          "name": "Debug It",
+          "bonus": true
+        },
+        {
+          "id": "logic-l5",
+          "name": "Ask the AI",
+          "bonus": true
+        }
+      ]
+    },
+    {
+      "stage": 4,
+      "discipline": "cloud",
+      "specialisation": "Cloud Engineering",
+      "short": "Cloud",
+      "title": "Keep It Alive",
+      "icon": "☁️",
+      "colour": "#2E8FE8",
+      "levels": [
+        {
+          "id": "cloud-manual",
+          "name": "Manual Mode",
+          "bonus": false
+        },
+        {
+          "id": "cloud-configure",
+          "name": "Configure the Cluster",
+          "bonus": false
+        },
+        {
+          "id": "cloud-replay",
+          "name": "Replay the Storm",
+          "bonus": false
+        }
+      ]
+    }
+  ]
+}

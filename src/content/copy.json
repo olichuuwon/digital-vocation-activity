@@ -1,0 +1,38 @@
+{
+  "home": {
+    "title": "Ship It",
+    "tagline": "Floods hit the city. Four teams, one system. Get supplies to 1,200 families.",
+    "playSolo": "Play solo",
+    "createGroup": "Create group",
+    "joinGroup": "Join group",
+    "leaderboard": "Leaderboard",
+    "comingSoon": "Coming soon",
+    "resume": "Resume run",
+    "newRun": "New run"
+  },
+  "length": {
+    "heading": "How long have you got?",
+    "booth": "Booth run",
+    "boothDetail": "About 16 minutes",
+    "full": "Full run",
+    "fullDetail": "About 25–30 minutes, with bonus levels"
+  },
+  "settings": {
+    "heading": "Settings",
+    "theme": "Theme",
+    "themeSystem": "Match my phone",
+    "themeLight": "Light",
+    "themeDark": "Dark",
+    "sound": "Sound",
+    "relaxed": "Relaxed timers (×1.5 time)",
+    "quit": "Quit run",
+    "close": "Close"
+  },
+  "placeholder": {
+    "note": "This stage is still being built.",
+    "finishLevel": "Finish level",
+    "finale": "Finale",
+    "finaleNote": "Mission Live is still being built.",
+    "backHome": "Back to home"
+  }
+}

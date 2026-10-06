@@ -1,0 +1,104 @@
+.shell {
+  max-width: 480px;
+  margin: 0 auto;
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  padding: 0 var(--gutter) calc(var(--gutter) + env(safe-area-inset-bottom));
+}
+
+.topbar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding-top: calc(8px + env(safe-area-inset-top));
+}
+
+.screen {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding-top: 16px;
+}
+
+/* Primary actions sit in the bottom 40% of the screen (§9). */
+.actions {
+  margin-top: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.btn {
+  min-height: var(--tap);
+  min-width: var(--tap);
+  padding: 12px 18px;
+  border-radius: var(--radius);
+  border: 2px solid var(--border);
+  background: var(--surface);
+  font-weight: 600;
+  font-size: 1.0625rem;
+  cursor: pointer;
+  text-align: left;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.btn:disabled,
+.btn[aria-disabled='true'] {
+  cursor: not-allowed;
+  color: var(--text-muted);
+  border-style: dashed;
+}
+
+.primary {
+  background: var(--primary);
+  color: var(--on-primary);
+  border-color: var(--primary);
+}
+
+.iconBtn {
+  flex-shrink: 0;
+  min-height: var(--tap);
+  min-width: var(--tap);
+  border-radius: 50%;
+  border: 2px solid var(--border);
+  background: var(--surface);
+  font-size: 1.25rem;
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+}
+
+.muted {
+  color: var(--text-muted);
+  margin: 0;
+}
+
+.detail {
+  font-weight: 400;
+  font-size: 0.9375rem;
+  opacity: 0.85;
+}
+
+.hero {
+  padding-top: 8vh;
+}
+
+.screen h1:focus {
+  outline: none;
+}
+
+.hero h1 {
+  font-size: clamp(2.5rem, 12vw, 3.5rem);
+}
+
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px;
+}
