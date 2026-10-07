@@ -1,0 +1,106 @@
+/* Group mode support cards (§3.5.2). */
+
+.cards {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.tabs {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 6.5rem), 1fr));
+  gap: 6px;
+}
+
+.tab {
+  min-height: var(--tap);
+  border-radius: 10px;
+  border: 2px solid var(--border);
+  background: var(--surface);
+  font-weight: 700;
+  cursor: pointer;
+  padding: 4px 8px;
+}
+
+/* Selected tab: thick border + bold, not colour alone. */
+.tab[aria-selected='true'] {
+  border: 3px solid var(--text);
+  font-weight: 900;
+}
+
+.card {
+  border: 3px solid var(--border);
+  border-radius: 14px;
+  background: var(--surface);
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.cardTitle {
+  margin: 0;
+  font-size: 1.25rem;
+}
+
+.instruction {
+  margin: 0;
+  font-weight: 600;
+}
+
+.body {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.muted {
+  margin: 0;
+  color: var(--text-muted);
+}
+
+.big {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 900;
+  overflow-wrap: anywhere;
+}
+
+.list {
+  margin: 0;
+  padding-left: 1.2em;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-weight: 700;
+}
+
+.actionBtn {
+  min-height: 56px;
+  border-radius: var(--radius);
+  border: 3px solid var(--text);
+  background: var(--surface);
+  font-weight: 900;
+  font-size: 1.125rem;
+  cursor: pointer;
+}
+
+.actionBtn[aria-disabled='true'] {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 9rem), 1fr));
+  gap: 8px;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  flex-wrap: wrap;
+  font-weight: 700;
+}

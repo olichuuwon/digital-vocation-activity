@@ -42,6 +42,9 @@ import {
 } from './logic';
 import { OutlierBoard } from './OutlierLevel';
 import { stage1For, useStage1Progress } from './progress';
+import { publish } from '../../net/group';
+import { sc } from '../support/content';
+import { S1, useCoop } from '../support/topics';
 import { RecordCard, CardActions, type CardAction } from './RecordCard';
 
 type Phase = 'briefing' | 'intro' | 'play' | 'reality' | 'automate' | 'result' | 'handoff';
@@ -213,6 +216,19 @@ function CardPlay({ run, level, debug, onDone }: { run: GameState; level: CardLe
   const isTutorial = level.id === 'data-tutorial';
   const record: DataRecord | undefined = state.deck[state.index];
   const answer = currentAnswer(state);
+  // Group mode (§3.5.2): the Rulebook, kept IDs and the right fix live on the support phones.
+  const coop = useCoop();
+  useEffect(() => {
+    if (!coop) return;
+    const byId = new Map(state.deck.map((r) => [r.id, r]));
+    const kept = state.results
+      .filter((r) => r.kind === 'wrongKeep' || r.kind === 'keepUnfixed' || (r.correct && r.expected !== 'trash'))
+      .map((r) => byId.get(r.recordId)?.household)
+      .filter((h): h is string => !!h);
+    const fix = record?.fix && level.allowFix ? (record.fix.options[record.fix.correct] ?? null) : null;
+    publish(S1, { kept: [...new Set(kept)], fix, rules: level.rules });
+  }, [coop, state.index, state.results, state.deck, record, level]);
+  useEffect(() => () => publish(S1, null), []);
 
   const decide = (action: Action) => {
     const next = levelReducer(state, { type: 'decide', action });
@@ -273,7 +289,14 @@ function CardPlay({ run, level, debug, onDone }: { run: GameState; level: CardLe
             {fill(c.toast.streak, { n: state.streak })}
           </span>
         )}
-        <RulebookButton rulesInPlay={level.rules} newRuleId={level.newRules[level.newRules.length - 1]} onOpenChange={setRulebookOpen} />
+        {coop ? (
+          <p className={s.progress} data-testid="ask-rulebook">
+            <span aria-hidden="true">📘 </span>
+            {sc.main.askRulebook}
+          </p>
+        ) : (
+          <RulebookButton rulesInPlay={level.rules} newRuleId={level.newRules[level.newRules.length - 1]} onOpenChange={setRulebookOpen} />
+        )}
       </div>
       {level.seconds !== null && (
         <Timer

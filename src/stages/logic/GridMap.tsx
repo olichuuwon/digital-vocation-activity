@@ -97,6 +97,7 @@ export const GridMap = memo(function GridMap({
   crashed,
   label,
   describedBy,
+  hideNeeds = false,
 }: {
   grid: readonly string[];
   /** Active flood group, or null before a run reveals it. */
@@ -111,6 +112,8 @@ export const GridMap = memo(function GridMap({
   label: string;
   /** Id of the text description of each row. */
   describedBy?: string;
+  /** Group mode: house needs are on a support's Manifest card (§3.5.2). */
+  hideNeeds?: boolean;
 }) {
   const size = grid.length;
   const tiles: { ch: string; x: number; y: number }[] = [];
@@ -133,7 +136,7 @@ export const GridMap = memo(function GridMap({
       {tiles
         .filter((t) => /[HWFM]/.test(t.ch))
         .map(({ ch, x, y }) => (
-          <House key={`h${x},${y}`} x={x} y={y} need={ch} delivered={delivered.has(`${x},${y}`)} wrong={wrongDrops.has(`${x},${y}`)} />
+          <House key={`h${x},${y}`} x={x} y={y} need={hideNeeds ? 'H' : ch} delivered={delivered.has(`${x},${y}`)} wrong={wrongDrops.has(`${x},${y}`)} />
         ))}
       <g
         className={s.truck}

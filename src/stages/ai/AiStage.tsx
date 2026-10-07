@@ -63,6 +63,19 @@ import { CoveredBoard } from './CoveredBoard';
 import { FieldGuideButton } from './FieldGuide';
 import { stage2For, useStage2Progress, type AiOutcome, type EndPhase } from './progress';
 import s from './ai.module.css';
+import { publish, useActions } from '../../net/group';
+import { sc } from '../support/content';
+import { REVEAL, S2, useCoop, type S2 as S2Topic } from '../support/topics';
+
+/** Group mode: tell the support phones what this level needs; cleared when the level ends. */
+function usePublishS2(coop: boolean, value: S2Topic) {
+  const key = JSON.stringify(value);
+  useEffect(() => {
+    if (coop) publish(S2, value);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [coop, key]);
+  useEffect(() => () => publish(S2, null), []);
+}
 
 type Phase = 'briefing' | 'intro' | 'play' | EndPhase;
 type LevelId = 'ai-tutorial' | 'ai-l1' | 'ai-l2' | 'ai-l3' | 'ai-l4';
@@ -237,6 +250,7 @@ function LevelTop({
   streak?: number;
   onGuide: (open: boolean) => void;
 }) {
+  const coop = useCoop();
   const headingRef = useScreenHeading<HTMLHeadingElement>(levelName(levelId));
   return (
     <>
@@ -253,7 +267,14 @@ function LevelTop({
             {fill(c.toast.streak, { n: streak })}
           </span>
         )}
-        <FieldGuideButton onOpenChange={onGuide} />
+        {coop ? (
+          <span className={s.progress} data-testid="ask-guide">
+            <span aria-hidden="true">📖 </span>
+            {sc.main.askGuide}
+          </span>
+        ) : (
+          <FieldGuideButton onOpenChange={onGuide} />
+        )}
       </div>
     </>
   );
@@ -414,6 +435,12 @@ function CoveredPlay({ salt, debug, onDone }: { salt: number; debug: boolean; on
   const img = deck[index];
   const settingsOpen = useGame((g) => g.settingsOpen);
   const running = !guideOpen && !finished && !settingsOpen;
+  // Group mode (§3.5.2): the Reveal power is a support's button.
+  const coop = useCoop();
+  usePublishS2(coop, { level: 'covered', charges: cs.charges, audit: null });
+  useActions((a) => {
+    if (a.type === REVEAL) setCs((st) => coveredReducer(st, { type: 'reveal' }));
+  });
 
   // Tiles lift on a steady clock; paused while the field guide is open or the tab is hidden.
   useEffect(() => {
@@ -492,6 +519,7 @@ function CoveredPlay({ salt, debug, onDone }: { salt: number; debug: boolean; on
         <span className={ui.muted}>
           {shown >= total ? c.covered.allShown : fill(c.covered.tilesLeft, { n: total - shown })}
         </span>
+        {!coop && (
         <button
           type="button"
           className={s.revealBtn}
@@ -501,6 +529,7 @@ function CoveredPlay({ salt, debug, onDone }: { salt: number; debug: boolean; on
           <span aria-hidden="true">👁️ </span>
           {c.covered.reveal} ({fill(c.covered.revealLeft, { n: cs.charges })})
         </button>
+        )}
       </div>
       <HintBox
         quiet
@@ -610,6 +639,13 @@ function AuditPlay({ salt, debug, onDone }: { salt: number; debug: boolean; onDo
   const item = state.items[state.index];
   const img = item ? imagesById.get(item.imageId) : undefined;
   const answer = auditCurrentAnswer(state);
+  // Group mode (§3.5.2): only the Auditor's phone sees how sure the model is.
+  const coop = useCoop();
+  usePublishS2(coop, {
+    level: 'audit',
+    charges: null,
+    audit: item ? { predicted: labelName(item.predicted), pct: pct(item.confidence) } : null,
+  });
 
   const end = (final: AuditLevelState) => {
     if (final.endReason === 'timeUp') toast(c.timeUp, 'info');
@@ -668,7 +704,7 @@ function AuditPlay({ salt, debug, onDone }: { salt: number; debug: boolean; onDo
       </div>
       <p className={s.prediction} data-testid="prediction">
         <span>{fill(c.audit.says, { label: labelName(item.predicted) })}</span>
-        <span className={s.conf}>{fill(c.audit.confidence, { pct: pct(item.confidence) })}</span>
+        {!coop && <span className={s.conf}>{fill(c.audit.confidence, { pct: pct(item.confidence) })}</span>}
       </p>
       <p className={ui.muted} style={{ margin: 0 }}>
         {c.audit.instruction}

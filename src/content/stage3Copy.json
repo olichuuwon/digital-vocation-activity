@@ -121,7 +121,8 @@
     "truckHere": "truck here, facing {dir}",
     "wrongSupply": "House, wrong supply",
     "housesDone": "{done} of {total} houses have supplies.",
-    "python": "Your program in Python:"
+    "python": "Your program in Python:",
+    "tile": "Row {row}, column {col}"
   },
   "answerReady": "Stuck? Tap Show me to load a working program."
 }

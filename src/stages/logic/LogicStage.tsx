@@ -26,6 +26,8 @@ import { blockText, ICON } from './blocks';
 import { ProgramEditor } from './ProgramEditor';
 import { stage3For, useStage3Progress, type EndPhase } from './progress';
 import s from './logic.module.css';
+import { publish } from '../../net/group';
+import { S3, useCoop } from '../support/topics';
 
 type Phase = 'briefing' | 'intro' | 'play' | EndPhase;
 
@@ -287,6 +289,42 @@ function PlayLevel({
     announce(text);
   };
 
+  // The flood for the next run is known before Run, so a support phone can scout it (§3.5.2).
+  const upcomingFlood =
+    forcedFlood ??
+    (level.floodGroups.length
+      ? level.floodGroups[Math.floor(mulberry32(seed + attempts * 131)() * level.floodGroups.length)]!
+      : null);
+  const coop = useCoop();
+  const [lastFail, setLastFail] = useState<RunResult | null>(null);
+  useEffect(() => {
+    if (!coop) return;
+    const where = (p: { x: number; y: number }) => fill(c.a11y.tile, { row: p.y + 1, col: p.x + 1 });
+    const floodTiles = (g: string) => (map.floodTiles[g as 'a' | 'b' | 'c'] ?? []).map(where);
+    const failSteps = lastFail
+      ? lastFail.trace
+          .slice(0, (lastFail.failAt ?? lastFail.trace.length - 1) + 1)
+          .filter((st) => st.event !== 'loop' && st.event !== 'check')
+          .map((st) => {
+            const b = getBlock(program, st.addr);
+            return b ? blockText(b) : st.op;
+          })
+          .slice(-30)
+      : null;
+    const failAt = lastFail?.failAt !== undefined ? lastFail.trace[lastFail.failAt] : undefined;
+    const failBlock = failAt ? getBlock(program, failAt.addr) : undefined;
+    publish(S3, {
+      levelId: level.id,
+      flooded: upcomingFlood ? floodTiles(upcomingFlood) : [],
+      dry: level.floodGroups.filter((g) => g !== upcomingFlood).flatMap(floodTiles),
+      needs: map.houses.filter((h) => h.need !== 'any').map((h) => ({ house: where(h), item: c.map.needs[h.need as 'W' | 'F' | 'M'] })),
+      houses: map.houses.map(where),
+      debug: failSteps ? { steps: failSteps, stoppedAt: failBlock ? blockText(failBlock) : null } : null,
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [coop, upcomingFlood, lastFail, level.id]);
+  useEffect(() => () => publish(S3, null), []);
+
   const start = (auto: boolean) => {
     if (solved) return;
     if (level.blockLimit !== null && used > level.blockLimit) return toast(c.run.overLimit, 'error');
@@ -320,6 +358,7 @@ function PlayLevel({
     const counts = !isDebug || failKey === lastFailKey.current;
     lastFailKey.current = failKey;
     if (counts) setFailedRuns((f) => f + 1);
+    setLastFail(result);
     const why = result.reason === 'tooLong' ? 'unfinished' : (result.reason as Exclude<RunResult['reason'], 'success' | 'tooLong'>);
     // New help is spoken with the failure (HintBox is quiet), so one live region speaks at a time.
     const help = nextAssist(failedRuns + (counts ? 1 : 0));
@@ -417,6 +456,7 @@ function PlayLevel({
           crashed={!!failStep}
           label={mapLabel}
           describedBy="map-rows"
+          hideNeeds={coop}
         />
       </div>
       <ol className="visually-hidden" id="map-rows">

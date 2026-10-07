@@ -45,6 +45,9 @@ import { appQuality, diagnose } from './logic';
 import { stage4For, useStage4Progress, type EndPhase, type ReplayResult } from './progress';
 import { useSimLoop } from './useSimLoop';
 import s from './cloud.module.css';
+import { publish, useActions } from '../../net/group';
+import { sc } from '../support/content';
+import { BOOST, CONFIG, RESTART, S4C, S4M, configPatchSchema, podActionSchema, useCoop } from '../support/topics';
 
 type LevelId = 'cloud-manual' | 'cloud-configure' | 'cloud-replay';
 type Phase = 'briefing' | 'k8s' | 'intro' | 'play' | EndPhase;
@@ -392,6 +395,27 @@ function ManualPlay({ traffic, debug, onDone }: { traffic: Traffic; debug: boole
     speed: (relaxed ? 1 / RELAXED_FACTOR : 1) * debugSpeed(debug),
   });
   useClusterEvents(state, false);
+  // Group mode (§3.5.2): each support phone runs its servers' Boost and Restart buttons.
+  const coop = useCoop();
+  useEffect(() => {
+    if (!coop) return;
+    publish(S4M, {
+      pods: state.pods.map((p) => ({
+        id: p.id,
+        status: p.status,
+        cpu: Math.min(5, p.cpu),
+        boosted: p.boostTicks > 0,
+        cooling: p.boostCooldown > 0,
+      })),
+    });
+  }, [coop, state]);
+  useEffect(() => () => publish(S4M, null), []);
+  useActions((a) => {
+    const p = podActionSchema.safeParse(a.payload);
+    if (!p.success) return;
+    if (a.type === BOOST) act({ type: 'boost', pod: p.data.pod });
+    if (a.type === RESTART) act({ type: 'restart', pod: p.data.pod });
+  });
   const uptime = uptimeSoFar(state);
   const mult = Math.max(1, Math.round(state.last.demand / (BASE_RPS * traffic.scale)));
   const continueRef = useRef<HTMLButtonElement>(null);
@@ -412,11 +436,17 @@ function ManualPlay({ traffic, debug, onDone }: { traffic: Traffic; debug: boole
       </div>
       <Clock tick={state.tick} />
       {!tutorialSeen && <TutorialOverlay gesture="tap" text={c.tutorialHint} onDismiss={() => setTutorialSeen(true)} />}
+      {coop && (
+        <p className={s.help} data-testid="ask-servers">
+          <span aria-hidden="true">📣 </span>
+          {sc.main.askServers}
+        </p>
+      )}
       <ul className={s.servers} role="list">
         {[...state.pods]
           .sort((a, b) => a.id - b.id)
           .map((pod) => (
-            <ServerCard key={pod.id} pod={pod} act={act} />
+            <ServerCard key={pod.id} pod={pod} act={act} buttons={!coop} />
           ))}
       </ul>
       {state.done ? (
@@ -434,7 +464,7 @@ function ManualPlay({ traffic, debug, onDone }: { traffic: Traffic; debug: boole
   );
 }
 
-function ServerCard({ pod, act }: { pod: Pod; act: (a: Action) => void }) {
+function ServerCard({ pod, act, buttons = true }: { pod: Pod; act: (a: Action) => void; buttons?: boolean }) {
   const name = fill(c.manual.server, { n: pod.id + 1 });
   const busy = fill(c.manual.busy, { pct: pct(pod.cpu) });
   let label: string = c.manual.boost;
@@ -463,16 +493,20 @@ function ServerCard({ pod, act }: { pod: Pod; act: (a: Action) => void }) {
         {name}
         <span className={s.serverState}>{state}</span>
       </span>
-      <button
-        type="button"
-        className={s.act}
-        data-kind={kind}
-        aria-disabled={off || undefined}
-        aria-label={`${label}: ${name}`}
-        onClick={() => !off && act({ type: kind === 'restart' ? 'restart' : 'boost', pod: pod.id })}
-      >
-        {label}
-      </button>
+      {buttons ? (
+        <button
+          type="button"
+          className={s.act}
+          data-kind={kind}
+          aria-disabled={off || undefined}
+          aria-label={`${label}: ${name}`}
+          onClick={() => !off && act({ type: kind === 'restart' ? 'restart' : 'boost', pod: pod.id })}
+        >
+          {label}
+        </button>
+      ) : (
+        <span aria-hidden="true">{pod.status === 'crashed' ? '🆘' : ''}</span>
+      )}
       <PodBar pod={pod} />
     </li>
   );
@@ -576,6 +610,20 @@ function Configure({
     pendingSay.current = fill(c.configure.changed, { setting, value });
     setConfigState((x) => normalizeConfig({ ...x, ...patch }));
   };
+  // Group mode (§3.5.2): settings are split across support phones; everyone sees the budget.
+  const coop = useCoop();
+  useEffect(() => {
+    if (coop) publish(S4C, { config, cost, budget: traffic.budget });
+  }, [coop, config, cost, traffic.budget]);
+  useEffect(() => () => publish(S4C, null), []);
+  useActions((a) => {
+    if (a.type !== CONFIG) return;
+    const p = configPatchSchema.safeParse(a.payload);
+    if (!p.success) return;
+    const [key, value] = Object.entries(p.data)[0] ?? [];
+    if (key === undefined) return;
+    setConfig(p.data, key, String(value));
+  });
   const onOff = (v: boolean) => (v ? c.configure.on : c.configure.off);
   const hint = tweaks >= 2 ? 'answer' : tweaks >= 1 ? 'hint' : 'none';
   const answer = [
