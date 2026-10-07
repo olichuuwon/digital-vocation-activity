@@ -1,7 +1,9 @@
+import { MotionConfig } from 'framer-motion';
 import { lazy, Suspense, useEffect, useMemo, useState } from 'react';
+import { ToastHost } from '../components/Toast';
 import { useGame } from '../state/store';
 import { DebugPanel } from './DebugPanel';
-import { isHostPath, parseParams } from './params';
+import { isDevComponentsPath, isHostPath, parseParams } from './params';
 import { PipelineStrip } from './PipelineStrip';
 import { useAnnouncer } from './screenFocus';
 import { Home } from './screens/Home';
@@ -13,10 +15,36 @@ import { useTheme } from './useTheme';
 
 // Booth screen code (incl. the QR encoder) only loads on /host.
 const Host = lazy(() => import('./screens/Host'));
+const DevComponents = lazy(() => import('./screens/DevComponents'));
 
 export function App() {
-  const host = useMemo(() => isHostPath(window.location.pathname, import.meta.env.BASE_URL), []);
-  return host ? <HostApp /> : <GameApp />;
+  const route = useMemo(() => {
+    const { pathname } = window.location;
+    const base = import.meta.env.BASE_URL;
+    return isHostPath(pathname, base) ? 'host' : isDevComponentsPath(pathname, base) ? 'dev' : 'game';
+  }, []);
+  // Framer Motion honours prefers-reduced-motion everywhere (§10).
+  return (
+    <MotionConfig reducedMotion="user">
+      {route === 'host' ? <HostApp /> : route === 'dev' ? <DevApp /> : <GameApp />}
+    </MotionConfig>
+  );
+}
+
+function DevApp() {
+  const theme = useGame((s) => s.settings.theme);
+  const announcement = useAnnouncer((s) => s.message);
+  useTheme(theme);
+  return (
+    <div className={ui.shell}>
+      <Suspense fallback={null}>
+        <DevComponents />
+      </Suspense>
+      <p role="status" aria-live="polite" className="visually-hidden">
+        {announcement}
+      </p>
+    </div>
+  );
 }
 
 function HostApp() {
@@ -86,6 +114,7 @@ function GameApp() {
       <p role="status" aria-live="polite" className="visually-hidden">
         {announcement}
       </p>
+      <ToastHost />
       {params.debug && <DebugPanel />}
     </div>
   );

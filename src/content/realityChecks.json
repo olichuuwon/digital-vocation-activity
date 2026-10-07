@@ -1,0 +1,93 @@
+{
+  "checks": [
+    {
+      "id": "data",
+      "heading": "Clean once, apply everywhere",
+      "needsApproval": true,
+      "cards": [
+        {
+          "visual": "records-to-millions",
+          "title": "From {handCleaned} to 2,000,000",
+          "body": "You cleaned {handCleaned} records by hand. Data scientists write each rule once as code. A pipeline, an automatic chain of steps, then applies it to millions of records in seconds."
+        }
+      ]
+    },
+    {
+      "id": "ai",
+      "heading": "Confidence, not certainty",
+      "needsApproval": true,
+      "cards": [
+        {
+          "visual": "training-curve",
+          "title": "Your labels did this",
+          "body": "Every picture you labelled helped train your model, the program that learnt from your examples. More good labels, more accurate guesses."
+        },
+        {
+          "visual": "night-road",
+          "title": "Clear road: 91%?",
+          "body": "Your model says this road is clear, 91% sure. It's flooded. Your model never saw night photos. Real AI teams hunt for gaps like this and keep humans checking the results."
+        }
+      ]
+    },
+    {
+      "id": "logic",
+      "heading": "That was programming",
+      "needsApproval": true,
+      "cards": [
+        {
+          "visual": "blocks-to-python",
+          "title": "Your blocks, as code",
+          "body": "Your blocks just turned into Python, a real programming language. Same logic, different words. Programming is breaking a problem into clear steps."
+        },
+        {
+          "visual": "test-maps",
+          "title": "Tested before it ships",
+          "body": "Software engineers also write automatic tests: small checks that run your program on thousands of maps before real people use it. Each tick is a passed test."
+        }
+      ]
+    },
+    {
+      "id": "cloud-k8s",
+      "heading": "Meet Kubernetes",
+      "needsApproval": false,
+      "cards": [
+        {
+          "visual": "pods",
+          "title": "Pods",
+          "body": "Pods: small identical copies of your app. Kubernetes, a tool that manages apps, runs many at once."
+        },
+        {
+          "visual": "load-balancer",
+          "title": "Load balancer",
+          "body": "A load balancer spreads users evenly across your pods, so no single copy gets swamped."
+        },
+        {
+          "visual": "autoscaler",
+          "title": "Autoscaler",
+          "body": "The autoscaler adds pods when it's busy and removes them when it's quiet, saving money."
+        },
+        {
+          "visual": "self-healing",
+          "title": "Self-healing",
+          "body": "Kubernetes checks each pod's health. If one crashes, it replaces it automatically. No more frantic tapping."
+        },
+        {
+          "visual": "rolling-update",
+          "title": "Rolling updates",
+          "body": "New versions go out a few pods at a time. If checks fail, Kubernetes rolls back automatically."
+        }
+      ]
+    },
+    {
+      "id": "cloud-end",
+      "heading": "This is a real job",
+      "needsApproval": true,
+      "cards": [
+        {
+          "visual": "sre-alerts",
+          "body": "Site reliability engineers (SREs) keep apps like this running for millions of people. They set up alerts so a human only gets woken up when automation can't fix it."
+        }
+      ]
+    }
+  ]
+}

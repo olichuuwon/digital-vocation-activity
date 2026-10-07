@@ -1,0 +1,326 @@
+/* Shared stage components (M1). Mobile portrait first; 48px targets; survives 200% text. */
+
+.screen {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding-top: 16px;
+}
+
+.screen h1 {
+  font-size: clamp(1.75rem, 9vw, 2.5rem);
+  overflow-wrap: anywhere;
+}
+
+.screen h1:focus {
+  outline: none;
+}
+
+.actions {
+  margin-top: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.row {
+  display: flex;
+  gap: 12px;
+}
+
+.row > * {
+  flex: 1;
+}
+
+.btn {
+  min-height: var(--tap);
+  padding: 12px 18px;
+  border-radius: var(--radius);
+  border: 2px solid var(--border);
+  background: var(--surface);
+  font-weight: 600;
+  font-size: 1.0625rem;
+  cursor: pointer;
+}
+
+.primary {
+  background: var(--primary);
+  color: var(--on-primary);
+  border-color: var(--primary);
+}
+
+.muted {
+  color: var(--text-muted);
+  margin: 0;
+}
+
+.body {
+  font-size: 1.125rem;
+  margin: 0;
+}
+
+/* --- Briefing ------------------------------------------------------------------- */
+.briefing {
+  border-top: 8px solid var(--c);
+  border-radius: var(--radius);
+  background: var(--surface);
+  border-left: 1px solid var(--border);
+  border-right: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  padding: 20px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.tag {
+  align-self: flex-start;
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: var(--ink);
+  border: 2px solid var(--c);
+  border-radius: 999px;
+  padding: 2px 10px;
+}
+
+.bigIcon {
+  font-size: 3rem;
+  line-height: 1;
+}
+
+/* --- Timer ---------------------------------------------------------------------- */
+.timer {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+  font-size: 1.125rem;
+}
+
+.timerTrack {
+  flex: 1;
+  height: 10px;
+  border-radius: 5px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  overflow: hidden;
+}
+
+.timerFill {
+  height: 100%;
+  background: var(--c, var(--primary));
+  transition: width 0.2s linear;
+}
+
+/* Last 10 seconds: icon + bold + striped fill, not colour alone. */
+.urgent {
+  color: var(--danger);
+}
+
+.urgent .timerFill {
+  background: var(--danger);
+  background-image: repeating-linear-gradient(45deg, transparent 0 4px, rgb(255 255 255 / 0.4) 4px 8px);
+}
+
+/* --- Stars ---------------------------------------------------------------------- */
+.stars {
+  display: flex;
+  gap: 8px;
+  font-size: 3.25rem;
+  line-height: 1;
+  justify-content: center;
+}
+
+.starOn {
+  color: var(--logic);
+}
+
+.starOff {
+  color: var(--text-muted);
+  opacity: 0.6;
+}
+
+.lines {
+  margin: 0;
+  padding-left: 1.25em;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+/* --- Reality Check -------------------------------------------------------------- */
+.reality {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  cursor: pointer;
+}
+
+.visual {
+  min-height: 140px;
+  display: grid;
+  place-items: center;
+  border-radius: 10px;
+  background: var(--surface-2);
+  overflow: hidden;
+  padding: 12px;
+}
+
+.dots {
+  display: flex;
+  justify-content: center;
+  gap: 6px;
+}
+
+.dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  border: 2px solid var(--text-muted);
+}
+
+.dotOn {
+  background: var(--text);
+  border-color: var(--text);
+}
+
+/* --- Tutorial overlay ----------------------------------------------------------- */
+.tutorial {
+  position: relative;
+  border: 2px dashed var(--border);
+  border-radius: var(--radius);
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  background: var(--surface);
+}
+
+.hand {
+  font-size: 2.5rem;
+  line-height: 1;
+  pointer-events: none;
+}
+
+/* --- Rulebook ------------------------------------------------------------------- */
+dialog.sheet {
+  margin: auto auto 0;
+  width: 100%;
+  max-width: 480px;
+  max-height: 85dvh;
+  border: 1px solid var(--border);
+  border-radius: 20px 20px 0 0;
+  background: var(--surface);
+  color: var(--text);
+  padding: 16px var(--gutter) calc(16px + env(safe-area-inset-bottom));
+}
+
+dialog.sheet::backdrop {
+  background: rgb(0 0 0 / 0.55);
+}
+
+.sheetHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.rules {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.rule {
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 12px;
+  background: var(--surface);
+}
+
+.ruleNew {
+  border: 3px solid var(--data);
+}
+
+.ruleTitle {
+  font-weight: 700;
+  margin: 0 0 4px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+}
+
+.newTag {
+  font-size: 0.8125rem;
+  font-weight: 800;
+  color: var(--data-ink);
+  border: 2px solid var(--data);
+  border-radius: 999px;
+  padding: 0 8px;
+}
+
+.examples {
+  margin: 6px 0 0;
+  padding: 0;
+  list-style: none;
+  font-family: ui-monospace, Menlo, monospace;
+  font-size: 0.9375rem;
+}
+
+.rulebookBtn {
+  min-height: var(--tap);
+  border-radius: 999px;
+  border: 2px solid var(--data);
+  background: var(--surface);
+  padding: 8px 16px;
+  font-weight: 700;
+  cursor: pointer;
+  align-self: flex-start;
+}
+
+/* --- Toast ---------------------------------------------------------------------- */
+.toastHost {
+  position: fixed;
+  left: 50%;
+  bottom: calc(96px + env(safe-area-inset-bottom));
+  transform: translateX(-50%);
+  width: min(100% - 2 * var(--gutter), 448px);
+  z-index: 40;
+  pointer-events: none;
+  display: flex;
+  justify-content: center;
+}
+
+.toast {
+  background: var(--primary);
+  color: var(--on-primary);
+  border-radius: 12px;
+  padding: 10px 14px;
+  font-weight: 600;
+  box-shadow: 0 6px 20px rgb(0 0 0 / 0.25);
+}
+
+/* --- Hint ----------------------------------------------------------------------- */
+.hintBox {
+  border: 2px solid var(--logic);
+  border-radius: 12px;
+  padding: 10px 12px;
+  background: var(--surface);
+}
+
+.hintBox strong {
+  color: var(--logic-ink);
+}

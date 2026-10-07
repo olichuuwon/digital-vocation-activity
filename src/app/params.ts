@@ -29,11 +29,16 @@ export function parseParams(search: string): UrlParams {
 }
 
 /** True on the booth screen route (`/host`), respecting a deploy sub-path (BASE_PATH). */
-export function isHostPath(pathname: string, base = '/'): boolean {
+function isAppPath(pathname: string, base: string, sub: string): boolean {
   const root = base.endsWith('/') ? base : `${base}/`;
   const path = pathname.endsWith('/') ? pathname.slice(0, -1) : pathname;
-  return path === `${root}host`;
+  return path === `${root}${sub}`;
 }
+
+export const isHostPath = (pathname: string, base = '/') => isAppPath(pathname, base, 'host');
+
+/** `/dev/components`: the shared-component gallery (M1). */
+export const isDevComponentsPath = (pathname: string, base = '/') => isAppPath(pathname, base, 'dev/components');
 
 /** The game link the booth QR opens; passes a facilitator `?mode=` through. */
 export function gameUrl(origin: string, base: string, mode: Mode | null, relaxed = false): string {

@@ -30,9 +30,19 @@
 | 2026-10-07 | `/host` QR | Uses the page's own origin and passes `?mode` and `?relaxed=1` through. Open `/host` on the production URL so the QR is right. | No |
 | 2026-10-07 | Submission queue | Stored on the device with the run payload only (no nicknames), retries 2s→60s, dropped after 24h. Ready for M6.5; nothing calls it yet. | No |
 | 2026-10-07 | M0.5 copy | Leaderboard and `/host` text in `copy.json` is functional UI text written by `realtime-engineer`. Review with `content-writer` in M1. | No |
+| 2026-10-07 | M1 content | `content-writer` drafted `briefings.json`, `rulebook.json`, `realityChecks.json`. Word limits are enforced by zod (briefing body ≤25, Reality card ≤40, Kubernetes card ≤20). | No |
+| 2026-10-07 | Rulebook examples | Spec examples used as given. Rules 2 and 3 have extra examples not in the spec ("People: 0", "Water: 900 L", "ID 1042 (second time)") to show the existing rules. | Yes |
+| 2026-10-07 | Stage 1 Reality Check | The "choose a rule to automate" tap (§4.3) is gameplay, built in M2 after the cards. | No |
+| 2026-10-07 | Timer | Relaxed ×1.5 rounds up. Pauses on `running=false` and while the tab is hidden; time while the phone is locked never counts. Screen readers hear 30s, 10s and time up only. | No |
+| 2026-10-07 | `/dev/components` | Reachable in production (no data, no backend calls). Not linked from the game. | No |
+| 2026-10-07 | Bundle | Framer Motion added ~45 KB gz to the entry (now ≈149 KB of 250). Switch to `LazyMotion` + `m` in M7. | No |
 
 ## Copy needing owner approval
-_None yet._
+<!-- NEEDS OWNER APPROVAL --> Reality Check cards in `src/content/realityChecks.json` with `needsApproval: true` (career-facing, D14). Preview them at `/dev/components`.
+1. **Data, "Clean once, apply everywhere":** "You cleaned {handCleaned} records by hand. Data scientists write each rule once as code. A pipeline, an automatic chain of steps, then applies it to millions of records in seconds."
+2. **AI, "Confidence, not certainty":** "Every picture you labelled helped train your model…" and "Your model says this road is clear, 91% sure. It's flooded. Your model never saw night photos. Real AI teams hunt for gaps like this and keep humans checking the results."
+3. **Logic, "That was programming":** "Your blocks just turned into Python…" and "Software engineers also write automatic tests: small checks that run your program on thousands of maps before real people use it. Each tick is a passed test."
+4. **Cloud, "This is a real job":** "Site reliability engineers (SREs) keep apps like this running for millions of people. They set up alerts so a human only gets woken up when automation can't fix it."
 
 ## Milestone status
 - [x] M0 · [x] M0.5 · [ ] M1 · [ ] M2 · [ ] M3 · [ ] M4 · [ ] M5 · [ ] M6 · [ ] M6.5 · [ ] M7 · [ ] M8

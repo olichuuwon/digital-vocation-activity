@@ -91,5 +91,31 @@
     "hiddenDone": "Hidden: {name}",
     "shownDone": "Visible again: {name}",
     "stale": "Reconnecting… last updated {time} SGT"
+  },
+  "components": {
+    "timeLeft": "Time left",
+    "secondsLeft": "{n} seconds left",
+    "timeUp": "Time's up!",
+    "paused": "Paused",
+    "starsLabel": "{n} of 3 stars",
+    "continue": "Continue",
+    "next": "Next",
+    "skip": "Skip",
+    "done": "Done",
+    "cardOf": "Card {n} of {total}",
+    "gotIt": "Got it",
+    "tutorialLabel": "How to play",
+    "handoffHeading": "Pass the phone",
+    "handoffSoloHeading": "Next up",
+    "handoffBody": "{name}, you're the main player for {stage}.",
+    "handoffSoloBody": "Next team: {stage}.",
+    "ready": "Ready",
+    "rulebook": "Rulebook",
+    "newRule": "New rule",
+    "rulesInPlay": "Rules in play",
+    "close": "Close",
+    "hint": "Hint",
+    "answer": "Here's the answer",
+    "devHeading": "Component gallery"
   }
 }

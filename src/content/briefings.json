@@ -1,0 +1,28 @@
+{
+  "briefings": [
+    {
+      "stage": 1,
+      "heading": "Clean the data",
+      "body": "Flood relief requests are pouring in, but the data is messy. Sort each record: keep it, fix it or trash it.",
+      "go": "Start sorting"
+    },
+    {
+      "stage": 2,
+      "heading": "Teach the machine to see",
+      "body": "Relief teams need an AI, a program that learns from examples, to spot supplies in photos. Label each picture to teach it.",
+      "go": "Start labelling"
+    },
+    {
+      "stage": 3,
+      "heading": "Build the logic",
+      "body": "A supply truck is ready at the depot. Snap together simple steps to guide it to every family, avoiding flooded roads.",
+      "go": "Start building"
+    },
+    {
+      "stage": 4,
+      "heading": "Keep it alive",
+      "body": "Everyone needs the relief app at once. Keep its servers (the computers that run it) online so no request gets dropped.",
+      "go": "Go live"
+    }
+  ]
+}
