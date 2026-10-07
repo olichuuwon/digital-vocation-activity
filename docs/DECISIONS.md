@@ -49,4 +49,4 @@ _None yet._
 - 121 unit tests (incl. SQL run in PGlite to prove anon can't tamper) and 44 e2e tests green. Initial JS ≈ 104 KB gzipped; supabase-js and `/host` load on demand.
 - QA fixes: debug submit dev-only; 6+ digit PIN and higher lockout threshold; zero-width/bidi names rejected; extra test for private functions; e2e builds into `dist-e2e` and never reuses a real-env server.
 - a11y fixes: focus kept after retry, unlock, lock and hide; one status region announces loading/results/empty; `role="list"` for iOS VoiceOver; PIN errors tied to the input; hide/unhide announced; stale `/host` board says "Reconnecting"; long headings wrap at 200%.
-- Live check against the real project: pending the owner running the migration.
+- Live check 2026-10-07 against the real project: migration applied, PIN set. Read today ✅, submit ✅ (row id 1 "QA Test", 0 families), retry returns the same row ✅, direct insert / secret column / private function all refused ✅, 1201 families rejected ✅. Deployed bundle includes the Supabase config ✅.
