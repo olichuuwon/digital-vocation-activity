@@ -97,7 +97,9 @@ function GameApp() {
         </button>
       </header>
       {inRun && run.stage === 1 ? (
-        <DataStage key={`${run.startedAt}-1-${run.levelIndex}`} run={run} debug={params.debug} />
+        <main style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+          <DataStage key={`${run.startedAt}-1-${run.levelIndex}`} run={run} debug={params.debug} />
+        </main>
       ) : inRun ? (
         <StagePlaceholder
           key={`${run.stage}-${run.levelIndex}`}

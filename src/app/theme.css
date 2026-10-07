@@ -89,6 +89,10 @@
   box-sizing: border-box;
 }
 
+html {
+  scroll-padding-bottom: 96px;
+}
+
 html,
 body {
   margin: 0;

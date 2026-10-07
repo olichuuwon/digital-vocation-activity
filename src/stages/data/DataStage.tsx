@@ -1,4 +1,4 @@
-import { useMemo, useReducer, useState } from 'react';
+import { useEffect, useMemo, useReducer, useRef, useState } from 'react';
 import { useScreenHeading } from '../../app/screenFocus';
 import { BriefingCard } from '../../components/BriefingCard';
 import { HandOff } from '../../components/HandOff';
@@ -150,25 +150,25 @@ function LevelIntro({ level, onStart }: { level: CardLevel | { id: 'data-l3'; ne
   );
 }
 
-function toastFor(result: CardResult, streak: number) {
+function toastFor(result: CardResult, streak: number, next: string) {
   const r = result.rule ?? 1;
   switch (result.kind) {
     case 'correct':
-      if (streak >= STREAK_MIN) return toast(fill(c.toast.streak, { n: streak }), 'success');
-      if (result.rule === 5) return toast(c.toast.outlierKept, 'success');
-      return toast(c.toast.correct, 'success');
+      if (streak >= STREAK_MIN) return toast(fill(c.toast.streak, { n: streak }), 'success', next);
+      if (result.rule === 5) return toast(c.toast.outlierKept, 'success', next);
+      return toast(c.toast.correct, 'success', next);
     case 'wrongKeep':
     case 'fixInsteadOfTrash':
-      return toast(fill(c.toast.wrongKeep, { rule: r, short: ruleShort(r) }), 'error');
+      return toast(fill(c.toast.wrongKeep, { rule: r, short: ruleShort(r) }), 'error', next);
     case 'keepUnfixed':
-      return toast(fill(c.toast.wrongKeep, { rule: 4, short: ruleShort(4) }), 'error');
+      return toast(fill(c.toast.wrongKeep, { rule: 4, short: ruleShort(4) }), 'error', next);
     case 'wrongTrashValid':
     case 'fixInsteadOfKeep':
-      return toast(c.toast.wrongTrashValid, 'error');
+      return toast(c.toast.wrongTrashValid, 'error', next);
     case 'wrongTrashFixable':
-      return toast(c.toast.wrongTrashFixable, 'error');
+      return toast(c.toast.wrongTrashFixable, 'error', next);
     case 'wrongFix':
-      return toast(c.toast.wrongFix, 'error');
+      return toast(c.toast.wrongFix, 'error', next);
   }
 }
 
@@ -180,6 +180,13 @@ function CardPlay({ run, level, debug, onDone }: { run: GameState; level: CardLe
   const [state, dispatch] = useReducer(levelReducer, undefined, () => createLevelState(level, deck));
   const [fixing, setFixing] = useState(false);
   const [rulebookOpen, setRulebookOpen] = useState(false);
+  // When the fix picker closes (pick or Back), return focus to the Fix button (WCAG 2.4.3).
+  const fixBtnRef = useRef<HTMLButtonElement>(null);
+  const wasFixing = useRef(false);
+  useEffect(() => {
+    if (!fixing && wasFixing.current) fixBtnRef.current?.focus();
+    wasFixing.current = fixing;
+  }, [fixing]);
   const [tutorialSeen, setTutorialSeen] = useState(0);
   const headingRef = useScreenHeading<HTMLHeadingElement>(stageContent(1)!.levels.find((l) => l.id === level.id)!.name);
   const isTutorial = level.id === 'data-tutorial';
@@ -190,7 +197,12 @@ function CardPlay({ run, level, debug, onDone }: { run: GameState; level: CardLe
     const next = levelReducer(state, { type: 'decide', action });
     dispatch({ type: 'decide', action });
     const result = next.results[next.results.length - 1];
-    if (result) toastFor(result, next.streak);
+    const upcoming = next.deck[next.index];
+    const spoken =
+      upcoming && !next.done
+        ? fill(c.nextCard, { id: upcoming.household, n: next.index + 1, total: next.deck.length })
+        : '';
+    if (result) toastFor(result, next.streak, spoken);
     setFixing(false);
     if (next.done) end(next);
   };
@@ -214,11 +226,13 @@ function CardPlay({ run, level, debug, onDone }: { run: GameState; level: CardLe
   if (!record) return null;
 
   const showTutorialHand = isTutorial && tutorialSeen <= state.index && state.index < 3;
-  const hintText = fill(c.hint, { rule: answer?.rule ?? 1, short: ruleShort(answer?.rule ?? 1) });
-  const answerText = fill(c.answer, {
-    action: answer ? c.actions[answer.expected].toLowerCase() : '',
-    rule: answer?.rule ?? 1,
-  });
+  // Plain valid cards break no rule, so they get "keep it" help instead of a rule number.
+  const hintText =
+    answer?.rule == null ? c.hintKeep : fill(c.hint, { rule: answer.rule, short: ruleShort(answer.rule) });
+  const answerText =
+    answer?.rule == null
+      ? c.answerKeep
+      : fill(c.answer, { action: c.actions[answer.expected].toLowerCase(), rule: answer.rule });
 
   return (
     <section className={s.level}>
@@ -263,7 +277,7 @@ function CardPlay({ run, level, debug, onDone }: { run: GameState; level: CardLe
             />
           )}
           <HintBox level={state.hint} hint={hintText} answer={answerText} />
-          <CardActions allowFix={level.allowFix} onAction={onAction} />
+          <CardActions allowFix={level.allowFix} onAction={onAction} fixRef={fixBtnRef} />
         </>
       )}
     </section>
@@ -275,31 +289,37 @@ function OutlierPlay({ run, intro, onStart, onDone }: { run: GameState; intro: b
   const [i, setI] = useState(0);
   const [judgements, setJudgements] = useState<OutlierJudgement[]>([]);
   const [wrongTaps, setWrongTaps] = useState(0);
+  const [rulebookOpen, setRulebookOpen] = useState(false);
+  const current = o.charts[i]!;
+  const title = `${current.measure === 'people' ? c.outlier.chartPeople : c.outlier.chartWater} · ${fill(c.outlier.chartOf, { n: i + 1, total: o.charts.length })}`;
+  // A new chart is a new screen: the heading takes focus so nobody is left on <body>.
+  const headingRef = useScreenHeading<HTMLHeadingElement>(intro ? '' : title);
   // Charts not reached before time-up count as 0 (chartCount stays the full set).
   const finish = (all: OutlierJudgement[]) => {
     useStage1Progress.getState().saveOutlier(run.startedAt, outlierBonus(all, o.charts.length));
     onDone();
   };
   if (intro) return <LevelIntro level={{ id: 'data-l3', newRules: o.newRules }} onStart={onStart} />;
-  const chart = o.charts[i]!;
+  const chart = current;
   const hint = outlierHintLevel(wrongTaps);
   return (
     <section className={s.level}>
+      <h1 id="outlier-heading" ref={headingRef} tabIndex={-1} style={{ fontSize: '1.375rem' }}>
+        {title}
+      </h1>
       <div className={s.topRow}>
-        <span className={s.progress}>
-          {i + 1} / {o.charts.length}
-        </span>
-        <RulebookButton rulesInPlay={o.rules} />
+        <RulebookButton rulesInPlay={o.rules} onOpenChange={setRulebookOpen} />
       </div>
-      <Timer seconds={o.seconds} onExpire={() => finish(judgements)} />
+      <Timer seconds={o.seconds} running={!rulebookOpen} onExpire={() => finish(judgements)} />
       <p className={ui.muted}>{c.outlier.instruction}</p>
       <HintBox
         level={hint}
-        hint="People: 1–15. Water: 5–200 L. Only values outside those are errors."
-        answer={`Errors: ${chart.errors.map((e) => chart.bars[e]!.value).join(', ')}`}
+        hint={c.outlier.hintRange}
+        answer={fill(c.outlier.answerErrors, { values: chart.errors.map((e) => chart.bars[e]!.value).join(', ') })}
       />
       <OutlierBoard
         key={chart.id}
+        labelledBy="outlier-heading"
         chart={chart}
         onDone={(tapped) => {
           const j = judgeOutlier(chart, tapped);

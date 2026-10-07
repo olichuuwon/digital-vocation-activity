@@ -134,6 +134,9 @@ export const stage1CopySchema = z.object({
   }),
   hint: words(15),
   answer: words(15),
+  hintKeep: words(15),
+  answerKeep: words(15),
+  nextCard: words(10),
   timeUp: words(8),
   outlier: z.object({
     instruction: words(20),
@@ -142,6 +145,11 @@ export const stage1CopySchema = z.object({
     done: txt,
     missed: words(15),
     wrongTap: words(15),
+    hintRange: words(20),
+    answerErrors: words(15),
+    unitPeople: txt,
+    unitWater: txt,
+    chartOf: txt,
   }),
   automate: z.object({
     question: words(12),

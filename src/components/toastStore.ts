@@ -9,7 +9,8 @@ interface ToastState {
   id: number;
   message: string;
   kind: Kind;
-  show: (message: string, kind?: Kind) => void;
+  /** `spoken` is added to the screen-reader announcement only (e.g. what the next card is). */
+  show: (message: string, kind?: Kind, spoken?: string) => void;
   clear: () => void;
 }
 
@@ -18,16 +19,17 @@ export const useToast = create<ToastState>()((set) => ({
   id: 0,
   message: '',
   kind: 'info',
-  show: (message, kind = 'info') => {
+  show: (message, kind = 'info', spoken) => {
     if (kind !== 'info') buzz(kind);
     const prefix = kind === 'success' ? copy.components.toastSuccess : kind === 'error' ? copy.components.toastError : '';
-    useAnnouncer.getState().announce(prefix ? `${prefix} ${message}` : message);
+    const said = prefix ? `${prefix} ${message}` : message;
+    useAnnouncer.getState().announce(spoken ? `${said} ${spoken}` : said);
     set((st) => ({ id: st.id + 1, message, kind }));
   },
   clear: () => set({ message: '' }),
 }));
 
-export const toast = (message: string, kind?: Kind) => useToast.getState().show(message, kind);
+export const toast = (message: string, kind?: Kind, spoken?: string) => useToast.getState().show(message, kind, spoken);
 
 
 /** Long enough to read at 200% text: 2.5s minimum, ~70ms per character, ×1.5 when relaxed. */

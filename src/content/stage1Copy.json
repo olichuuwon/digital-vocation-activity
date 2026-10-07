@@ -6,10 +6,14 @@
     "data-l3": "Tap the bars that are errors. Unusual isn't wrong, so leave possible values alone."
   },
   "tutorialHint": {
-    "keep": "Every field filled? Swipe right to keep.",
-    "trash": "Something's missing. Swipe left to trash."
+    "keep": "Every field filled? Swipe right or tap Keep.",
+    "trash": "Something's missing. Swipe left or tap Trash."
   },
-  "actions": { "keep": "Keep", "fix": "Fix", "trash": "Trash" },
+  "actions": {
+    "keep": "Keep",
+    "fix": "Fix",
+    "trash": "Trash"
+  },
   "fixPrompt": "Pick the right fix",
   "fieldLabels": {
     "household": "Household",
@@ -43,7 +47,12 @@
     "chartWater": "Water per household (L)",
     "done": "Done",
     "missed": "You missed an error. Look for impossible values.",
-    "wrongTap": "Unusual, but possible. Rule 5: keep it."
+    "wrongTap": "Unusual, but possible. Rule 5: keep it.",
+    "hintRange": "People: 1 to 15. Water: 5 to 200 L. Only values outside those are errors.",
+    "answerErrors": "The errors are: {values}.",
+    "unitPeople": "people",
+    "unitWater": "litres",
+    "chartOf": "Chart {n} of {total}"
   },
   "automate": {
     "question": "Which rule would you turn into code first?",
@@ -64,5 +73,8 @@
     "fixed": "{n} records fixed",
     "automated": "Automation bonus earned"
   },
-  "learned": "You cleaned {count} records by hand. Write a rule once as code, and a pipeline (an automatic chain of steps) cleans millions."
+  "learned": "You cleaned {count} records by hand. Write a rule once as code, and a pipeline (an automatic chain of steps) cleans millions.",
+  "hintKeep": "Stuck? Every field filled and sensible? Then keep it.",
+  "answerKeep": "Nothing's broken here. Keep it.",
+  "nextCard": "Next: household {id}, {n} of {total}."
 }

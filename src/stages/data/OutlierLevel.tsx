@@ -11,18 +11,20 @@ export function OutlierBoard({
   chart,
   disabled,
   onDone,
+  labelledBy,
 }: {
   chart: OutlierChart;
   disabled?: boolean;
   onDone: (tapped: number[]) => void;
+  /** id of the level's h1, which names the chart. */
+  labelledBy: string;
 }) {
   const [tapped, setTapped] = useState<number[]>([]);
   const max = Math.max(...chart.bars.map((b) => Math.abs(b.value)), 1);
-  const label = chart.measure === 'people' ? c.outlier.chartPeople : c.outlier.chartWater;
+  const unit = chart.measure === 'people' ? c.outlier.unitPeople : c.outlier.unitWater;
   const toggle = (i: number) => setTapped((t) => (t.includes(i) ? t.filter((x) => x !== i) : [...t, i]));
   return (
-    <section aria-labelledby={`chart-${chart.id}`} style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-      <h2 id={`chart-${chart.id}`}>{label}</h2>
+    <section aria-labelledby={labelledBy} style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
       <ul className={s.chart} role="list">
         {chart.bars.map((b, i) => {
           const on = tapped.includes(i);
@@ -42,22 +44,24 @@ export function OutlierBoard({
                 </span>
                 <span className={s.barValue}>
                   {b.value}
-                  {on && <span className={s.flag}> ✗</span>}
+                  <span className="visually-hidden"> {unit}</span>
+                  {on && (
+                    <span className={s.flag} aria-hidden="true">
+                      {' '}
+                      ✗
+                    </span>
+                  )}
                 </span>
               </button>
             </li>
           );
         })}
       </ul>
-      <button
-        type="button"
-        className={s.action}
-        style={{ position: 'sticky', bottom: 8 }}
-        disabled={disabled}
-        onClick={() => onDone(tapped)}
-      >
-        {c.outlier.done}
-      </button>
+      <div className={s.doneBar}>
+        <button type="button" className={s.action} style={{ width: '100%' }} disabled={disabled} onClick={() => onDone(tapped)}>
+          {c.outlier.done}
+        </button>
+      </div>
     </section>
   );
 }

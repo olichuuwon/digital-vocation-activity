@@ -52,7 +52,7 @@ test('Stage 1: every card can be decided with buttons only, and wrong answers le
     const status = await page.getByTestId('record-card').getAttribute('data-status');
     await page.getByRole('button', { name: status === 'valid' ? 'Trash' : 'Keep', exact: true }).click();
   }
-  await expect(page.getByTestId('hint')).toContainText(/rule/i);
+  await expect(page.getByTestId('hint')).toContainText(/Hint/);
 });
 
 test('Stage 1 full mode includes the Spot the Outlier bonus', async ({ page }) => {

@@ -310,7 +310,8 @@ dialog.sheet::backdrop {
 .toastHost {
   position: fixed;
   left: 50%;
-  bottom: calc(96px + env(safe-area-inset-bottom));
+  /* Top of the screen, so it never covers the action buttons (sticky at the bottom). */
+  top: calc(64px + env(safe-area-inset-top));
   transform: translateX(-50%);
   width: min(100% - 2 * var(--gutter), 448px);
   z-index: 40;
@@ -320,6 +321,8 @@ dialog.sheet::backdrop {
 }
 
 .toast {
+  max-width: 100%;
+  overflow-wrap: anywhere;
   background: var(--primary);
   color: var(--on-primary);
   border-radius: 12px;

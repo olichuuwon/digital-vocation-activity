@@ -54,10 +54,22 @@
 
 .fields {
   margin: 0;
-  display: grid;
-  grid-template-columns: auto 1fr;
-  gap: 8px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
   font-size: 1.125rem;
+}
+
+/* Label and value sit side by side, and the value wraps whole onto its own line at large text. */
+.field {
+  display: flex;
+  flex-wrap: wrap;
+  column-gap: 12px;
+  align-items: baseline;
+}
+
+.field dt {
+  min-width: 6.5em;
 }
 
 .fields dt {
@@ -69,7 +81,7 @@
   margin: 0;
   font-weight: 700;
   font-family: ui-monospace, Menlo, monospace;
-  overflow-wrap: anywhere;
+  white-space: nowrap;
 }
 
 .blank {
@@ -102,12 +114,18 @@
 
 .stampFix {
   left: 50%;
+  background: var(--surface);
   transform: translateX(-50%);
   color: var(--logic-ink);
 }
 
 .actions {
   margin-top: auto;
+  position: sticky;
+  bottom: 0;
+  z-index: 5;
+  background: var(--bg);
+  padding: 8px 0 calc(8px + env(safe-area-inset-bottom));
   display: grid;
   grid-template-columns: repeat(var(--cols, 2), 1fr);
   gap: 10px;
@@ -137,7 +155,7 @@
 }
 
 .action[data-kind='fix'] {
-  border-color: var(--logic);
+  border-color: var(--logic-ink);
 }
 
 .action:disabled {
@@ -161,7 +179,7 @@
 .option {
   min-height: var(--tap);
   border-radius: 12px;
-  border: 2px solid var(--logic);
+  border: 2px solid var(--logic-ink);
   background: var(--surface);
   font: 700 1.0625rem/1.2 ui-monospace, Menlo, monospace;
   cursor: pointer;
@@ -228,4 +246,12 @@
   display: flex;
   flex-direction: column;
   gap: 10px;
+}
+
+/* Done stays reachable at the bottom; html scroll-padding keeps focused bars visible above it. */
+.doneBar {
+  position: sticky;
+  bottom: 0;
+  background: var(--bg);
+  padding: 8px 0 calc(8px + env(safe-area-inset-bottom));
 }

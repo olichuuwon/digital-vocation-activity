@@ -26,6 +26,8 @@ let firstScreen = true;
 export function useScreenHeading<T extends HTMLElement>(title: string) {
   const ref = useRef<T>(null);
   useEffect(() => {
+    // An empty title means "not a screen yet" (e.g. a level still showing its intro).
+    if (!title) return;
     const game = copy.home.title;
     document.title = title === game ? game : `${title} · ${game}`;
     if (firstScreen) {

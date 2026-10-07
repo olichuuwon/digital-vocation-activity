@@ -1,4 +1,5 @@
 import { motion, useMotionValue, useTransform, type PanInfo } from 'framer-motion';
+import type { CSSProperties, Ref } from 'react';
 import type { DataRecord } from '../../content/stage1Schema';
 import { c } from './content';
 import s from './data.module.css';
@@ -14,10 +15,10 @@ function formatWater(w: DataRecord['water']) {
 
 function Field({ label, value }: { label: string; value: string | number | null }) {
   return (
-    <>
+    <div className={s.field}>
       <dt>{label}</dt>
       <dd>{value === null || value === '' ? <span className={s.blank}>{c.fieldLabels.missing}</span> : value}</dd>
-    </>
+    </div>
   );
 }
 
@@ -92,13 +93,23 @@ export function CardActions({
   allowFix,
   disabled,
   onAction,
+  fixRef,
 }: {
   allowFix: boolean;
   disabled?: boolean;
   onAction: (a: CardAction) => void;
+  /** Focus returns here when the fix picker closes. */
+  fixRef?: Ref<HTMLButtonElement>;
 }) {
   const btn = (kind: CardAction, label: string, dir: string) => (
-    <button type="button" className={s.action} data-kind={kind} disabled={disabled} onClick={() => onAction(kind)}>
+    <button
+      type="button"
+      className={s.action}
+      data-kind={kind}
+      disabled={disabled}
+      onClick={() => onAction(kind)}
+      ref={kind === 'fix' ? fixRef : undefined}
+    >
       <span>{label}</span>
       <span className={s.dir} aria-hidden="true">
         {dir}
@@ -106,7 +117,7 @@ export function CardActions({
     </button>
   );
   return (
-    <div className={s.actions} style={{ '--cols': allowFix ? 3 : 2 } as React.CSSProperties}>
+    <div className={s.actions} style={{ '--cols': allowFix ? 3 : 2 } as CSSProperties}>
       {btn('trash', c.actions.trash, '← swipe')}
       {allowFix && btn('fix', c.actions.fix, '↑ swipe')}
       {btn('keep', c.actions.keep, 'swipe →')}
