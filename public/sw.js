@@ -36,7 +36,8 @@ self.addEventListener('fetch', (e) => {
   e.respondWith(
     caches.open(CACHE).then(async (cache) => {
       // Page loads ignore the query (?debug=1, ?join=CODE…): it's the same app shell.
-      const cached = await cache.match(req, { ignoreSearch: req.mode === 'navigate' });
+      // ignoreVary: module scripts send Origin, and a "Vary: Origin" response cached on install would miss.
+      const cached = await cache.match(req, { ignoreSearch: req.mode === 'navigate', ignoreVary: true });
       const fresh = fetch(req)
         .then((res) => {
           if (res.ok) cache.put(req, res.clone());
