@@ -1,0 +1,328 @@
+/* Stage 4 "Keep It Alive". Blue = Cloud Engineering (§9). */
+
+.level {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding-top: 8px;
+}
+
+.stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+  justify-content: space-between;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+.clock {
+  height: 8px;
+  border-radius: 999px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  overflow: hidden;
+}
+
+.clockFill {
+  display: block;
+  height: 100%;
+  background: var(--cloud);
+}
+
+/* Bad update banner: icon + text + thick border, not colour alone. */
+.banner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  border: 3px solid var(--danger);
+  border-radius: 12px;
+  padding: 8px 12px;
+  background: var(--surface);
+  font-weight: 800;
+}
+
+.servers {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.server {
+  border: 2px solid var(--border);
+  border-left: 8px solid var(--cloud);
+  border-radius: 12px;
+  background: var(--surface);
+  padding: 8px 10px;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 6px 10px;
+  align-items: center;
+}
+
+.server[data-status='crashed'] {
+  border-left-color: var(--danger);
+  border-style: dashed;
+  border-left-style: solid;
+}
+
+.serverName {
+  font-weight: 800;
+  display: flex;
+  gap: 6px;
+  align-items: baseline;
+  flex-wrap: wrap;
+}
+
+.serverState {
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.bar {
+  grid-column: 1 / -1;
+  height: 14px;
+  border-radius: 6px;
+  background: var(--surface-2);
+  overflow: hidden;
+  border: 1px solid var(--border);
+}
+
+.barFill {
+  display: block;
+  height: 100%;
+  background: var(--cloud);
+  transition: width 0.1s linear;
+}
+
+/* Over 100%: striped fill, so overload isn't shown by colour alone. */
+.barFill[data-over='true'] {
+  background: repeating-linear-gradient(45deg, var(--danger), var(--danger) 6px, var(--danger-soft, #ffb4ab) 6px, var(--danger-soft, #ffb4ab) 12px);
+}
+
+.act {
+  min-height: var(--tap);
+  min-width: 6.5rem;
+  border-radius: 10px;
+  border: 2px solid var(--cloud-ink);
+  background: var(--surface);
+  font-weight: 800;
+  padding: 6px 12px;
+  cursor: pointer;
+}
+
+.act[data-kind='restart'],
+.act[data-kind='rollback'] {
+  border-color: var(--danger);
+}
+
+.act[aria-disabled='true'] {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+/* Configure */
+.settings {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.setting {
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--surface);
+  padding: 8px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.settingHead {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  font-weight: 800;
+}
+
+.help {
+  margin: 0;
+  font-size: 0.875rem;
+  color: var(--text-muted);
+}
+
+.toggle {
+  display: inline-flex;
+  border: 2px solid var(--cloud-ink);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.toggle button {
+  min-height: 44px;
+  min-width: 3.5rem;
+  border: 0;
+  background: var(--surface);
+  font-weight: 800;
+  cursor: pointer;
+  padding: 4px 12px;
+}
+
+.toggle button[aria-pressed='true'] {
+  background: var(--cloud-ink);
+  color: #fff;
+}
+
+.stepper {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-variant-numeric: tabular-nums;
+}
+
+.stepper button {
+  min-height: var(--tap);
+  min-width: var(--tap);
+  border-radius: 10px;
+  border: 2px solid var(--cloud-ink);
+  background: var(--surface);
+  font-weight: 900;
+  font-size: 1.25rem;
+  cursor: pointer;
+}
+
+.stepper button[aria-disabled='true'] {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.stepper output {
+  min-width: 2ch;
+  text-align: center;
+  font-weight: 800;
+  font-size: 1.125rem;
+}
+
+.range {
+  width: 100%;
+  min-height: var(--tap);
+  accent-color: var(--cloud-ink);
+}
+
+.meter {
+  border: 2px solid var(--border);
+  border-radius: 12px;
+  padding: 8px 10px;
+  background: var(--surface);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-weight: 700;
+}
+
+.meter[data-over='true'] {
+  border-color: var(--danger);
+  border-style: dashed;
+}
+
+.go {
+  margin-top: auto;
+  position: sticky;
+  bottom: 0;
+  z-index: 5;
+  background: var(--bg);
+  padding: 8px 0 calc(8px + env(safe-area-inset-bottom));
+  display: flex;
+  gap: 8px;
+}
+
+.go > * {
+  flex: 1;
+}
+
+.goStack {
+  flex-direction: column;
+}
+
+.goStack .meter {
+  padding: 6px 10px;
+  gap: 4px;
+  font-size: 0.9375rem;
+}
+
+/* Replay */
+.pods {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(6.5rem, 1fr));
+  gap: 6px;
+}
+
+.pod {
+  border: 2px solid var(--cloud);
+  border-radius: 10px;
+  background: var(--surface);
+  padding: 4px 6px;
+  font-size: 0.875rem;
+  font-weight: 700;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.pod[data-status='starting'] {
+  border-style: dashed;
+}
+
+.pod[data-status='crashed'] {
+  border-color: var(--danger);
+  border-style: dotted;
+  border-width: 3px;
+}
+
+.graph {
+  width: 100%;
+  height: 64px;
+  display: block;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface);
+}
+
+.compare {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.compareItem {
+  border: 2px solid var(--border);
+  border-radius: 12px;
+  padding: 10px;
+  background: var(--surface);
+  text-align: center;
+}
+
+.compareItem strong {
+  display: block;
+  font-size: 1.75rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.compareItem[data-kind='auto'] {
+  border-color: var(--cloud-ink);
+  border-width: 3px;
+}
