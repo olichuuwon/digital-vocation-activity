@@ -88,6 +88,11 @@
   padding-top: 8vh;
 }
 
+.screen h1 {
+  font-size: clamp(1.75rem, 9vw, 2.5rem);
+  overflow-wrap: anywhere;
+}
+
 .screen h1:focus {
   outline: none;
 }

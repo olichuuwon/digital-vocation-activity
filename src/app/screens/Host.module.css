@@ -1,0 +1,149 @@
+/* Booth big screen: wide layout, still usable on a phone. */
+.host {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 16px var(--gutter) 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.head h1 {
+  font-size: clamp(1.75rem, 4vw, 3rem);
+}
+
+.head h1:focus {
+  outline: none;
+}
+
+.grid {
+  display: grid;
+  gap: 16px;
+  grid-template-columns: 1fr;
+}
+
+@media (min-width: 900px) {
+  .grid {
+    grid-template-columns: minmax(300px, 2fr) 3fr;
+    align-items: start;
+  }
+  .boardCard {
+    grid-row: span 3;
+  }
+}
+
+.grid > section {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+}
+
+.qrCard {
+  align-items: center;
+  text-align: center;
+}
+
+/* Always dark-on-white so phones can scan it in either theme. */
+.qr {
+  width: min(100%, 480px);
+  height: auto;
+  aspect-ratio: 1;
+  background: #fff;
+  border-radius: 8px;
+  padding: 8px;
+}
+
+.url {
+  margin: 0;
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+
+.pinForm {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.pinLabel {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-weight: 600;
+}
+
+.pin {
+  min-height: var(--tap);
+  padding: 8px 12px;
+  border-radius: var(--radius);
+  border: 2px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+  font: inherit;
+  letter-spacing: 0.3em;
+  max-width: 14em;
+}
+
+.hostList {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.modList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.modRow {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 4px 12px;
+  align-items: center;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.modRow > button {
+  grid-row: span 2;
+  grid-column: 2;
+}
+
+.modName {
+  font-weight: 700;
+  overflow-wrap: anywhere;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 8px;
+  align-items: center;
+}
+
+.hiddenTag {
+  font-size: 0.8125rem;
+  padding: 1px 8px;
+  border-radius: 999px;
+  border: 1px solid var(--danger);
+  color: var(--danger);
+}
+
+.row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.message {
+  margin: 0;
+  min-height: 1.45em;
+  font-weight: 600;
+}
+
+.head h1:focus,
+section h2:focus {
+  outline: none;
+}

@@ -14,3 +14,8 @@ export function levelsFor(stage: StageContent, mode: Mode) {
 export function stageContent(stage: number): StageContent | undefined {
   return stages.find((s) => s.stage === stage);
 }
+
+/** Fills `{name}` placeholders in copy strings. Unknown placeholders are left as-is. */
+export function fill(template: string, vars: Record<string, string | number>): string {
+  return template.replace(/\{(\w+)\}/g, (m, k: string) => (k in vars ? String(vars[k]) : m));
+}

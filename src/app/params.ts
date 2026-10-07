@@ -27,3 +27,18 @@ export function parseParams(search: string): UrlParams {
 
   return { mode, debug: truthy(p.get('debug')), stage, relaxed: truthy(p.get('relaxed')), fakePeers };
 }
+
+/** True on the booth screen route (`/host`), respecting a deploy sub-path (BASE_PATH). */
+export function isHostPath(pathname: string, base = '/'): boolean {
+  const root = base.endsWith('/') ? base : `${base}/`;
+  const path = pathname.endsWith('/') ? pathname.slice(0, -1) : pathname;
+  return path === `${root}host`;
+}
+
+/** The game link the booth QR opens; passes a facilitator `?mode=` through. */
+export function gameUrl(origin: string, base: string, mode: Mode | null, relaxed = false): string {
+  const url = new URL(base, origin);
+  if (mode) url.searchParams.set('mode', mode);
+  if (relaxed) url.searchParams.set('relaxed', '1');
+  return url.toString();
+}

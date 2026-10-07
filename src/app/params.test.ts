@@ -1,4 +1,4 @@
-import { parseParams } from './params';
+import { gameUrl, isHostPath, parseParams } from './params';
 
 describe('parseParams', () => {
   it('returns defaults for an empty query', () => {
@@ -25,5 +25,28 @@ describe('parseParams', () => {
     expect(p.debug).toBe(true);
     expect(p.relaxed).toBe(true);
     expect(p.fakePeers).toBe(3);
+  });
+});
+
+describe('isHostPath', () => {
+  it('matches /host with or without a trailing slash', () => {
+    expect(isHostPath('/host')).toBe(true);
+    expect(isHostPath('/host/')).toBe(true);
+    expect(isHostPath('/')).toBe(false);
+    expect(isHostPath('/hosting')).toBe(false);
+    expect(isHostPath('/x/host')).toBe(false);
+  });
+
+  it('respects a deploy sub-path', () => {
+    expect(isHostPath('/ship-it/host', '/ship-it/')).toBe(true);
+    expect(isHostPath('/host', '/ship-it/')).toBe(false);
+  });
+});
+
+describe('gameUrl', () => {
+  it('links to the game root and passes ?mode= through', () => {
+    expect(gameUrl('https://game.example', '/', null)).toBe('https://game.example/');
+    expect(gameUrl('https://game.example', '/', 'full')).toBe('https://game.example/?mode=full');
+    expect(gameUrl('https://game.example', '/ship-it/', 'booth')).toBe('https://game.example/ship-it/?mode=booth');
   });
 });

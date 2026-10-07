@@ -1,7 +1,7 @@
 import stagesJson from './stages.json';
 import copyJson from './copy.json';
 import { copySchema, stagesFileSchema } from './schemas';
-import { levelsFor, stages } from './index';
+import { fill, levelsFor, stages } from './index';
 
 describe('content', () => {
   it('stages.json matches its schema', () => {
@@ -24,5 +24,12 @@ describe('content', () => {
       expect(levelsFor(s, 'booth').every((l) => !l.bonus)).toBe(true);
       expect(levelsFor(s, 'booth').length).toBeGreaterThan(0);
     }
+  });
+});
+
+describe('fill', () => {
+  it('replaces known placeholders and leaves unknown ones', () => {
+    expect(fill('Top 50 on {date}', { date: '7 Oct 2026' })).toBe('Top 50 on 7 Oct 2026');
+    expect(fill('{a} and {b}', { a: 1 })).toBe('1 and {b}');
   });
 });

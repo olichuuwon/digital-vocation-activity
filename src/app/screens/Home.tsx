@@ -8,8 +8,16 @@ import ui from '../ui.module.css';
 const t = copy.home;
 const l = copy.length;
 
-/** Entry screen (§3.5.1). Group play and the leaderboard arrive in M0.5/M6.5. */
-export function Home({ facilitatorMode, onEnter }: { facilitatorMode: Mode | null; onEnter: () => void }) {
+/** Entry screen (§3.5.1). Group play arrives in M6.5. */
+export function Home({
+  facilitatorMode,
+  onEnter,
+  onLeaderboard,
+}: {
+  facilitatorMode: Mode | null;
+  onEnter: () => void;
+  onLeaderboard: () => void;
+}) {
   const hasRun = useGame((s) => s.run !== null);
   const startRunInStore = useGame((s) => s.startRun);
   const startRun = (mode: Mode) => {
@@ -65,8 +73,8 @@ export function Home({ facilitatorMode, onEnter }: { facilitatorMode: Mode | nul
         <button type="button" className={ui.btn} aria-disabled="true">
           {t.joinGroup} <span className={ui.detail}>{t.comingSoon}</span>
         </button>
-        <button type="button" className={ui.btn} aria-disabled="true">
-          {t.leaderboard} <span className={ui.detail}>{t.comingSoon}</span>
+        <button type="button" className={ui.btn} onClick={onLeaderboard}>
+          {t.leaderboard}
         </button>
       </div>
     </main>

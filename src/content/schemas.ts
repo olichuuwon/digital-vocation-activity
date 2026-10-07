@@ -40,6 +40,20 @@ export const copySchema = z.object({
     sound: text, relaxed: text, quit: text, close: text,
   }),
   placeholder: z.object({ note: text, finishLevel: text, finale: text, finaleNote: text, backHome: text }),
+  leaderboard: z.object({
+    heading: text, tabsLabel: text, today: text, all: text, dateLabel: text, allTime: text,
+    allTimeNote: text, dateNote: text, todayNote: text, loading: text, emptyToday: text,
+    emptyDate: text, emptyAll: text, error: text, unavailable: text, retry: text, back: text,
+    rank: text, players: text, families: text, finished: text, you: text, pinned: text,
+    soloNote: text, count: text, testSubmit: text, testSubmitted: text, testFailed: text,
+  }),
+  host: z.object({
+    heading: text, scan: text, qrAlt: text, board: text, updated: text, playing: text,
+    playingSoon: text, facilitator: text, facilitatorNote: text, pinLabel: text, unlock: text,
+    lock: text, refresh: text, checking: text, wrongPin: text, locked: text, notConfigured: text,
+    networkError: text, noneToday: text, hide: text, unhide: text, hiddenTag: text,
+    hiddenDone: text, shownDone: text, stale: text,
+  }),
 });
 
 export type StageContent = z.infer<typeof stageSchema>;
