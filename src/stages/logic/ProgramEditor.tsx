@@ -1,7 +1,8 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { fill } from '../../content';
-import type { Block, BlockOp, Program } from '../../content/stage3Schema';
+import type { BlockOp, Program } from '../../content/stage3Schema';
 import { toast } from '../../components/toastStore';
+import { blockText, ICON } from './blocks';
 import { c } from './content';
 import {
   blockCount,
@@ -22,21 +23,6 @@ import {
   type ListPath,
 } from './program';
 import s from './logic.module.css';
-
-export const ICON: Record<BlockOp, string> = {
-  forward: '⬆️',
-  left: '↰',
-  right: '↱',
-  drop: '📦',
-  repeat: '🔁',
-  ifFlooded: '🌊',
-  askAi: '🤖',
-};
-
-export function blockText(b: Block): string {
-  if (b.op === 'repeat') return `${c.blocks.repeat} ${fill(c.editor.times, { n: b.n })}`;
-  return c.blocks[b.op];
-}
 
 const sameList = (a: ListPath, b: ListPath) => a.length === b.length && a.every((x, i) => x === b[i]);
 
@@ -82,6 +68,11 @@ export function ProgramEditor({
   const full = blockLimit !== null && used >= blockLimit;
   const rows = flatten(program);
   const selBlock = selected ? getBlock(program, selected) : undefined;
+  // Keep the running block in view while the truck drives (the program box scrolls on its own).
+  const boxRef = useRef<HTMLElement>(null);
+  useEffect(() => {
+    boxRef.current?.querySelector('[data-active="true"]')?.scrollIntoView?.({ block: 'nearest' });
+  }, [activeAddr]);
 
   const commit = (p: Program, nextSel: BlockAddr | null, nextCursor?: Cursor) => {
     onChange(p);
@@ -142,7 +133,7 @@ export function ProgramEditor({
 
   return (
     <>
-      <section className={s.programBox} aria-labelledby="program-heading">
+      <section className={s.programBox} aria-labelledby="program-heading" ref={boxRef}>
         <div className={s.programHead}>
           <h2 id="program-heading" style={{ fontSize: 'inherit', margin: 0 }}>
             {c.editor.program}

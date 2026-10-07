@@ -11,7 +11,7 @@
     "logic-tutorial": "Count the squares to each corner. Turn where the road turns, then Drop supplies at the house.",
     "logic-l1": "Trace both orders with your finger. Pick the one with fewer moves and turns, since each costs a block.",
     "logic-l2": "Spot the part that repeats. Put it inside Repeat and set how many times.",
-    "logic-l3": "Drive to where the roads split. If the road ahead is flooded, take the other one. Otherwise, go straight on.",
+    "logic-l3": "If the road ahead floods, take the side road. Blocks after the If run on both roads.",
     "logic-l4": "Tap Step to go one block at a time. Watch for the first move that doesn't match the road.",
     "logic-l5": "Use “Ask the AI, then drop” at every house instead of Drop supplies. It guesses what each house needs."
   },

@@ -42,7 +42,7 @@ const fork = lvl({
   grid: ['Da#H..', 'b###..', '......', '......', '......', '......'],
   floodGroups: ['a', 'b'],
   palette: ['forward', 'left', 'right', 'drop', 'ifFlooded'],
-  blockLimit: 14,
+  blockLimit: 13,
 });
 const forkSolution: Program = [iff([R, F, L, F, F, F, L, F], [F, F, F]), DROP];
 
@@ -71,7 +71,7 @@ describe('parseMap / pickFlood / countBlocks', () => {
   it('counts every block, containers included', () => {
     expect(countBlocks([])).toBe(0);
     expect(countBlocks([rep(3, F)])).toBe(2);
-    expect(countBlocks(forkSolution)).toBe(14);
+    expect(countBlocks(forkSolution)).toBe(13);
     expect(countBlocks([rep(2, iff([F], []), rep(2, L))])).toBe(5);
   });
 });

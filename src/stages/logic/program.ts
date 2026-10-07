@@ -158,12 +158,4 @@ export function flatten(program: Program, list: ListPath = [], depth = 0, out: F
 }
 
 /** Every block counts 1, containers included (contract in stage3Schema.ts). */
-export function blockCount(program: Program): number {
-  let n = 0;
-  for (const b of program) {
-    n += 1;
-    if (b.op === 'repeat') n += blockCount(b.body);
-    else if (b.op === 'ifFlooded') n += blockCount(b.then) + blockCount(b.else);
-  }
-  return n;
-}
+export { countBlocks as blockCount } from '../../sim/grid';

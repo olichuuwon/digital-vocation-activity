@@ -19,6 +19,7 @@ const Host = lazy(() => import('./screens/Host'));
 const DevComponents = lazy(() => import('./screens/DevComponents'));
 // Stages after the first load on demand, keeping the first load small (§11 perf budget).
 const AiStage = lazy(() => import('../stages/ai/AiStage'));
+const LogicStage = lazy(() => import('../stages/logic/LogicStage'));
 
 export function App() {
   const route = useMemo(() => {
@@ -107,6 +108,12 @@ function GameApp() {
         <main style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
           <Suspense fallback={null}>
             <AiStage key={`${run.startedAt}-2-${run.levelIndex}`} run={run} debug={params.debug} />
+          </Suspense>
+        </main>
+      ) : inRun && run.stage === 3 ? (
+        <main style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+          <Suspense fallback={null}>
+            <LogicStage key={`${run.startedAt}-3-${run.levelIndex}`} run={run} debug={params.debug} />
           </Suspense>
         </main>
       ) : inRun ? (

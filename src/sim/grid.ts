@@ -380,27 +380,28 @@ export function succeedsAll(level: LogicLevel, program: Program, maxSteps = DEFA
 // Solver
 // ---------------------------------------------------------------------------
 //
-// SEARCH: iterative deepening on the block budget B = 1, 2, … maxBlocks, so the first program
-// found is a shortest one. The program is built block by block in reading order while being run
-// on EVERY flood scenario at once (a "joint state": one truck state per scenario, modelAccuracy 1).
-//   • Prefix pruning: a block (or a partial Repeat body / If branch, on its first pass) that fails
-//     in any scenario is dropped, with everything that would follow it — execution is
-//     sequential, so no completion can recover.
-//   • A Repeat body is built once (first pass), then n = 2..9 extra passes are run; a failing pass
-//     stops larger n.
+// SEARCH: uniform-cost search (cost = blocks) over "joint states", so the first finished program
+// popped is a shortest one. A joint state is one truck state (position, facing, served houses) per
+// flood scenario: the program is built block by block in reading order and run on EVERY scenario
+// at once (modelAccuracy 1). A search "move" is one whole top-level block, containers included.
+//   • Prefix pruning: a block — or a partial Repeat body / If branch on its first pass — that fails
+//     in any scenario is dropped with everything that would follow it. Execution is sequential, so
+//     no completion can recover.
+//   • Transposition table: a joint state is expanded once, at its cheapest cost. The same applies
+//     inside any list that runs exactly once (the top level and If branches reached from it): only
+//     the cheapest branch per distinct outcome is kept. Step counts are not in the key (the 300-step
+//     cap only matters for absurd programs).
+//   • A Repeat body runs many times, so bodies are enumerated in full (still first-pass pruned).
+//     The body is built once, then passes 2..9 are run; a failing pass stops larger n.
 //   • An If's then-branch is built on the scenarios whose tile ahead is flooded, the else-branch on
-//     the rest. A top-level If where all scenarios agree is skipped (inlining the taken branch is
-//     strictly shorter).
-//   • Transposition table at top-level block boundaries: a joint state already reached with no
-//     more blocks spent is not expanded again (per budget iteration). Step counts are ignored in
-//     the key (the cap only matters for absurd programs).
-//   • Equivalence pruning that never removes the only shortest program: no Left right after Right
-//     (or vice versa), no three equal turns in a row, no Repeat whose body is turns only or empty,
-//     no Repeat that is no shorter than its unrolled body (n·|body| ≤ 1+|body|), no If with both
-//     branches empty.
+//     the rest. An If that runs once where all scenarios agree is skipped (inlining the taken
+//     branch is strictly shorter).
+//   • Equivalence pruning that never removes every shortest program: no Left right after Right (or
+//     vice versa), no three equal turns in a row, no Repeat whose body is empty or turns only, no
+//     Repeat no shorter than its unrolled body (n·|body| ≤ 1+|body|), no If with both branches empty.
 //   • Nesting depth ≤ 2: a top-level Repeat/If may hold a Repeat/If whose body is plain blocks.
-// It is exhaustive within those bounds, so `null` proves "no program ≤ maxBlocks" (with the
-// palette given) and a result's length is the true minimum.
+// Within those bounds the search is exhaustive, so `null` proves "no program ≤ maxBlocks" with the
+// palette given, and a result's length is the true minimum.
 
 export interface SolveOptions {
   /** Default: level.blockLimit, else 12. */
@@ -409,7 +410,7 @@ export interface SolveOptions {
   flood?: FloodGroup | null | 'all';
   /** Override the level palette (e.g. to prove a block is required). */
   palette?: readonly BlockOp[];
-  /** Safety valve on explored nodes; throws when exceeded. Default 5e6. */
+  /** Safety valve on expanded nodes; throws when exceeded. Default 5e6. */
   maxNodes?: number;
 }
 
@@ -419,9 +420,14 @@ export interface SolveResult {
   nodes: number;
 }
 
-type Joint = St[];
 const SIMPLE: readonly BlockOp[] = ['forward', 'left', 'right', 'drop', 'askAi'];
 const isTurn = (op: BlockOp) => op === 'left' || op === 'right';
+
+interface Seq {
+  blocks: Block[];
+  out: St[];
+  cost: number;
+}
 
 export function solve(level: LogicLevel, opts: SolveOptions = {}): SolveResult | null {
   const map = parseMap(level);
@@ -432,12 +438,23 @@ export function solve(level: LogicLevel, opts: SolveOptions = {}): SolveResult |
   const hasRepeat = palette.includes('repeat');
   const hasIf = palette.includes('ifFlooded');
   const maxNodes = opts.maxNodes ?? 5_000_000;
-  const ctxs: Ctx[] = scen.map((flood) => ({ map, flood, acc: 1, rng: undefined, maxSteps: DEFAULT_MAX_STEPS, trace: null, deliveredOrder: null, wrongOrder: null }));
+  const ctxs: Ctx[] = scen.map((flood) => ({
+    map,
+    flood,
+    acc: 1,
+    rng: undefined,
+    maxSteps: DEFAULT_MAX_STEPS,
+    trace: null,
+    deliveredOrder: null,
+    wrongOrder: null,
+  }));
   const full = allMask(map);
   let nodes = 0;
   const key = (j: readonly St[]): string => j.map((s) => `${s.x},${s.y},${s.d},${s.delivered},${s.wrong}`).join('|');
+  const done = (j: readonly St[]) => j.every((s) => ((s.delivered | s.wrong) & full) === full);
+  const floodedAhead = (ci: number, s: St) => flooded(ctxs[ci] as Ctx, s.x + DX[s.d as 0], s.y + DY[s.d as 0]);
 
-  /** Run a block list on a subset of scenarios (idx) from states; null if any fails. */
+  /** Run a block list on scenarios `idx` (states[k] belongs to idx[k]); null if any fails. */
   const runOn = (list: Program, idx: readonly number[], states: readonly St[]): St[] | null => {
     const out: St[] = [];
     for (let k = 0; k < idx.length; k++) {
@@ -448,31 +465,30 @@ export function solve(level: LogicLevel, opts: SolveOptions = {}): SolveResult |
     return out;
   };
 
-  interface Seq {
-    blocks: Block[];
-    out: St[];
-    cost: number;
-  }
-
-  /**
-   * Every block sequence of cost ≤ budget (empty included) that survives its first pass from
-   * `states` (scenarios `idx`). depth = nesting depth of this list (0 = top level).
-   */
-  const genSeq = (idx: readonly number[], states: St[], budget: number, depth: number, cb: (q: Seq) => void): void => {
+  /** Every sequence of cost ≤ budget (empty included) that survives its first pass. */
+  const genSeqAll = (idx: readonly number[], states: St[], budget: number, depth: number, cb: (q: Seq) => void): void => {
     const rec = (blocks: Block[], cur: St[], cost: number): void => {
       cb({ blocks, out: cur, cost });
-      if (cost >= budget) return;
-      genBlock(idx, cur, budget - cost, depth, blocks, (b, out, c) => rec([...blocks, b], out, cost + c));
+      if (cost < budget) genBlock(idx, cur, budget - cost, depth, false, blocks, (b, out, c) => rec([...blocks, b], out, cost + c));
     };
     rec([], states, 0);
   };
 
   /**
-   * Cheapest block sequence (cost ≤ budget) per distinct outcome, by uniform-cost search with a
-   * transposition table. Used where a list runs exactly once (top-level If branches).
+   * Uniform-cost search over sequences that run once: the cheapest sequence per distinct outcome.
+   * `stop` (optional) ends the search early when it returns true for a popped sequence.
    */
-  const genSeqBest = (idx: readonly number[], states: St[], budget: number, depth: number): Seq[] => {
+  const genSeqBest = (
+    idx: readonly number[],
+    states: St[],
+    budget: number,
+    depth: number,
+    stop?: (q: Seq) => boolean,
+    h?: (out: St[]) => number,
+  ): Seq[] => {
     const best = new Map<string, Seq>();
+    /** Cheapest cost queued per outcome, so each outcome sits in the queue once per cost. */
+    const queued = new Map<string, number>();
     const buckets: Seq[][] = Array.from({ length: budget + 1 }, () => []);
     (buckets[0] as Seq[]).push({ blocks: [], out: states, cost: 0 });
     for (let c = 0; c <= budget; c++)
@@ -480,23 +496,29 @@ export function solve(level: LogicLevel, opts: SolveOptions = {}): SolveResult |
         const k = key(q.out);
         if (best.has(k)) continue;
         best.set(k, q);
+        if (stop?.(q)) return [q];
         if (c < budget)
-          genBlock(idx, q.out, budget - c, depth, q.blocks, (b, out, bc) => {
-            if (!best.has(key(out))) (buckets[c + bc] as Seq[]).push({ blocks: [...q.blocks, b], out, cost: c + bc });
+          genBlock(idx, q.out, budget - c, depth, true, q.blocks, (b, out, bc) => {
+            const ok = key(out);
+            if (best.has(ok) || (queued.get(ok) ?? Infinity) <= c + bc) return;
+            if (h && c + bc + h(out) > budget) return;
+            queued.set(ok, c + bc);
+            (buckets[c + bc] as Seq[]).push({ blocks: [...q.blocks, b], out, cost: c + bc });
           });
       }
     return [...best.values()];
   };
 
-  /** Every single block of cost ≤ budget, given what precedes it in its list (for turn pruning). */
-  const genBlock = (
+  /** Every single block of cost ≤ budget after `before` in its list. once = this list runs once. */
+  function genBlock(
     idx: readonly number[],
     states: St[],
     budget: number,
     depth: number,
+    once: boolean,
     before: readonly Block[],
     cb: (b: Block, out: St[], cost: number) => void,
-  ): void => {
+  ): void {
     if (++nodes > maxNodes) throw new Error(`solve(${level.id}): search exceeded ${maxNodes} nodes`);
     const last = before[before.length - 1]?.op;
     const last2 = before[before.length - 2]?.op;
@@ -504,99 +526,81 @@ export function solve(level: LogicLevel, opts: SolveOptions = {}): SolveResult |
       if (op === 'left' && last === 'right') continue;
       if (op === 'right' && last === 'left') continue;
       if (isTurn(op) && last === op && last2 === op) continue;
-      const b: Block = { op } as Block;
+      const b = { op } as Block;
       const out = runOn([b], idx, states);
       if (out) cb(b, out, 1);
     }
     if (depth >= 2 || budget < 2) return;
-    if (hasRepeat) {
-      genSeq(idx, states, budget - 1, depth + 1, (q) => {
+    if (hasRepeat)
+      genSeqAll(idx, states, budget - 1, depth + 1, (q) => {
         if (q.blocks.length === 0 || q.blocks.every((x) => isTurn(x.op))) return;
+        if (key(q.out) === key(states)) return; // first pass changes nothing: every pass is a no-op
         let cur: St[] | null = q.out;
-        const body = q.blocks;
-        for (let n = REPEAT_MIN; n <= REPEAT_MAX && cur; n++) {
-          cur = runOn(body, idx, cur);
+        for (let n = REPEAT_MIN; n <= REPEAT_MAX; n++) {
+          cur = runOn(q.blocks, idx, cur);
           if (!cur) break;
-          if (n * q.cost <= 1 + q.cost) continue;
-          cb({ op: 'repeat', n, body }, cur, 1 + q.cost);
+          if (n * q.cost > 1 + q.cost) cb({ op: 'repeat', n, body: q.blocks }, cur, 1 + q.cost);
         }
       });
-    }
     if (hasIf) {
       const fIdx: number[] = [];
       const fSt: St[] = [];
       const dIdx: number[] = [];
       const dSt: St[] = [];
+      const isF = idx.map((ci, k) => floodedAhead(ci, states[k] as St));
       idx.forEach((ci, k) => {
-        const s = states[k] as St;
-        if (flooded(ctxs[ci] as Ctx, s.x + DX[s.d as 0], s.y + DY[s.d as 0])) {
+        if (isF[k]) {
           fIdx.push(ci);
-          fSt.push(s);
+          fSt.push(states[k] as St);
         } else {
           dIdx.push(ci);
-          dSt.push(s);
+          dSt.push(states[k] as St);
         }
       });
-      if (depth === 0 && (fIdx.length === 0 || dIdx.length === 0)) return;
-      // A top-level If runs once, so only each branch's outcome matters: keep the cheapest
-      // branch per distinct outcome. Nested Ifs may run again from other states: keep all.
-      const branches = (bi: number[], bs: St[]): Seq[] => {
-        if (depth > 0) {
-          const all: Seq[] = [];
-          genSeq(bi, bs, budget - 1, depth + 1, (q) => all.push(q));
-          return all;
-        }
-        return genSeqBest(bi, bs, budget - 1, depth + 1);
+      if (once && (fIdx.length === 0 || dIdx.length === 0)) return;
+      const branch = (bi: number[], bs: St[]): Seq[] => {
+        if (once) return genSeqBest(bi, bs, budget - 1, depth + 1);
+        const all: Seq[] = [];
+        genSeqAll(bi, bs, budget - 1, depth + 1, (q) => all.push(q));
+        return all;
       };
-      const elses = branches(dIdx, dSt);
-      for (const t of branches(fIdx, fSt)) {
+      const elses = branch(dIdx, dSt);
+      for (const t of branch(fIdx, fSt))
         for (const e of elses) {
-          if (t.cost + e.cost > budget - 1) continue;
-          if (t.cost + e.cost === 0) continue;
-          // Merge back into the order of idx.
-          const out: St[] = [];
+          const c = t.cost + e.cost;
+          if (c === 0 || c > budget - 1) continue;
           let fi = 0;
           let di = 0;
-          for (let k = 0; k < idx.length; k++) {
-            const s = states[k] as St;
-            const isF = flooded(ctxs[idx[k] as number] as Ctx, s.x + DX[s.d as 0], s.y + DY[s.d as 0]);
-            out.push(isF ? (t.out[fi++] as St) : (e.out[di++] as St));
-          }
-          cb({ op: 'ifFlooded', then: t.blocks, else: e.blocks }, out, 1 + t.cost + e.cost);
+          const out = isF.map((f) => (f ? (t.out[fi++] as St) : (e.out[di++] as St)));
+          cb({ op: 'ifFlooded', then: t.blocks, else: e.blocks }, out, 1 + c);
         }
-      }
     }
-  };
-  const allIdx = scen.map((_, k) => k);
-  const done = (j: Joint) => j.every((s) => ((s.delivered | s.wrong) & full) === full);
+  }
 
-  for (let B = 1; B <= maxBlocks; B++) {
-    const seen = new Map<string, number>();
-    let found: Block[] | null = null;
-    const dfs = (j: Joint, prog: Block[], g: number): void => {
-      if (found) return;
-      if (done(j)) {
-        found = prog;
-        return;
-      }
-      if (g >= B) return;
-      const k = key(j);
-      const prev = seen.get(k);
-      if (prev !== undefined && prev <= g) return;
-      seen.set(k, g);
-      genBlock(allIdx, j, B - g, 0, prog, (b, out, c) => {
-        if (!found) dfs(out, [...prog, b], g + c);
-      });
-    };
-    const start = scen.map(() => startSt(map));
-    dfs(start, [], 0);
-    if (found) {
-      const program = found as Block[];
-      return { program, blocks: countBlocks(program), nodes };
+  /**
+   * Admissible, consistent lower bound on the blocks still needed: 1 if a house is unserved (some
+   * drop/askAi block), +1 if in some scenario the truck isn't standing on an unserved house (some
+   * forward block). One plain block can't lower it by 2: a drop that serves the last house fails in
+   * the scenario whose truck is elsewhere.
+   */
+  const h = (j: readonly St[]): number => {
+    if (done(j)) return 0;
+    for (const s of j) {
+      const hi = map.houseAt[s.y * map.size + s.x] as number;
+      if (hi < 0 || ((s.delivered | s.wrong) & (1 << hi)) !== 0) return 2;
     }
+    return 1;
+  };
+  // Deepening on the block budget keeps container enumeration bounded by what is still affordable.
+  const start = scen.map(() => startSt(map));
+  const all = scen.map((_, k) => k);
+  for (let B = h(start); B <= maxBlocks; B++) {
+    const [hit] = genSeqBest(all, start, B, 0, (q) => done(q.out), h).filter((q) => done(q.out));
+    if (hit) return { program: hit.blocks, blocks: countBlocks(hit.blocks), nodes };
   }
   return null;
 }
+
 
 // ---------------------------------------------------------------------------
 // Debug It (L4): fewest block swaps that fix the prebuilt program

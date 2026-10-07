@@ -26,10 +26,10 @@ test('a booth run starts Stage 1, resumes after reload, and later stages reach t
   await page.getByRole('button', { name: 'Resume run' }).click();
   await expect(page.getByRole('listitem').filter({ hasText: 'in progress' })).toContainText('Data');
 
-  // Stages 3–4 are still placeholders: booth S3 4 + S4 3 = 7 taps to the finale.
-  await page.goto('/?debug=1&stage=3');
+  // Stage 4 is still a placeholder: 3 taps to the finale.
+  await page.goto('/?debug=1&stage=4');
   const finish = page.getByRole('button', { name: 'Finish level' });
-  for (let i = 0; i < 7; i++) await finish.click();
+  for (let i = 0; i < 3; i++) await finish.click();
   await expect(page.getByRole('heading', { name: 'Finale' })).toBeVisible();
 });
 
@@ -41,11 +41,11 @@ test('full mode via facilitator param starts a full run', async ({ page }) => {
 });
 
 test('debug params jump straight to a stage', async ({ page }) => {
-  await page.goto('/?debug=1&stage=3');
-  await expect(page.getByTestId('stage-heading')).toContainText('Build the Logic');
-  await page.getByText('Debug').click();
-  await page.getByRole('button', { name: '4', exact: true }).click();
+  await page.goto('/?debug=1&stage=4');
   await expect(page.getByTestId('stage-heading')).toContainText('Keep It Alive');
+  await page.getByText('Debug').click();
+  await page.getByRole('button', { name: '3', exact: true }).click();
+  await expect(page.getByRole('heading', { name: 'Build the logic' })).toBeVisible();
 });
 
 test('settings: dark theme toggles and persists', async ({ page }) => {

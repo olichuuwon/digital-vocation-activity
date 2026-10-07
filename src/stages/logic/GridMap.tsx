@@ -25,7 +25,12 @@ function Tile({ ch, x, y, flooded }: { ch: string; x: number; y: number; flooded
       <g>
         <rect x={X} y={Y} width="10" height="10" fill="#8fc46a" />
         {(x + y) % 3 === 0 && <circle cx={X + 5} cy={Y + 5} r="2.6" fill="#4f8f3a" />}
-        {(x + y) % 3 === 1 && <rect x={X + 2.5} y={Y + 3} width="5" height="4.5" fill="#d9c9a8" stroke="#6b5a3a" strokeWidth="0.3" />}
+        {(x + y) % 3 === 1 && (
+          <g>
+            <circle cx={X + 4} cy={Y + 6} r="1.6" fill="#6aa84f" />
+            <circle cx={X + 6} cy={Y + 5.6} r="1.9" fill="#5e9c45" />
+          </g>
+        )}
       </g>
     );
   return (
