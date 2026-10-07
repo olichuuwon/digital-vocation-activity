@@ -21,6 +21,7 @@ const DevComponents = lazy(() => import('./screens/DevComponents'));
 const AiStage = lazy(() => import('../stages/ai/AiStage'));
 const LogicStage = lazy(() => import('../stages/logic/LogicStage'));
 const CloudStage = lazy(() => import('../stages/cloud/CloudStage'));
+const FinaleStage = lazy(() => import('../stages/finale/FinaleStage'));
 
 export function App() {
   const route = useMemo(() => {
@@ -121,6 +122,20 @@ function GameApp() {
         <main style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
           <Suspense fallback={null}>
             <CloudStage key={`${run.startedAt}-4-${run.levelIndex}`} run={run} debug={params.debug} />
+          </Suspense>
+        </main>
+      ) : inRun && run.stage === 5 ? (
+        <main style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+          <Suspense fallback={null}>
+            <FinaleStage
+              key={`${run.startedAt}-5`}
+              run={run}
+              onHome={() => setOnHome(true)}
+              onLeaderboard={() => {
+                setOnHome(true);
+                setBoardOpen(true);
+              }}
+            />
           </Suspense>
         </main>
       ) : inRun ? (

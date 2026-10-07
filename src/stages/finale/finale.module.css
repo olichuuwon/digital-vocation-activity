@@ -1,0 +1,216 @@
+/* Finale "Mission Live" + Debrief (§8). */
+
+.level {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding-top: 8px;
+}
+
+.chain {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  font-weight: 800;
+  font-size: 1.125rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.chain li {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.arrow {
+  color: var(--text-muted);
+}
+
+.bigNumber {
+  margin: 0;
+  text-align: center;
+  font-size: clamp(2.75rem, 14vw, 4rem);
+  font-weight: 900;
+  line-height: 1.05;
+  font-variant-numeric: tabular-nums;
+}
+
+.stats {
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+.incident {
+  border: 3px solid var(--danger);
+  border-radius: 14px;
+  background: var(--surface);
+  padding: 14px;
+  font-size: 1.1875rem;
+  font-weight: 800;
+  min-height: 6rem;
+}
+
+.question {
+  margin: 0;
+  font-weight: 700;
+  text-align: center;
+}
+
+.teams {
+  margin-top: auto;
+  position: sticky;
+  bottom: 0;
+  background: var(--bg);
+  padding: 8px 0 calc(8px + env(safe-area-inset-bottom));
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.team {
+  min-height: 60px;
+  border-radius: var(--radius);
+  border: 3px solid var(--border);
+  background: var(--surface);
+  font-weight: 800;
+  font-size: 1rem;
+  cursor: pointer;
+  padding: 6px 8px;
+  overflow-wrap: anywhere;
+}
+
+.team[data-team='data'] { border-color: var(--data-ink); }
+.team[data-team='ai'] { border-color: var(--ai-ink); }
+.team[data-team='logic'] { border-color: var(--logic-ink); }
+.team[data-team='cloud'] { border-color: var(--cloud-ink); }
+
+.team[aria-disabled='true'] {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+/* Debrief */
+.debrief {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 8px 0 16px;
+}
+
+/* Screenshot card: everything here fits one 360×740 screen (§8.3). */
+.card {
+  border: 3px solid var(--border);
+  border-radius: 18px;
+  background: var(--surface);
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  text-align: center;
+}
+
+.card h1 {
+  margin: 0;
+  font-size: 1.375rem;
+}
+
+.card p {
+  margin: 0;
+}
+
+.of {
+  font-weight: 700;
+}
+
+.rank {
+  font-size: 1.25rem;
+  font-weight: 900;
+}
+
+.best {
+  font-weight: 800;
+  color: var(--logic-ink);
+}
+
+.stars {
+  list-style: none;
+  margin: 4px 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px 12px;
+  font-weight: 700;
+}
+
+.stars li {
+  white-space: nowrap;
+}
+
+.solo {
+  font-size: 0.875rem;
+  color: var(--text-muted);
+}
+
+.block {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.block h2 {
+  margin: 0;
+  font-size: 1.25rem;
+}
+
+.match {
+  margin: 0;
+  padding-left: 1.4em;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.match li strong {
+  display: block;
+}
+
+.learned {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.why {
+  border-left: 4px solid var(--cloud);
+  padding: 4px 12px;
+  background: var(--surface);
+  border-radius: 8px;
+}
+
+.why h3 {
+  margin: 4px 0;
+  font-size: 1.0625rem;
+}
+
+.why p {
+  margin: 0 0 4px;
+}
+
+.buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
