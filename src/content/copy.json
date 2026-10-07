@@ -19,7 +19,8 @@
     "stageHeading": "Where do you want to start?",
     "fromStart": "From the beginning",
     "finale": "Finale: Mission Live",
-    "devNote": "Stage select is on for testing. Earlier stages count as not played."
+    "devNote": "Stage select is on for testing. Earlier stages count as not played.",
+    "back": "Back"
   },
   "settings": {
     "heading": "Settings",

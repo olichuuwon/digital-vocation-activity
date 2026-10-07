@@ -1,13 +1,14 @@
 import { animate, motion, useReducedMotion } from 'framer-motion';
 import { useEffect, useMemo, useState } from 'react';
-import { useScreenHeading } from '../../app/screenFocus';
+import { useAnnouncer, useScreenHeading } from '../../app/screenFocus';
 import { Timer } from '../../components/Timer';
-import { toast } from '../../components/toastStore';
+import { toastMs } from '../../components/toastStore';
+import { buzz } from '../../app/haptics';
 import ui from '../../components/components.module.css';
 import { fill, stageContent, stages } from '../../content';
 import type { Team } from '../../content/finaleSchema';
 import { formatBoardDate, sgtDate } from '../../net/sgtTime';
-import { useGame } from '../../state/store';
+import { useGame, useRelaxed } from '../../state/store';
 import type { GameState, Stage } from '../../state/types';
 import { c as aiCopy } from '../ai/content';
 import { stage2For } from '../ai/progress';
@@ -72,6 +73,7 @@ function CountUp({ to }: { to: number }) {
 
 /** §8.1: the chain of the player's own numbers, then the families counter. */
 function Reveal({ p, onGo }: { p: ReturnType<typeof pipeline>; onGo: () => void }) {
+  const reduce = useReducedMotion();
   const headingRef = useScreenHeading<HTMLHeadingElement>(c.reveal.heading);
   const links: [string, string][] = [
     ['📊', fill(c.reveal.data, { pct: pct(p.data) })],
@@ -85,9 +87,9 @@ function Reveal({ p, onGo }: { p: ReturnType<typeof pipeline>; onGo: () => void 
         {c.reveal.heading}
       </h1>
       <p className={ui.body}>{c.reveal.intro}</p>
-      <ol className={s.chain} data-testid="pipeline">
+      <ol className={s.chain} data-testid="pipeline" role="list">
         {links.map(([icon, text], i) => (
-          <motion.li key={text} initial={{ opacity: 0, x: -12 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.4 + i * 0.8 }}>
+          <motion.li key={text} initial={reduce ? false : { opacity: 0, x: -12 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.4 + i * 0.8 }}>
             <span aria-hidden="true">{icon}</span> {text}
             {i < links.length - 1 && (
               <span className={s.arrow} aria-hidden="true">
@@ -143,35 +145,48 @@ function LiveOps({ run, base, onDone }: { run: GameState; base: number; onDone: 
     return d;
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [run.startedAt]);
+  const relaxed = useRelaxed();
+  const announce = useAnnouncer((a) => a.announce);
   const [results, setResults] = useState(saved.results);
-  const [waiting, setWaiting] = useState(false);
+  /** Feedback for the incident just routed, shown in place (a toast would cover the next incident). */
+  const [feedback, setFeedback] = useState<{ ok: boolean; text: string; why: string } | null>(null);
   const headingRef = useScreenHeading<HTMLHeadingElement>(c.liveOps.heading);
-  const i = results.length;
-  const incident = dealt[i];
+  // While feedback shows, keep the incident just answered on screen (also for the last one).
+  const shown = feedback ? Math.max(0, results.length - 1) : results.length;
+  const incident = dealt[shown];
   const families = liveOpsFamilies(base, results, finale.liveOps);
+  const incidentLabel = (n: number) => `${fill(c.liveOps.incidentOf, { n: n + 1, total: dealt.length })}: ${c.incidents[dealt[n]!.id]?.text ?? ''}`;
+
+  // The first incident is spoken on arrival (focus goes to the heading, the timer is already running).
+  useEffect(() => {
+    if (dealt[results.length]) announce(incidentLabel(results.length));
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const route = (team: Team | null) => {
-    if (!incident || waiting) return;
+    if (!incident || feedback) return;
     const r = routeResult(incident, team);
     const next = [...results, r];
     setResults(next);
     useFinaleProgress.getState().patch(run.startedAt, { results: next });
     const teamName = c.teamButtons[incident.team];
     const why = c.incidents[incident.id]?.why ?? '';
-    const msg =
+    const text =
       r === 'right'
         ? fill(c.liveOps.right, { n: finale.liveOps.reward })
         : fill(r === 'wrong' ? c.liveOps.wrong : c.liveOps.timeout, { team: teamName });
-    const upcoming = dealt[next.length];
-    const spoken = upcoming
-      ? `${why} ${fill(c.liveOps.incidentOf, { n: next.length + 1, total: dealt.length })}: ${c.incidents[upcoming.id]?.text ?? ''}`
-      : why;
-    toast(`${msg} ${why}`, r === 'right' ? 'success' : 'error', spoken.replace(why, '').trim());
-    setWaiting(true);
+    setFeedback({ ok: r === 'right', text, why });
+    buzz(r === 'right' ? 'success' : 'error');
+    const last = next.length >= dealt.length;
+    // Spoken: verdict, then the next incident (the "why" stays on screen). The gap lasts long
+    // enough to hear it (relaxed ×1.5), so the next timer never starts mid-sentence.
+    const spoken = `${r === 'right' ? t.toastSuccess : t.toastError} ${text} ${last ? c.liveOps.done : incidentLabel(next.length)}`;
+    announce(spoken);
+    // Capped at 4 s (×1.5 relaxed) so the booth run doesn't drag; +30 s is there if more is needed.
+    const gap = Math.max(finale.liveOps.gapMs * (relaxed ? 1.5 : 1), Math.min(4000 * (relaxed ? 1.5 : 1), toastMs(spoken, relaxed) * 0.5));
     setTimeout(() => {
-      setWaiting(false);
-      if (next.length >= dealt.length) onDone(next);
-    }, finale.liveOps.gapMs);
+      setFeedback(null);
+      if (last) onDone(next);
+    }, gap);
   };
 
   if (!incident) return null;
@@ -181,10 +196,17 @@ function LiveOps({ run, base, onDone }: { run: GameState; base: number; onDone: 
         {c.liveOps.heading}
       </h1>
       <div className={s.stats}>
-        <span>{fill(c.liveOps.incidentOf, { n: i + 1, total: dealt.length })}</span>
+        <span>{fill(c.liveOps.incidentOf, { n: shown + 1, total: dealt.length })}</span>
         <span data-testid="live-families">{fill(c.liveOps.families, { n: nf.format(families) })}</span>
       </div>
-      <Timer key={`${incident.id}-${i}`} seconds={finale.liveOps.secondsEach} running={!waiting} onExpire={() => route(null)} />
+      <Timer
+        key={`${incident.id}-${shown}`}
+        seconds={finale.liveOps.secondsEach}
+        running={!feedback}
+        showPaused={false}
+        announceAt={[0]}
+        onExpire={() => route(null)}
+      />
       <motion.article
         key={incident.id}
         className={s.incident}
@@ -196,17 +218,21 @@ function LiveOps({ run, base, onDone }: { run: GameState; base: number; onDone: 
         <span aria-hidden="true">🚨 </span>
         {c.incidents[incident.id]?.text}
       </motion.article>
-      <p className={s.question}>{c.liveOps.route}</p>
+      {feedback ? (
+        // Already spoken via the announcer; shown here for sighted players.
+        <div className={s.feedback} data-ok={feedback.ok} aria-hidden="true" data-testid="feedback">
+          <strong>
+            {feedback.ok ? '✓ ' : '✗ '}
+            {feedback.text}
+          </strong>
+          <span>{feedback.why}</span>
+        </div>
+      ) : (
+        <p className={s.question}>{c.liveOps.route}</p>
+      )}
       <div className={s.teams} role="group" aria-label={c.liveOps.route}>
         {(['data', 'ai', 'logic', 'cloud'] as const).map((team) => (
-          <button
-            key={team}
-            type="button"
-            className={s.team}
-            data-team={team}
-            aria-disabled={waiting || undefined}
-            onClick={() => route(team)}
-          >
+          <button key={team} type="button" className={s.team} data-team={team} onClick={() => route(team)}>
             <span aria-hidden="true">{TEAM_ICON[team]} </span>
             {c.teamButtons[team]}
           </button>
@@ -241,7 +267,16 @@ function Debrief({ run, onHome, onLeaderboard }: { run: GameState; onHome: () =>
   // finishedAt is set when Live Ops ends; fall back to the run start for old saves.
   const date = formatBoardDate(sgtDate(run.finishedAt ?? run.startedAt));
 
-  if (chapters) return <ChapterSelect onBack={() => setChapters(false)} />;
+  if (chapters)
+    return (
+      <ChapterSelect
+        onBack={() => {
+          setChapters(false);
+          // Back on the results: put focus on the button that opened chapter select (2.4.3).
+          requestAnimationFrame(() => document.querySelector<HTMLElement>('[data-testid="replay-stage"]')?.focus());
+        }}
+      />
+    );
 
   return (
     <section className={s.debrief}>
@@ -324,7 +359,7 @@ function Debrief({ run, onHome, onLeaderboard }: { run: GameState; onHome: () =>
           {c.debrief.playAgain}
         </button>
         {unlocked && (
-          <button type="button" className={ui.btn} onClick={() => setChapters(true)}>
+          <button type="button" className={ui.btn} data-testid="replay-stage" onClick={() => setChapters(true)}>
             {c.debrief.replayStage}
           </button>
         )}
@@ -363,7 +398,7 @@ function ChapterSelect({ onBack }: { onBack: () => void }) {
         ))}
         <button type="button" className={ui.btn} onClick={onBack}>
           <span aria-hidden="true">← </span>
-          {c.debrief.home}
+          {c.debrief.back}
         </button>
       </div>
     </section>

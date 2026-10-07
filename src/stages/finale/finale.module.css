@@ -67,12 +67,11 @@
 
 .teams {
   margin-top: auto;
-  position: sticky;
   bottom: 0;
   background: var(--bg);
   padding: 8px 0 calc(8px + env(safe-area-inset-bottom));
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 9rem), 1fr));
   gap: 8px;
 }
 
@@ -85,7 +84,27 @@
   font-size: 1rem;
   cursor: pointer;
   padding: 6px 8px;
-  overflow-wrap: anywhere;
+  overflow-wrap: break-word;
+}
+
+/* Feedback for the incident just routed: icon + text, not colour alone. */
+.feedback {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  border-radius: 12px;
+  border: 3px solid var(--border);
+  background: var(--surface);
+  padding: 10px 12px;
+}
+
+.feedback[data-ok='true'] {
+  border-color: var(--data-ink);
+}
+
+.feedback[data-ok='false'] {
+  border-color: var(--danger);
+  border-style: dashed;
 }
 
 .team[data-team='data'] { border-color: var(--data-ink); }
@@ -147,12 +166,12 @@
   margin: 4px 0;
   padding: 0;
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 8rem), 1fr));
   gap: 4px 12px;
   font-weight: 700;
 }
 
-.stars li {
+.stars li span[role='img'] {
   white-space: nowrap;
 }
 
@@ -213,4 +232,11 @@
   display: flex;
   flex-direction: column;
   gap: 10px;
+}
+
+/* Sticky team buttons only when the screen has room (not at large text on small phones). */
+@media (min-height: 600px) {
+  .teams {
+    position: sticky;
+  }
 }

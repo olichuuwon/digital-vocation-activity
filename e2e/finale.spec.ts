@@ -9,12 +9,12 @@ async function playLiveOps(page: Page, correct: boolean) {
     const pick = correct ? team : team === 'data' ? 'ai' : 'data';
     await page.locator(`button[data-team="${pick}"]`).click();
     // Next incident (or the debrief) replaces this one after the feedback gap.
-    await expect(page.getByTestId('incident').filter({ hasText: text ?? '' })).toHaveCount(0, { timeout: 6000 });
+    await expect(page.getByTestId('incident').filter({ hasText: text ?? '' })).toHaveCount(0, { timeout: 10_000 });
   }
 }
 
 test('Finale: reveal, route every incident, debrief card fits one screen, then chapter select', async ({ page }) => {
-  test.setTimeout(90_000);
+  test.setTimeout(150_000);
   await page.setViewportSize({ width: 360, height: 740 });
   await page.goto('/?debug=1&stage=5');
   await expect(page.getByRole('heading', { name: 'Mission live' })).toBeVisible();
@@ -47,7 +47,7 @@ test('Finale: reveal, route every incident, debrief card fits one screen, then c
 });
 
 test('Finale: wrong routes cost families; Play again goes Home with no Resume', async ({ page }) => {
-  test.setTimeout(90_000);
+  test.setTimeout(150_000);
   await page.goto('/?debug=1&stage=5');
   await page.getByRole('button', { name: 'Go live' }).click();
   await page.getByRole('button', { name: 'Start shift' }).click();

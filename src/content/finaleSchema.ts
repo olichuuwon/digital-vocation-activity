@@ -91,6 +91,7 @@ export const finaleCopySchema = z.object({
     chapterIntro: words(15),
     leaderboard: words(3),
     home: words(3),
+    back: words(4),
   }),
 });
 export type FinaleCopy = z.infer<typeof finaleCopySchema>;

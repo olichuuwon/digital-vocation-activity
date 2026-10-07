@@ -36,7 +36,7 @@ export const copySchema = z.object({
   }),
   length: z.object({
     heading: text, booth: text, boothDetail: text, full: text, fullDetail: text,
-    stageHeading: text, fromStart: text, finale: text, devNote: text,
+    stageHeading: text, fromStart: text, finale: text, devNote: text, back: text,
   }),
   settings: z.object({
     heading: text, theme: text, themeSystem: text, themeLight: text, themeDark: text,

@@ -57,7 +57,7 @@ export function Home({
             {l.finale}
           </button>
           <button type="button" className={ui.btn} onClick={() => setStageFor(null)}>
-            <span aria-hidden="true">←</span> Back
+            <span aria-hidden="true">←</span> {l.back}
           </button>
         </div>
       </main>
@@ -78,7 +78,7 @@ export function Home({
             {l.full} <span className={ui.detail}>{l.fullDetail}</span>
           </button>
           <button type="button" className={ui.btn} onClick={() => setPicking(false)}>
-            <span aria-hidden="true">←</span> Back
+            <span aria-hidden="true">←</span> {l.back}
           </button>
         </div>
       </main>

@@ -20,6 +20,7 @@ export function Timer({
   onExpire,
   onExtend,
   showPaused = true,
+  announceAt = ANNOUNCE_AT,
 }: {
   seconds: number;
   /** Pass false while a dialog (Rulebook, Settings) is open. */
@@ -29,6 +30,8 @@ export function Timer({
   onExtend?: (extensions: number) => void;
   /** Show "Paused" while not running (off when the stage pauses the clock for its own animation). */
   showPaused?: boolean;
+  /** Seconds-left checkpoints spoken to screen readers (short per-item timers can pass [0]). */
+  announceAt?: readonly number[];
 }) {
   const relaxed = useRelaxed();
   const settingsOpen = useGame((g) => g.settingsOpen);
@@ -40,9 +43,12 @@ export function Timer({
   const announced = useRef(new Set<number>());
   const expired = useRef(false);
   const onExpireRef = useRef(onExpire);
+  // A ref, so passing a fresh array each render doesn't restart the clock.
+  const announceAtRef = useRef(announceAt);
   const announce = useAnnouncer((a) => a.announce);
   useEffect(() => {
     onExpireRef.current = onExpire;
+    announceAtRef.current = announceAt;
   });
 
   useEffect(() => {
@@ -60,7 +66,7 @@ export function Timer({
       last = now;
       setElapsedMs(elapsedRef.current);
       const left = secondsLeft(total, elapsedRef.current);
-      for (const at of ANNOUNCE_AT) {
+      for (const at of announceAtRef.current) {
         if ((at < total || at === 0) && left <= at && !announced.current.has(at) && !expired.current) {
           announced.current.add(at);
           announce(at === 0 ? t.timeUp : fill(t.secondsLeft, { n: at }));
