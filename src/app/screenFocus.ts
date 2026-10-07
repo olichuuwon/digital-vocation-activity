@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { create } from 'zustand';
+import { copy } from '../content';
 
 /** Shared polite live region (§10). Stages push result text with `announce()`. */
 export const useAnnouncer = create<{ message: string; announce: (m: string) => void }>()((set) => ({
@@ -16,7 +17,8 @@ let firstScreen = true;
 export function useScreenHeading<T extends HTMLElement>(title: string) {
   const ref = useRef<T>(null);
   useEffect(() => {
-    document.title = title === 'Ship It' ? title : `${title} · Ship It`;
+    const game = copy.home.title;
+    document.title = title === game ? game : `${title} · ${game}`;
     if (firstScreen) {
       firstScreen = false;
       return;

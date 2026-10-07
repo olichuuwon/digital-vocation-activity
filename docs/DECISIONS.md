@@ -4,7 +4,7 @@
 |------|------|-------------------------|-------------------|
 |      | D1–D17 | See GAME_SPEC.md §0 | Yes |
 | 2026-10-06 | D11 Hosting | **Owner chose Vercel.** `vercel.json` added (Vite preset, SPA rewrite for `/host` etc., no-cache on `sw.js`, immutable `/assets`). Deploys via Vercel's Git integration once the owner creates the repo. GitHub Pages workflow removed. | Done |
-| 2026-10-06 | D1 Game name `[FILL]` | Using working title "Ship It" in `src/content/copy.json`. | Yes |
+| 2026-10-07 | D1 Game name | **Owner chose "Let's Ship It".** Set in `src/content/copy.json` (title, tab titles), `index.html` and the manifest. Repo stays `digital-vocation-activity`. | Done |
 | 2026-10-06 | D2 Brand colours | Not in the decisions table; using spec §9 discipline colours. Added darker "-ink" variants for text contrast (4.5:1). | Yes |
 | 2026-10-06 | Q1 Branding | No logos. Text only. | Yes |
 | 2026-10-06 | Fonts (§9 "self-hosted") | No fonts named. M0 uses system font stacks (zero download, nothing third-party). Swap in self-hosted fonts in M7 if wanted. | Yes |

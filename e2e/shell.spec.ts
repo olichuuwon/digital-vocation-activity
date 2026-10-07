@@ -7,7 +7,7 @@ test.beforeEach(async ({ page }) => {
 });
 
 test('home shows solo play and a primary action within reach', async ({ page }) => {
-  await expect(page.getByRole('heading', { name: 'Ship It' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: "Let's Ship It" })).toBeVisible();
   const play = page.getByRole('button', { name: 'Play solo' });
   await expect(play).toBeVisible();
   const box = (await play.boundingBox())!;
@@ -79,5 +79,5 @@ test('focus moves to the new heading after finishing a level', async ({ page }) 
   await page.getByRole('button', { name: /Booth run/ }).click();
   await page.getByRole('button', { name: 'Finish level' }).click();
   await expect(page.getByTestId('stage-heading')).toBeFocused();
-  await expect(page).toHaveTitle(/Clean the Data, level 1 · Ship It/);
+  await expect(page).toHaveTitle(/Clean the Data, level 1 · Let's Ship It/);
 });
