@@ -1,5 +1,7 @@
 # Decisions & assumptions log
 
+> **Pending owner inputs:** see `docs/OWNER_INPUTS.md` (numbered checklist). Add new items there at the end of each milestone.
+
 | Date | Item | Decision / default used | Owner to confirm? |
 |------|------|-------------------------|-------------------|
 |      | D1–D17 | See GAME_SPEC.md §0 | Yes |
