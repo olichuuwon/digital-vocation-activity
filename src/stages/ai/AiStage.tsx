@@ -55,7 +55,10 @@ import {
 } from '../../sim/reveal';
 import { SceneArt } from './Art';
 import { BoxDrawer } from './BoxDrawer';
-import { c, images, imagesById, stage2 } from './content';
+import { c, images, imagesById, stage2, t } from './content';
+import { useRelaxed } from '../../state/store';
+import { RELAXED_FACTOR } from '../../state/timer';
+import type { HintLevel } from '../../state/hints';
 import { CoveredBoard } from './CoveredBoard';
 import { FieldGuideButton } from './FieldGuide';
 import { stage2For, useStage2Progress, type AiOutcome, type EndPhase } from './progress';
@@ -66,7 +69,23 @@ type LevelId = 'ai-tutorial' | 'ai-l1' | 'ai-l2' | 'ai-l3' | 'ai-l4';
 
 const labelName = (l: Label) => c.labels[l];
 const clueFor = (l: Label) => c.fieldGuide.entries[l];
-const altFor = (img: AiImage, n: number, total: number) => fill(c.imageAlt, { n, total, clue: clueFor(img.label) });
+const altFor = (img: AiImage, n: number, total: number) =>
+  `${fill(c.imageAlt, { n, total, clue: clueFor(img.label) })}${img.variant === 'night' ? ` ${c.a11y.night}` : ''}`;
+/** Where the item sits, for Draw the Box alt text ("bottom left"). */
+function whereIs(img: AiImage): string {
+  const [x, y, w, h] = img.box;
+  const p = c.a11y.places;
+  const cx = x + w / 2;
+  const cy = y + h / 2;
+  const col = cx < 36 ? p.left : cx > 64 ? p.right : p.centre;
+  const row = cy < 36 ? p.top : cy > 64 ? p.bottom : p.middle;
+  return fill(c.a11y.where, { where: row === p.middle && col === p.centre ? p.centre : `${row} ${col}` });
+}
+/** What a screen reader hears after an answer: the next picture, then any new help (one live region). */
+function spokenNext(next: string, help: HintLevel, hint: string, answer: string): string {
+  const h = help === 'hint' ? `${t.hint}: ${hint}` : help === 'answer' ? `${t.answer}: ${answer}` : '';
+  return [next, h].filter(Boolean).join(' ');
+}
 const pct = (x: number) => Math.round(x * 100);
 
 /** A fresh shuffle per attempt, so replays vary (§4.4 spirit). */
@@ -252,20 +271,25 @@ function LabelButtons({
 }) {
   return (
     <div className={s.options} role="group" aria-label={c.question}>
-      {options.map((l) => {
+      {/* Keyed by slot so the focused button survives the next picture (WCAG 2.4.3). Ruled-out
+          options use aria-disabled, not disabled, so focus never drops to <body>. */}
+      {options.map((l, i) => {
         const isSuggested = suggested === l;
+        const off = disabled.includes(l);
         return (
           <button
-            key={l}
+            key={i}
             type="button"
             className={s.option}
             data-label={l}
             data-suggested={isSuggested || undefined}
-            disabled={disabled.includes(l)}
-            onClick={() => onPick(l)}
+            aria-disabled={off || undefined}
+            onClick={() => !off && onPick(l)}
           >
             {isSuggested && <span aria-hidden="true">✓ </span>}
             {labelName(l)}
+            {isSuggested && <span className="visually-hidden"> {c.a11y.suggested}</span>}
+            {off && <span className="visually-hidden"> {c.a11y.ruledOut}</span>}
           </button>
         );
       })}
@@ -314,7 +338,15 @@ function LabelPlay({
     dispatch({ type: 'answer', label });
     const r = next.results[next.results.length - 1]!;
     const upcoming = next.deck[next.index];
-    const spoken = upcoming && !next.done ? fill(c.nextImage, { n: next.index + 1, total: next.deck.length }) : '';
+    const spoken =
+      upcoming && !next.done
+        ? spokenNext(
+            altFor(upcoming, next.index + 1, next.deck.length),
+            next.hint,
+            fill(c.hint, { clue: clueFor(upcoming.label) }),
+            fill(c.answer, { label: labelName(upcoming.label) }),
+          )
+        : '';
     if (r.correct) toast(next.streak >= STREAK_MIN ? fill(c.toast.streak, { n: next.streak }) : c.toast.correct, 'success', spoken);
     else toast(fill(c.toast.wrong, { label: labelName(r.expected) }), 'error', spoken);
     if (next.done) end(next);
@@ -343,6 +375,7 @@ function LabelPlay({
         <TutorialOverlay gesture="tap" text={c.tutorialHint} onDismiss={() => setTutorialSeen(true)} />
       )}
       <HintBox
+        quiet
         level={state.hint}
         hint={fill(c.hint, { clue: clueFor(img.label) })}
         answer={fill(c.answer, { label: labelName(img.label) })}
@@ -363,7 +396,11 @@ function LabelPlay({
 const TICK_MS = 100;
 
 function CoveredPlay({ salt, debug, onDone }: { salt: number; debug: boolean; onDone: (o?: AiOutcome) => void }) {
-  const cfg = stage2.covered;
+  // Relaxed mode (§10) slows the tiles too, not just the clock. Early bonus counts tiles, so it stays fair.
+  const relaxed = useRelaxed();
+  const [cfg] = useState(() =>
+    relaxed ? { ...stage2.covered, revealEveryMs: Math.round(stage2.covered.revealEveryMs * RELAXED_FACTOR) } : stage2.covered,
+  );
   const rng = useAttemptRng(salt);
   const deck = useMemo(() => buildLabelDeck(images, cfg.count, rng), [cfg.count, rng]);
   const options = useOptions(deck, cfg.options, rng);
@@ -400,14 +437,22 @@ function CoveredPlay({ salt, debug, onDone }: { salt: number; debug: boolean; on
     if (next === cs) return;
     if (!next.solved) {
       setCs(next);
-      toast(c.covered.wrongTile, 'error');
+      const help = coveredHint(next);
+      const announceHelp = help !== coveredHint(cs);
+      toast(
+        c.covered.wrongTile,
+        'error',
+        announceHelp
+          ? spokenNext('', help, fill(c.hint, { clue: clueFor(next.label) }), fill(c.answer, { label: labelName(next.label) }))
+          : '',
+      );
       return;
     }
     const r = coveredResult(next);
     const all = [...results, r];
     setResults(all);
     const upcoming = deck[index + 1];
-    const spoken = upcoming ? fill(c.nextImage, { n: index + 2, total: deck.length }) : '';
+    const spoken = upcoming ? altFor(upcoming, index + 2, deck.length) : '';
     toast(r.bonus >= 0.5 && r.wrongGuesses === 0 ? c.covered.early : c.toast.correct, 'success', spoken);
     if (!upcoming) return end(all);
     setIndex(index + 1);
@@ -441,13 +486,13 @@ function CoveredPlay({ salt, debug, onDone }: { salt: number; debug: boolean; on
         shown={shown}
       />
       <div className={s.revealRow} data-testid="covered-label" data-label={debug ? img.label : undefined}>
-        <span className={ui.muted} aria-hidden="true">
+        <span className={ui.muted}>
           {shown >= total ? c.covered.allShown : fill(c.covered.tilesLeft, { n: total - shown })}
         </span>
         <button
           type="button"
           className={s.revealBtn}
-          disabled={cs.charges <= 0 || shown >= total}
+          aria-disabled={cs.charges <= 0 || shown >= total || undefined}
           onClick={() => setCs((st) => coveredReducer(st, { type: 'reveal' }))}
         >
           <span aria-hidden="true">👁️ </span>
@@ -455,6 +500,7 @@ function CoveredPlay({ salt, debug, onDone }: { salt: number; debug: boolean; on
         </button>
       </div>
       <HintBox
+        quiet
         level={hint}
         hint={fill(c.hint, { clue: clueFor(img.label) })}
         answer={fill(c.answer, { label: labelName(img.label) })}
@@ -498,7 +544,14 @@ function BoxPlay({ salt, debug, onDone }: { salt: number; debug: boolean; onDone
     setIous(all);
     if (grade === 'miss') setMisses((m) => m + 1);
     const upcoming = deck[index + 1];
-    const spoken = upcoming ? fill(c.nextImage, { n: index + 2, total: deck.length }) : '';
+    const spoken = upcoming
+      ? spokenNext(
+          `${fill(c.box.findLabel, { label: labelName(upcoming.label) })}. ${altFor(upcoming, index + 2, deck.length)} ${whereIs(upcoming)}`,
+          boxHintLevel(misses + (grade === 'miss' ? 1 : 0)),
+          c.box.hint,
+          c.box.answer,
+        )
+      : '';
     toast(fill(c.box[grade], { pct: pct(iou) }), grade === 'miss' ? 'error' : 'success', spoken);
     if (!upcoming) return end(all);
     setIndex(index + 1);
@@ -522,13 +575,13 @@ function BoxPlay({ salt, debug, onDone }: { salt: number; debug: boolean; onDone
         <BoxDrawer
           key={img.id}
           image={img}
-          title={altFor(img, index + 1, deck.length)}
+          title={`${altFor(img, index + 1, deck.length)} ${whereIs(img)}`}
           box={box}
           onChange={setBox}
           truth={hint === 'answer' ? img.box : undefined}
         />
       </div>
-      <HintBox level={hint} hint={c.box.hint} answer={c.box.answer} />
+      <HintBox quiet level={hint} hint={c.box.hint} answer={c.box.answer} />
       <p className={s.credit}>{c.box.credit}</p>
       <div className={ui.actions} style={{ position: 'sticky', bottom: 0, background: 'var(--bg)', padding: '8px 0' }}>
         <button type="button" className={`${ui.btn} ${ui.primary}`} onClick={lock}>
@@ -570,7 +623,16 @@ function AuditPlay({ salt, debug, onDone }: { salt: number; debug: boolean; onDo
     dispatch({ type: 'judge', verdict });
     const r = next.results[next.results.length - 1]!;
     const upcoming = next.items[next.index];
-    const spoken = upcoming && !next.done ? fill(c.nextImage, { n: next.index + 1, total: next.items.length }) : '';
+    const upImg = upcoming && !next.done ? imagesById.get(upcoming.imageId) : undefined;
+    const spoken =
+      upcoming && upImg
+        ? spokenNext(
+            `${altFor(upImg, next.index + 1, next.items.length)} ${fill(c.audit.says, { label: labelName(upcoming.predicted) })}, ${fill(c.audit.confidence, { pct: pct(upcoming.confidence) })}.`,
+            next.hint,
+            c.audit.hint,
+            fill(c.audit.answer, { predicted: labelName(upcoming.predicted), label: labelName(upImg.label) }),
+          )
+        : '';
     const vars = { label: labelName(img.label), predicted: labelName(item.predicted) };
     const msg = { caught: c.audit.caught, missed: fill(c.audit.missed, vars), falseFlag: c.audit.falseFlag, trusted: c.audit.trusted }[r.kind];
     toast(msg, r.correct ? 'success' : 'error', spoken);
@@ -606,6 +668,7 @@ function AuditPlay({ salt, debug, onDone }: { salt: number; debug: boolean; onDo
         {c.audit.instruction}
       </p>
       <HintBox
+        quiet
         level={state.hint}
         hint={c.audit.hint}
         answer={fill(c.audit.answer, { predicted: labelName(item.predicted), label: labelName(img.label) })}

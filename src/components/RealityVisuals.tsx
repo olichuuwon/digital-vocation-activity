@@ -91,6 +91,7 @@ function RollingUpdate() {
 }
 
 export function RealityVisualView({ visual, vars = {} }: { visual: RealityVisual; vars?: Record<string, number> }) {
+  const reduce = useReducedMotion();
   switch (visual) {
     case 'records-to-millions':
       return (
@@ -119,7 +120,7 @@ export function RealityVisualView({ visual, vars = {} }: { visual: RealityVisual
           <text x="110" y="70" fontSize="12" fill="currentColor">
             accuracy ↑ with labels
           </text>
-          <motion.g initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 1.2 }}>
+          <motion.g initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: reduce ? 0 : 1.2 }}>
             <rect x="16" y="8" width="84" height="22" rx="11" fill="var(--ai)" />
             <text x="58" y="23" fontSize="11" fontWeight="800" fill="#fff" textAnchor="middle" data-testid="labelled-count">
               {vars.labelled ?? 20} from you

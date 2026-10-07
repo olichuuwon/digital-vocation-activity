@@ -252,5 +252,14 @@ export const stage2CopySchema = z.object({
     box: txt,
   }),
   learned: words(25),
+  /** Screen-reader-only text (§10). */
+  a11y: z.object({
+    suggested: txt,
+    ruledOut: txt,
+    night: words(8),
+    where: txt,
+    places: z.object({ top: txt, middle: txt, bottom: txt, left: txt, centre: txt, right: txt }),
+    boxReadout: txt,
+  }),
 });
 export type Stage2Copy = z.infer<typeof stage2CopySchema>;

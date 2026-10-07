@@ -29,13 +29,18 @@
 /* Square picture, small enough that the 4 label buttons stay on screen at 360×640. */
 .frame {
   position: relative;
-  width: min(100%, 44vh, 20rem);
+  /* Leaves room for the sticky buttons, also at 200% text. */
+  width: min(100%, 44vh, 20rem, max(9rem, calc(100dvh - 22rem)));
   aspect-ratio: 1;
   align-self: center;
   border-radius: 14px;
   overflow: hidden;
   border: 3px solid var(--ai);
   background: var(--surface-2);
+}
+
+/* Only Draw the Box captures touch (dragging); other pictures scroll normally. */
+.boxFrame {
   touch-action: none;
 }
 
@@ -75,7 +80,7 @@
   border-style: double;
 }
 
-.option:disabled {
+.option[aria-disabled='true'] {
   opacity: 0.45;
   text-decoration: line-through;
   cursor: not-allowed;
@@ -143,7 +148,7 @@
   cursor: pointer;
 }
 
-.revealBtn:disabled {
+.revealBtn[aria-disabled='true'] {
   opacity: 0.5;
   cursor: not-allowed;
 }
@@ -155,7 +160,7 @@
 
 .nudge {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 6.5rem), 1fr));
   gap: 6px;
 }
 
@@ -169,6 +174,7 @@
   font-size: 0.9375rem;
   cursor: pointer;
   padding: 4px;
+  overflow-wrap: anywhere;
 }
 
 .nudgeLabel {

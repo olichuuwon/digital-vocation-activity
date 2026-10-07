@@ -2,10 +2,11 @@ import { useRef, type PointerEvent as ReactPointerEvent } from 'react';
 import type { AiImage, Box } from '../../content/stage2Schema';
 import { dragCorner, moveBox, resizeBox } from '../../sim/iou';
 import { SceneArt } from './Art';
+import { fill } from '../../content';
 import { c } from './content';
 import s from './ai.module.css';
 
-const STEP = 4;
+const STEP = 6;
 
 type Corner = 'tl' | 'tr' | 'bl' | 'br';
 type Drag = { kind: 'move'; lastX: number; lastY: number } | { kind: Corner };
@@ -82,7 +83,7 @@ export function BoxDrawer({
     <>
       <div
         ref={frame}
-        className={s.frame}
+        className={`${s.frame} ${s.boxFrame}`}
         onPointerMove={onMove}
         onPointerUp={end}
         onPointerCancel={end}
@@ -91,17 +92,11 @@ export function BoxDrawer({
       >
         <SceneArt image={image} title={title}>
           {truth && (
-            <rect
-              x={truth[0]}
-              y={truth[1]}
-              width={truth[2]}
-              height={truth[3]}
-              fill="none"
-              stroke="#fff"
-              strokeWidth="1.2"
-              strokeDasharray="3 2"
-              data-testid="truth-box"
-            />
+            <g data-testid="truth-box" fill="none">
+              {/* Black under-stroke keeps the dashed outline visible on any backdrop (1.4.11). */}
+              <rect x={truth[0]} y={truth[1]} width={truth[2]} height={truth[3]} stroke="#000" strokeWidth="2.2" />
+              <rect x={truth[0]} y={truth[1]} width={truth[2]} height={truth[3]} stroke="#fff" strokeWidth="1.2" strokeDasharray="3 2" />
+            </g>
           )}
           <rect x={x} y={y} width={w} height={h} fill="rgb(124 77 255 / 0.18)" stroke="#000" strokeWidth="1.6" />
           <rect
@@ -117,12 +112,15 @@ export function BoxDrawer({
           />
           {corners.map(([k, cx, cy]) => (
             <g key={k} className={s.handle} onPointerDown={(e) => begin(e, k)}>
-              <circle cx={cx} cy={cy} r="7" fill="transparent" />
+              <circle cx={cx} cy={cy} r="9" fill="transparent" />
               <circle cx={cx} cy={cy} r="3" fill="#ffd400" stroke="#000" strokeWidth="1" />
             </g>
           ))}
         </SceneArt>
       </div>
+      <p className="visually-hidden" aria-live="polite">
+        {fill(c.a11y.boxReadout, { x: Math.round(x), y: Math.round(y), w: Math.round(w), h: Math.round(h) })}
+      </p>
       <div className={s.nudge} role="group" aria-label={`${c.box.move} / ${c.box.resize}`}>
         {nudge.map(([label, f]) => (
           <button key={label} type="button" onClick={() => onChange(f())}>

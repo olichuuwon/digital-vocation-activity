@@ -98,5 +98,20 @@
     "model": "Your model: {pct}% accurate",
     "box": "Box overlap {pct}%"
   },
-  "learned": "You labelled {count} pictures. AI learns from labelled examples like yours, but it still makes mistakes, so humans must check it."
+  "learned": "You labelled {count} pictures. AI learns from labelled examples like yours, but it still makes mistakes, so humans must check it.",
+  "a11y": {
+    "suggested": "(suggested)",
+    "ruledOut": "(ruled out)",
+    "night": "Night photo, hard to see.",
+    "where": "It's in the {where} of the picture.",
+    "places": {
+      "top": "top",
+      "middle": "middle",
+      "bottom": "bottom",
+      "left": "left",
+      "centre": "centre",
+      "right": "right"
+    },
+    "boxReadout": "Your box: {x}% from the left, {y}% from the top, {w}% wide, {h}% tall."
+  }
 }
