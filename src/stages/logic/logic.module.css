@@ -51,16 +51,26 @@
   }
 }
 
-/* Program: a nested list of block rows, scrolls on its own so the palette stays reachable. */
+/* Program: part of the page (no box scrolling inside the page); the dock stays at the bottom. */
 .programBox {
   border: 2px solid var(--border);
   border-radius: 12px;
   background: var(--surface);
   padding: 6px;
-  /* Grows with large text (rem), so at 200% more than a row or two stays visible. */
-  max-height: max(26vh, 12rem);
-  min-height: 7rem;
-  overflow-y: auto;
+}
+
+/* Sticky bottom dock: tools for the selected block, the palette and Run/Step/Reset. */
+.dock {
+  margin-top: auto;
+  position: sticky;
+  bottom: 0;
+  z-index: 5;
+  background: var(--bg);
+  border-top: 1px solid var(--border);
+  padding: 8px 0 calc(8px + env(safe-area-inset-bottom));
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 }
 
 .programHead {
@@ -162,9 +172,13 @@
 
 /* Actions for the selected block */
 .tools {
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 5.5rem), 1fr));
   gap: 6px;
+}
+
+.palette[hidden] {
+  display: none;
 }
 
 .tool {
@@ -174,7 +188,8 @@
   border: 2px solid var(--border);
   background: var(--surface);
   font-weight: 700;
-  padding: 4px 10px;
+  font-size: 0.9375rem;
+  padding: 4px 6px;
   cursor: pointer;
 }
 
@@ -185,8 +200,8 @@
 
 /* Palette */
 .palette {
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 6.75rem), 1fr));
   gap: 6px;
 }
 
@@ -196,9 +211,11 @@
   border: 2px solid var(--logic-ink);
   background: var(--surface);
   font-weight: 800;
-  padding: 6px 12px;
+  font-size: 0.9375rem;
+  line-height: 1.15;
+  padding: 4px 6px;
   cursor: pointer;
-  flex: 1 1 auto;
+  overflow-wrap: anywhere;
 }
 
 .paletteBtn[aria-disabled='true'] {
@@ -207,12 +224,6 @@
 }
 
 .runBar {
-  margin-top: auto;
-  position: sticky;
-  bottom: 0;
-  z-index: 5;
-  background: var(--bg);
-  padding: 8px 0 calc(8px + env(safe-area-inset-bottom));
   display: grid;
   grid-template-columns: 2fr 1fr 1fr;
   gap: 8px;

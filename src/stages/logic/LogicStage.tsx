@@ -249,6 +249,16 @@ function PlayLevel({
   // Relaxed mode (§10) slows the truck too, so there's time to follow it.
   const stepMs = relaxed ? Math.round(STEP_MS * RELAXED_FACTOR) : STEP_MS;
   const runBtnRef = useRef<HTMLButtonElement>(null);
+  const mapRef = useRef<HTMLDivElement>(null);
+  // The dock covers the bottom of the screen: keep focused controls clear of it while mounted.
+  useEffect(() => {
+    const html = document.documentElement;
+    const before = html.style.scrollPaddingBottom;
+    html.style.scrollPaddingBottom = '240px';
+    return () => {
+      html.style.scrollPaddingBottom = before;
+    };
+  }, []);
   const assist: Assist = answerShown ? 'answer' : nextAssist(failedRuns);
   const used = blockCount(program);
 
@@ -287,6 +297,8 @@ function PlayLevel({
     const result = runProgram(level, program, { flood, modelAccuracy, rng });
     setAttempts((a) => a + 1);
     setRunning({ result, i: result.trace.length ? 0 : -1, auto, judged: false });
+    // Bring the map into view so the player watches the truck, wherever they'd scrolled to.
+    mapRef.current?.scrollIntoView?.({ block: 'nearest', behavior: window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
     if (!auto) sayStep(result, 0);
   };
 
@@ -388,13 +400,14 @@ function PlayLevel({
         <Timer
           seconds={level.seconds}
           running={!solved && !isRunning}
+          showPaused={!isRunning}
           onExpire={() => {
             toast(c.timeUp, 'info');
             onDone(isTutorial ? null : outcome(false), program);
           }}
         />
       )}
-      <div className={s.mapWrap} data-flood={debug ? (flood ?? '') : undefined}>
+      <div ref={mapRef} className={s.mapWrap} data-flood={debug ? (flood ?? '') : undefined}>
         <GridMap
           grid={level.grid}
           flood={flood}
@@ -424,71 +437,75 @@ function PlayLevel({
         activeAddr={shownStep?.addr ?? null}
         failedAddr={failStep?.addr ?? null}
         swap={isDebug ? { maxEdits: level.maxEdits ?? 2, changed: (p) => blocksChanged(level.prebuilt ?? [], p) } : undefined}
-      />
-      {isDebug && <p className={ui.muted}>{fill(c.editor.editsLeft, { n: Math.max(0, (level.maxEdits ?? 2) - blocksChanged(level.prebuilt ?? [], program)) })}</p>}
-      <div className={s.runBar}>
-        {solved ? (
-          <button
-            type="button"
-            className={s.runBtn}
-            data-primary="true"
-            style={{ gridColumn: '1 / -1' }}
-            onClick={() => onDone(isTutorial ? null : outcome(true, solved), program)}
-          >
-            {t.continue}
-          </button>
-        ) : (
+        dock={
           <>
-            <button
-              type="button"
-              ref={runBtnRef}
-              className={s.runBtn}
-              data-primary="true"
-              aria-disabled={isRunning || program.length === 0 || undefined}
-              onClick={() => !isRunning && program.length > 0 && start(true)}
-            >
-              {isRunning ? c.run.running : `▶ ${c.run.run}`}
-            </button>
-            <button
-              type="button"
-              className={s.runBtn}
-              aria-disabled={isRunning || program.length === 0 || undefined}
-              onClick={() => !isRunning && program.length > 0 && step()}
-            >
-              {c.run.step}
-            </button>
-            {assist === 'answer' && !answerShown ? (
-              <button
-                type="button"
-                className={s.runBtn}
-                onClick={() => {
-                  setAnswerShown(true);
-                  setProgram(level.solution);
-                  toast(c.answer, 'info');
-                  // The button swaps for Reset: put focus on Run instead, so a second tap can't undo the answer.
-                  requestAnimationFrame(() => runBtnRef.current?.focus());
-                }}
-              >
-                {c.run.showAnswer}
-              </button>
-            ) : (
-              <button
-                type="button"
-                className={s.runBtn}
-                aria-disabled={isRunning || undefined}
-                onClick={() => {
-                  if (isRunning) return;
-                  // Debug It: one tap puts the original program back (swaps reset too).
-                  if (isDebug) setProgram(level.prebuilt ?? []);
-                  else setRunning(null);
-                }}
-              >
-                {c.run.reset}
-              </button>
-            )}
+      {isDebug && <p className={ui.muted}>{fill(c.editor.editsLeft, { n: Math.max(0, (level.maxEdits ?? 2) - blocksChanged(level.prebuilt ?? [], program)) })}</p>}
+            <div className={s.runBar}>
+              {solved ? (
+                <button
+                  type="button"
+                  className={s.runBtn}
+                  data-primary="true"
+                  style={{ gridColumn: '1 / -1' }}
+                  onClick={() => onDone(isTutorial ? null : outcome(true, solved), program)}
+                >
+                  {t.continue}
+                </button>
+              ) : (
+                <>
+                  <button
+                    type="button"
+                    ref={runBtnRef}
+                    className={s.runBtn}
+                    data-primary="true"
+                    aria-disabled={isRunning || program.length === 0 || undefined}
+                    onClick={() => !isRunning && program.length > 0 && start(true)}
+                  >
+                    {isRunning ? c.run.running : `▶ ${c.run.run}`}
+                  </button>
+                  <button
+                    type="button"
+                    className={s.runBtn}
+                    aria-disabled={isRunning || program.length === 0 || undefined}
+                    onClick={() => !isRunning && program.length > 0 && step()}
+                  >
+                    {c.run.step}
+                  </button>
+                  {assist === 'answer' && !answerShown ? (
+                    <button
+                      type="button"
+                      className={s.runBtn}
+                      onClick={() => {
+                        setAnswerShown(true);
+                        setProgram(level.solution);
+                        toast(c.answer, 'info');
+                        // The button swaps for Reset: put focus on Run instead, so a second tap can't undo the answer.
+                        requestAnimationFrame(() => runBtnRef.current?.focus());
+                      }}
+                    >
+                      {c.run.showAnswer}
+                    </button>
+                  ) : (
+                    <button
+                      type="button"
+                      className={s.runBtn}
+                      aria-disabled={isRunning || undefined}
+                      onClick={() => {
+                        if (isRunning) return;
+                        // Debug It: one tap puts the original program back (swaps reset too).
+                        if (isDebug) setProgram(level.prebuilt ?? []);
+                        else setRunning(null);
+                      }}
+                    >
+                      {c.run.reset}
+                    </button>
+                  )}
+                </>
+              )}
+            </div>
           </>
-        )}
-      </div>
+        }
+      />
     </section>
   );
 }

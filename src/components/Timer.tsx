@@ -19,6 +19,7 @@ export function Timer({
   running: runningProp = true,
   onExpire,
   onExtend,
+  showPaused = true,
 }: {
   seconds: number;
   /** Pass false while a dialog (Rulebook, Settings) is open. */
@@ -26,6 +27,8 @@ export function Timer({
   onExpire?: () => void;
   /** Called after each "+30 seconds" tap, with the running count. */
   onExtend?: (extensions: number) => void;
+  /** Show "Paused" while not running (off when the stage pauses the clock for its own animation). */
+  showPaused?: boolean;
 }) {
   const relaxed = useRelaxed();
   const settingsOpen = useGame((g) => g.settingsOpen);
@@ -94,7 +97,7 @@ export function Timer({
       <span className={s.timerTrack} aria-hidden="true">
         <span className={s.timerFill} style={{ display: 'block', width: `${total > 0 ? (left / total) * 100 : 0}%` }} />
       </span>
-      {!running && left > 0 && <span className={s.muted}>{t.paused}</span>}
+      {showPaused && !running && left > 0 && <span className={s.muted}>{t.paused}</span>}
       {running && canExtend(left, extensions) && (
         <button type="button" className={s.extendBtn} onClick={extend}>
           {t.extend}

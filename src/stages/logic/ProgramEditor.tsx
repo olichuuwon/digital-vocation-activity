@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { useAnnouncer } from '../../app/screenFocus';
 import { fill } from '../../content';
 import type { BlockOp, Program } from '../../content/stage3Schema';
@@ -71,6 +71,7 @@ export function ProgramEditor({
   activeAddr,
   failedAddr,
   swap,
+  dock,
 }: {
   program: Program;
   onChange: (p: Program) => void;
@@ -82,6 +83,8 @@ export function ProgramEditor({
   failedAddr?: BlockAddr | null;
   /** Debug It: swaps left; undefined in normal levels. */
   swap?: { maxEdits: number; changed: (p: Program) => number };
+  /** Run/Step/Reset etc., shown in the sticky bottom dock under the palette. */
+  dock?: ReactNode;
 }) {
   const [cursor, setCursor] = useState<Cursor>({ list: [], index: program.length });
   const [selected, setSelected] = useState<BlockAddr | null>(null);
@@ -93,11 +96,8 @@ export function ProgramEditor({
   const countText = (n: number) =>
     blockLimit === null ? fill(c.editor.noLimit, { n }) : fill(c.editor.blocksUsed, { n, max: blockLimit });
 
-  // Keep the running block in view while the truck drives (the program box scrolls on its own).
+  // The program is part of the page; while the truck runs the map stays in view (no auto-scroll here).
   const boxRef = useRef<HTMLElement>(null);
-  useEffect(() => {
-    boxRef.current?.querySelector('[data-active="true"]')?.scrollIntoView?.({ block: 'nearest' });
-  }, [activeAddr]);
 
   // After Remove the focused button disappears: move focus to the nearest block or slot.
   const pendingFocus = useRef<string | null>(null);
@@ -276,6 +276,8 @@ export function ProgramEditor({
         </ul>
       </section>
 
+      {/* Bottom dock (thumb zone, §9): selected-block tools, palette and the stage's run controls. */}
+      <div className={s.dock}>
       {selected && selBlock && !locked && (
         <div className={s.tools} role="group" aria-label={fill(c.editor.selected, { block: blockText(selBlock) })}>
           {!swap && (
@@ -320,7 +322,8 @@ export function ProgramEditor({
         </div>
       )}
 
-      <div className={s.palette} role="group" aria-label={c.editor.palette}>
+      {/* Hidden while the truck runs or once solved, so the map and the run controls have the room. */}
+      <div className={s.palette} role="group" aria-label={c.editor.palette} hidden={locked}>
         {palette.map((op) => (
           <button
             key={op}
@@ -334,6 +337,8 @@ export function ProgramEditor({
             {c.blocks[op]}
           </button>
         ))}
+      </div>
+      {dock}
       </div>
     </>
   );
