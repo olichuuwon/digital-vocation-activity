@@ -20,7 +20,7 @@ describe('appQuality', () => {
 
 describe('diagnose (teachable failures, §7.4)', () => {
   it('a sensible config is perfect', () => expect(run({})).toBe('perfect'));
-  it('everything maxed is over budget', () => expect(run({ minPods: 12, maxPods: 12, scaleUpCpu: 0.4 })).toBe('overBudget'));
+  it('everything maxed is over budget', () => expect(run({ minPods: 12, maxPods: 12, scaleUpCpu: 0.4 })).toMatch(/^overBudget/));
   it('load balancer off is named', () => expect(run({ loadBalancer: false })).toBe('noLoadBalancer'));
   it('rolling updates off is named', () => expect(run({ rollingUpdate: false })).toBe('noRolling'));
   it('too few max pods is named', () => expect(run({ maxPods: 4 })).toBe('tooFewPods'));

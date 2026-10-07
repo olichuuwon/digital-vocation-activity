@@ -14,19 +14,30 @@ export function appQuality(scores: Scores): number {
   return clamp((clamp(scores.data.accuracy, 0, 1) + clamp(scores.ai.labelAccuracy, 0, 1) + logic) / 3, 0, 1);
 }
 
-export type Diagnosis = 'perfect' | 'overBudget' | 'tooFewPods' | 'thresholdHigh' | 'noLoadBalancer' | 'noHealing' | 'noRolling';
+export type Diagnosis =
+  | 'perfect'
+  | 'overBudget'
+  | 'overBudgetShaky'
+  | 'overBudgetMinOne'
+  | 'tooFewPods'
+  | 'thresholdHigh'
+  | 'noLoadBalancer'
+  | 'noHealing'
+  | 'noRolling';
 
 /** Errors share above which the bad update clearly hurt (rolling updates off and no quick Roll back). */
 const ERROR_SHARE = 0.02;
 
 /**
- * One teachable reason for the replay result (§7.4 "bad configs fail in teachable ways"), most
- * important first: budget, then the switches that were off and visibly cost uptime, then pod
- * limits (the cluster hit max pods), then a late threshold.
+ * One teachable reason for the replay result (§7.4 "bad configs fail in teachable ways"): the
+ * switches that were off and visibly cost uptime, then pod limits (the cluster hit max pods), then
+ * a late threshold. Budget leads only when uptime was fine ("rock solid but pricey"); over budget
+ * and shaky gets its own line, and with Min pods at 1 the advice isn't "lower Min pods".
  */
 export function diagnose(config: ClusterConfig, s: PhaseSummary): Diagnosis {
   if (s.uptime >= THREE_STAR_UPTIME && s.underBudget) return 'perfect';
-  if (!s.underBudget) return 'overBudget';
+  if (!s.underBudget && s.uptime >= THREE_STAR_UPTIME) return config.minPods <= 1 ? 'overBudgetMinOne' : 'overBudget';
+  if (!s.underBudget) return 'overBudgetShaky';
   if (!config.loadBalancer) return 'noLoadBalancer';
   if (!config.rollingUpdate && s.errored > ERROR_SHARE) return 'noRolling';
   if (!config.selfHealing && s.crashes > 0) return 'noHealing';

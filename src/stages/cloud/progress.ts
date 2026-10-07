@@ -15,18 +15,31 @@ export interface AutoResult {
   budget: number;
 }
 
+/** A finished Phase C, saved the moment the storm ends so a reload shows it instead of re-running 75 s. */
+export interface ReplayResult extends AutoResult {
+  manualUptime: number;
+  peakPods: number;
+  startPods: number;
+  diagnosis: string;
+}
+
 interface Stage4Progress {
   runId: number | null;
   manualUptime: number | null;
   config: ClusterConfig | null;
   auto: AutoResult | null;
+  /** Kubernetes cards already shown this run (not repeated on reload or after a tweak). */
+  cardsSeen: boolean;
+  /** Phase B settings as they're edited, so a reload keeps them. */
+  draft: ClusterConfig | null;
+  lastReplay: ReplayResult | null;
   /** Times the player went back to tweak settings after a replay. */
   tweaks: number;
   endPhase: EndPhase | null;
   patch: (runId: number, p: Partial<Omit<Stage4Progress, 'runId' | 'patch'>>) => void;
 }
 
-const empty = { manualUptime: null, config: null, auto: null, tweaks: 0, endPhase: null };
+const empty = { manualUptime: null, config: null, auto: null, cardsSeen: false, draft: null, lastReplay: null, tweaks: 0, endPhase: null };
 const isNum = (x: unknown): x is number => typeof x === 'number' && Number.isFinite(x);
 
 export const useStage4Progress = create<Stage4Progress>()(
@@ -43,25 +56,32 @@ export const useStage4Progress = create<Stage4Progress>()(
       merge: (persisted, current) => {
         const p = persisted as Partial<Stage4Progress> | null;
         if (!p || !isNum(p.runId)) return current;
-        const c = p.config;
-        const configOk =
-          c === null ||
+        const validConfig = (c: unknown): c is ClusterConfig | null | undefined =>
+          c == null ||
           (typeof c === 'object' &&
-            typeof c.loadBalancer === 'boolean' &&
-            isNum(c.minPods) &&
-            isNum(c.maxPods) &&
-            isNum(c.scaleUpCpu) &&
-            typeof c.selfHealing === 'boolean' &&
-            typeof c.rollingUpdate === 'boolean');
+            typeof (c as ClusterConfig).loadBalancer === 'boolean' &&
+            isNum((c as ClusterConfig).minPods) &&
+            isNum((c as ClusterConfig).maxPods) &&
+            isNum((c as ClusterConfig).scaleUpCpu) &&
+            typeof (c as ClusterConfig).selfHealing === 'boolean' &&
+            typeof (c as ClusterConfig).rollingUpdate === 'boolean');
+        const c = p.config;
+        const configOk = validConfig(c) && validConfig(p.draft);
+        const r = p.lastReplay;
+        const replayOk =
+          r == null || (typeof r === 'object' && [r.uptime, r.cost, r.budget, r.manualUptime, r.peakPods, r.startPods].every(isNum) && typeof r.diagnosis === 'string');
         const a = p.auto;
         const autoOk = a === null || (typeof a === 'object' && isNum(a.uptime) && isNum(a.cost) && isNum(a.budget));
-        if (!configOk || !autoOk) return current;
+        if (!configOk || !autoOk || !replayOk) return current;
         return {
           ...current,
           runId: p.runId,
           manualUptime: isNum(p.manualUptime) ? p.manualUptime : null,
           config: c ?? null,
           auto: a ?? null,
+          cardsSeen: p.cardsSeen === true,
+          draft: p.draft ?? null,
+          lastReplay: r ?? null,
           tweaks: isNum(p.tweaks) ? p.tweaks : 0,
           endPhase: (['reality', 'result'] as const).find((x) => x === p.endPhase) ?? null,
         };
@@ -73,6 +93,15 @@ export const useStage4Progress = create<Stage4Progress>()(
 export function stage4For(runId: number) {
   const s = useStage4Progress.getState();
   return s.runId === runId
-    ? { manualUptime: s.manualUptime, config: s.config, auto: s.auto, tweaks: s.tweaks, endPhase: s.endPhase }
+    ? {
+        manualUptime: s.manualUptime,
+        config: s.config,
+        auto: s.auto,
+        cardsSeen: s.cardsSeen,
+        draft: s.draft,
+        lastReplay: s.lastReplay,
+        tweaks: s.tweaks,
+        endPhase: s.endPhase,
+      }
     : { ...empty };
 }

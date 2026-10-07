@@ -338,3 +338,17 @@
   opacity: 0.5;
   cursor: not-allowed;
 }
+
+/* Storm controls: the bad-update notice stacks above the buttons and grows the bar upwards. */
+.stormBar {
+  flex-direction: column;
+}
+
+.barButtons {
+  display: flex;
+  gap: 8px;
+}
+
+.barButtons > * {
+  flex: 1;
+}

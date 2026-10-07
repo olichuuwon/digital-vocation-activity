@@ -6,7 +6,7 @@ import { HintBox } from '../../components/HintBox';
 import { RealityCheck } from '../../components/RealityCheck';
 import { StarResult } from '../../components/StarResult';
 import { Timer } from '../../components/Timer';
-import { toast } from '../../components/toastStore';
+import { toast, useToast } from '../../components/toastStore';
 import { TutorialOverlay } from '../../components/TutorialOverlay';
 import ui from '../../components/components.module.css';
 import { briefingFor, fill, levelsFor, realityCheck, stageContent } from '../../content';
@@ -42,7 +42,7 @@ import { RELAXED_FACTOR } from '../../state/timer';
 import type { GameState } from '../../state/types';
 import { c, t } from './content';
 import { appQuality, diagnose } from './logic';
-import { stage4For, useStage4Progress, type EndPhase } from './progress';
+import { stage4For, useStage4Progress, type EndPhase, type ReplayResult } from './progress';
 import { useSimLoop } from './useSimLoop';
 import s from './cloud.module.css';
 
@@ -85,7 +85,7 @@ export default function CloudStage({ run, debug }: { run: GameState; debug: bool
   const [phase, setPhaseState] = useState<Phase>(() => {
     if (isLast && saved.endPhase) return saved.endPhase;
     if (levelId === 'cloud-manual') return 'briefing';
-    if (levelId === 'cloud-configure' && saved.tweaks === 0) return 'k8s';
+    if (levelId === 'cloud-configure' && !saved.cardsSeen) return 'k8s';
     return 'intro';
   });
   const completeLevel = useGame((g) => g.completeLevel);
@@ -96,7 +96,16 @@ export default function CloudStage({ run, debug }: { run: GameState; debug: bool
   };
 
   if (phase === 'briefing') return <BriefingCard briefing={briefingFor(4)!} stage={stage} onGo={() => setPhase('intro')} />;
-  if (phase === 'k8s') return <RealityCheck check={realityCheck('cloud-k8s')} onDone={() => setPhase('intro')} />;
+  if (phase === 'k8s')
+    return (
+      <RealityCheck
+        check={realityCheck('cloud-k8s')}
+        onDone={() => {
+          useStage4Progress.getState().patch(run.startedAt, { cardsSeen: true });
+          setPhase('intro');
+        }}
+      />
+    );
   if (phase === 'intro') return <LevelIntro levelId={levelId} onStart={() => setPhase('play')} />;
 
   if (phase === 'play') {
@@ -115,8 +124,9 @@ export default function CloudStage({ run, debug }: { run: GameState; debug: bool
       return (
         <Configure
           traffic={traffic}
-          initial={saved.config ?? DEFAULT_CONFIG}
+          initial={saved.draft ?? saved.config ?? DEFAULT_CONFIG}
           tweaks={saved.tweaks}
+          onDraft={(draft) => useStage4Progress.getState().patch(run.startedAt, { draft })}
           onDone={(config) => {
             useStage4Progress.getState().patch(run.startedAt, { config });
             completeLevel();
@@ -128,10 +138,12 @@ export default function CloudStage({ run, debug }: { run: GameState; debug: bool
         traffic={traffic}
         config={saved.config ?? DEFAULT_CONFIG}
         manualUptime={saved.manualUptime ?? 0}
+        saved={saved.lastReplay}
+        onFinished={(r) => useStage4Progress.getState().patch(run.startedAt, { lastReplay: r })}
         canTweak={saved.tweaks < MAX_TWEAKS}
         debug={debug}
         onTweak={() => {
-          useStage4Progress.getState().patch(run.startedAt, { tweaks: saved.tweaks + 1, auto: null });
+          useStage4Progress.getState().patch(run.startedAt, { tweaks: saved.tweaks + 1, auto: null, lastReplay: null });
           // Back to Phase B (one level earlier); the Kubernetes cards aren't repeated.
           useGame.setState((g) => (g.run ? { run: { ...g.run, levelIndex: Math.max(0, g.run.levelIndex - 1) } } : g));
         }}
@@ -211,6 +223,9 @@ function useClusterEvents(state: SimState, auto: boolean, selfHealing = false) {
   const prev = useRef<SimState | null>(null);
   const lastScale = useRef(-1e9);
   const lastWarn = useRef(new Map<number, number>());
+  const lastCrash = useRef(-1e9);
+  const pendingCrashes = useRef(0);
+  const lastHeal = useRef(-1e9);
   useEffect(() => {
     const p = prev.current;
     prev.current = state;
@@ -218,12 +233,25 @@ function useClusterEvents(state: SimState, auto: boolean, selfHealing = false) {
     if (p.tick < PHASE_TICKS - STORM_WARN_TICKS && state.tick >= PHASE_TICKS - STORM_WARN_TICKS)
       announce(fill(c.manual.stormLeft, { s: STORM_WARN_TICKS / 10 }));
     const was = new Map(p.pods.map((x) => [x.id, x]));
-    const crashed = state.pods.find((x) => x.status === 'crashed' && was.get(x.id)?.status !== 'crashed');
-    if (crashed) {
-      // With self-healing on, Kubernetes fixes it: only the "replaced it" news is worth a toast.
-      if (auto && selfHealing) return;
-      buzz('error');
-      return void toast(fill(auto ? c.replay.podCrashed : c.manual.crashToast, { n: crashed.id + 1 }), 'info');
+    const newlyCrashed = state.pods.filter((x) => x.status === 'crashed' && was.get(x.id)?.status !== 'crashed');
+    const crashed = newlyCrashed[0];
+    // With self-healing on, Kubernetes fixes crashes: only the "replaced it" news is worth a toast.
+    if (crashed && !(auto && selfHealing)) {
+      pendingCrashes.current += newlyCrashed.length;
+      // One crash toast per 3 s of sim time; a cascade becomes a single "N pods crashed" summary.
+      if (state.tick - lastCrash.current >= 30) {
+        const n = pendingCrashes.current;
+        lastCrash.current = state.tick;
+        pendingCrashes.current = 0;
+        buzz('error');
+        const msg = auto
+          ? n > 1
+            ? fill(c.replay.crashes, { n })
+            : fill(c.replay.podCrashed, { n: crashed.id + 1 })
+          : fill(c.manual.crashToast, { n: crashed.id + 1 });
+        return void toast(msg, 'info');
+      }
+      return;
     }
     if (p.deploy !== 'bad' && state.deploy === 'bad') {
       buzz('error');
@@ -238,8 +266,12 @@ function useClusterEvents(state: SimState, auto: boolean, selfHealing = false) {
       announce(fill(c.manual.overloaded, { n: hot.id + 1 }));
     }
     if (!auto) return;
-    const healed = state.pods.find((x) => x.status === 'ready' && was.get(x.id)?.status === 'crashed');
-    if (healed) return void toast(c.replay.healed, 'info');
+    // "Kubernetes replaced it" only when self-healing did it, at most every 6 s.
+    const healed = selfHealing && state.pods.find((x) => x.status === 'ready' && was.get(x.id)?.status === 'crashed');
+    if (healed && state.tick - lastHeal.current >= 60) {
+      lastHeal.current = state.tick;
+      return void toast(c.replay.healed, 'info');
+    }
     // Scale events: at most one toast every 6 s of sim time.
     if (state.tick - lastScale.current < 60) return;
     if (state.pods.length > p.pods.length) {
@@ -265,9 +297,32 @@ function PodBar({ pod }: { pod: Pod }) {
  * Bottom bar during a storm (thumb zone, §9): Pause/Resume and Roll back. Both stay rendered, so
  * focus never drops when the bad update is rolled back (Roll back is aria-disabled until needed).
  */
-function StormBar({ paused, onPause, canRollback, onRollback }: { paused: boolean; onPause: () => void; canRollback: boolean; onRollback: () => void }) {
+function StormBar({
+  paused,
+  onPause,
+  canRollback,
+  onRollback,
+  fast,
+  onFast,
+}: {
+  paused: boolean;
+  onPause: () => void;
+  canRollback: boolean;
+  onRollback: () => void;
+  fast?: boolean;
+  onFast?: () => void;
+}) {
   return (
-    <div className={s.go}>
+    <div className={`${s.go} ${s.stormBar}`}>
+      {/* The bad-update notice grows the bar upwards, so the server cards never jump mid-tap. */}
+      {canRollback && <BadUpdate />}
+      <div className={s.barButtons}>
+      {onFast && (
+        <button type="button" className={ui.btn} aria-pressed={!!fast} onClick={onFast}>
+          <span aria-hidden="true">⏩ </span>
+          {c.replay.fastForward}
+        </button>
+      )}
       <button type="button" className={ui.btn} aria-pressed={paused} onClick={onPause}>
         <span aria-hidden="true">{paused ? '▶ ' : '⏸ '}</span>
         {paused ? c.manual.resume : c.manual.pause}
@@ -282,6 +337,7 @@ function StormBar({ paused, onPause, canRollback, onRollback }: { paused: boolea
         <span aria-hidden="true">↩ </span>
         {c.manual.rollback}
       </button>
+      </div>
     </div>
   );
 }
@@ -345,7 +401,6 @@ function ManualPlay({ traffic, debug, onDone }: { traffic: Traffic; debug: boole
       </div>
       <Clock tick={state.tick} />
       {!tutorialSeen && <TutorialOverlay gesture="tap" text={c.tutorialHint} onDismiss={() => setTutorialSeen(true)} />}
-      {state.deploy === 'bad' && !state.done && <BadUpdate />}
       <ul className={s.servers} role="list">
         {[...state.pods]
           .sort((a, b) => a.id - b.id)
@@ -478,14 +533,18 @@ function Configure({
   traffic,
   initial,
   tweaks,
+  onDraft,
   onDone,
 }: {
   traffic: Traffic;
   initial: ClusterConfig;
   tweaks: number;
+  onDraft: (c: ClusterConfig) => void;
   onDone: (c: ClusterConfig) => void;
 }) {
   const headingRef = useScreenHeading<HTMLHeadingElement>(c.configure.heading);
+  // Toasts from the storm would cover the timer: start this screen clean.
+  useEffect(() => useToast.getState().clear(), []);
   const announce = useAnnouncer((a) => a.announce);
   const [config, setConfigState] = useState<ClusterConfig>(initial);
   // The live cost meter (§7.3): a dry run of this setup against the storm, cost only.
@@ -498,9 +557,10 @@ function Configure({
     if (pendingSay.current === null) return;
     const said = `${pendingSay.current} ${costText}. ${over ? c.configure.overBudget : c.configure.underBudget}`;
     pendingSay.current = null;
+    onDraft(config);
     const id = setTimeout(() => announce(said), 400);
     return () => clearTimeout(id);
-  }, [config, costText, over, announce]);
+  }, [config, costText, over, announce]); // eslint-disable-line react-hooks/exhaustive-deps
   const setConfig = (patch: Partial<ClusterConfig>, setting: string, value: string) => {
     pendingSay.current = fill(c.configure.changed, { setting, value });
     setConfigState((x) => normalizeConfig({ ...x, ...patch }));
@@ -653,6 +713,8 @@ function Replay({
   traffic,
   config,
   manualUptime,
+  saved,
+  onFinished,
   canTweak,
   debug,
   onTweak,
@@ -661,34 +723,70 @@ function Replay({
   traffic: Traffic;
   config: ClusterConfig;
   manualUptime: number;
+  /** A storm that already finished (reload): show its result instead of replaying 75 s. */
+  saved: ReplayResult | null;
+  onFinished: (r: ReplayResult) => void;
   canTweak: boolean;
   debug: boolean;
   onTweak: () => void;
   onAccept: (auto: { uptime: number; cost: number; budget: number }) => void;
 }) {
+  const [result, setResult] = useState<ReplayResult | null>(saved);
+  if (result) return <ReplayResults r={result} canTweak={canTweak} onTweak={onTweak} onAccept={onAccept} />;
+  return (
+    <LiveReplay
+      traffic={traffic}
+      config={config}
+      manualUptime={manualUptime}
+      debug={debug}
+      onFinished={(r) => {
+        onFinished(r);
+        setResult(r);
+      }}
+    />
+  );
+}
+
+function LiveReplay({
+  traffic,
+  config,
+  manualUptime,
+  debug,
+  onFinished,
+}: {
+  traffic: Traffic;
+  config: ClusterConfig;
+  manualUptime: number;
+  debug: boolean;
+  onFinished: (r: ReplayResult) => void;
+}) {
   const headingRef = useScreenHeading<HTMLHeadingElement>(levelName('cloud-replay'));
   const settingsOpen = useGame((g) => g.settingsOpen);
   const relaxed = useRelaxed();
-  const announce = useAnnouncer((a) => a.announce);
   const { paused, toggle } = usePause();
+  // Phase C is mostly watching (§7.4): fast-forward ×3 keeps the booth run moving.
+  const [fast, setFast] = useState(false);
+  useEffect(() => useToast.getState().clear(), []);
   const step = useMemo(() => (st: SimState, dt: number, a: Action | null) => stepCluster(st, dt, config, a), [config]);
   const { state, podHistory, act } = useSimLoop(() => initCluster(config, traffic), step, {
     running: !settingsOpen && !paused,
-    speed: (relaxed ? 1 / RELAXED_FACTOR : 1) * debugSpeed(debug),
+    speed: (relaxed ? 1 / RELAXED_FACTOR : 1) * (fast ? 3 : 1) * debugSpeed(debug),
   });
   useClusterEvents(state, true, config.selfHealing);
   const uptime = uptimeSoFar(state);
   const cost = costPerMin(state);
-  const summary = state.done ? summarize(state) : null;
-  const diagnosis = summary ? diagnose(config, summary) : null;
-  const compareRef = useRef<HTMLHeadingElement>(null);
   useEffect(() => {
     if (!state.done) return;
     const sum = summarize(state);
-    announce(
-      `${fill(c.replay.stormOver, { manual: pct(manualUptime), auto: pct(sum.uptime) })} ${c.diagnosis[diagnose(config, sum)]}`,
-    );
-    compareRef.current?.focus();
+    onFinished({
+      uptime: sum.uptime,
+      cost: sum.cost,
+      budget: sum.budget,
+      manualUptime,
+      peakPods: sum.peakPods,
+      startPods: podHistory[0] ?? config.minPods,
+      diagnosis: diagnose(config, sum),
+    });
   }, [state.done]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
@@ -703,80 +801,99 @@ function Replay({
       </div>
       <Clock tick={state.tick} />
       <PodsGraph history={podHistory} max={PODS_MAX} />
-      {state.deploy === 'bad' && !state.done && <BadUpdate />}
-      {!summary && (
-        <ul className={s.pods} role="list" aria-label={fill(c.replay.pods, { n: state.pods.length })}>
-          {state.pods.map((pod) => {
-            const name = fill(c.replay.pod, { n: pod.id + 1 });
-            return (
-              <li key={pod.id} className={s.pod} data-status={pod.status}>
-                <span>
-                  <span aria-hidden="true">{pod.status === 'crashed' ? '💥 ' : pod.status === 'starting' ? '⏳ ' : '✅ '}</span>
-                  {name}:{' '}
-                  {pod.status === 'crashed'
-                    ? c.manual.crashed
-                    : pod.status === 'starting'
-                      ? c.manual.rebooting
-                      : fill(c.manual.busy, { pct: pct(pod.cpu) })}
-                </span>
-                {pod.status === 'ready' && <PodBar pod={pod} />}
-                {pod.status === 'crashed' && (
-                  <button
-                    type="button"
-                    className={s.act}
-                    data-kind="restart"
-                    aria-label={`${c.manual.restart}: ${name}`}
-                    onClick={() => act({ type: 'restart', pod: pod.id })}
-                  >
-                    {c.manual.restart}
-                  </button>
-                )}
-              </li>
-            );
-          })}
-        </ul>
-      )}
-      {!summary && (
-        <StormBar paused={paused} onPause={toggle} canRollback={state.deploy === 'bad'} onRollback={() => act({ type: 'rollback' })} />
-      )}
-      {summary && diagnosis && (
-        <>
-          <h2 ref={compareRef} tabIndex={-1} style={{ margin: 0, fontSize: '1.125rem' }}>
-            {c.replay.compareHeading}
-          </h2>
-          <div className={s.compare} data-testid="compare">
-            <div className={s.compareItem} data-kind="manual">
-              {c.replay.manual}
-              <strong>{pct(manualUptime)}%</strong>
-            </div>
-            <div className={s.compareItem} data-kind="auto">
-              {c.replay.auto}
-              <strong>{pct(summary.uptime)}%</strong>
-            </div>
-          </div>
-          <p className={ui.muted} style={{ margin: 0 }}>
-            {fill(c.result.cost, { n: Math.round(summary.cost), budget: summary.budget })} ·{' '}
-            {fill(c.replay.podsSummary, { start: podHistory[0] ?? config.minPods, peak: summary.peakPods })}
-          </p>
-          <p className={ui.body} data-testid="diagnosis" data-diagnosis={diagnosis}>
-            {c.diagnosis[diagnosis]}
-          </p>
-          <div className={s.go}>
-            {canTweak && diagnosis !== 'perfect' && (
-              <button type="button" className={ui.btn} onClick={onTweak}>
-                {c.replay.tweak}
-              </button>
-            )}
-            <button
-              type="button"
-              className={`${ui.btn} ${ui.primary}`}
-              onClick={() => onAccept({ uptime: summary.uptime, cost: summary.cost, budget: summary.budget })}
-            >
-              {c.replay.accept}
-            </button>
-          </div>
-        </>
-      )}
+      <ul className={s.pods} role="list" aria-label={fill(c.replay.pods, { n: state.pods.length })}>
+        {state.pods.map((pod) => {
+          const name = fill(c.replay.pod, { n: pod.id + 1 });
+          return (
+            <li key={pod.id} className={s.pod} data-status={pod.status}>
+              <span>
+                <span aria-hidden="true">{pod.status === 'crashed' ? '💥 ' : pod.status === 'starting' ? '⏳ ' : '✅ '}</span>
+                {name}:{' '}
+                {pod.status === 'crashed'
+                  ? c.manual.crashed
+                  : pod.status === 'starting'
+                    ? c.manual.rebooting
+                    : fill(c.manual.busy, { pct: pct(pod.cpu) })}
+              </span>
+              {pod.status === 'ready' && <PodBar pod={pod} />}
+              {pod.status === 'crashed' && (
+                <button
+                  type="button"
+                  className={s.act}
+                  data-kind="restart"
+                  aria-label={`${c.manual.restart}: ${name}`}
+                  onClick={() => act({ type: 'restart', pod: pod.id })}
+                >
+                  {c.manual.restart}
+                </button>
+              )}
+            </li>
+          );
+        })}
+      </ul>
+      <StormBar
+        paused={paused}
+        onPause={toggle}
+        canRollback={state.deploy === 'bad' && !state.done}
+        onRollback={() => act({ type: 'rollback' })}
+        fast={fast}
+        onFast={() => setFast((f) => !f)}
+      />
+    </section>
+  );
+}
+
+function ReplayResults({
+  r,
+  canTweak,
+  onTweak,
+  onAccept,
+}: {
+  r: ReplayResult;
+  canTweak: boolean;
+  onTweak: () => void;
+  onAccept: (auto: { uptime: number; cost: number; budget: number }) => void;
+}) {
+  const announce = useAnnouncer((a) => a.announce);
+  const compareRef = useRef<HTMLHeadingElement>(null);
+  const diagnosis = r.diagnosis as keyof typeof c.diagnosis;
+  useEffect(() => {
+    useToast.getState().clear();
+    announce(`${fill(c.replay.stormOver, { manual: pct(r.manualUptime), auto: pct(r.uptime) })} ${c.diagnosis[diagnosis] ?? ''}`);
+    compareRef.current?.focus();
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  return (
+    <section className={s.level}>
+      <h1 ref={compareRef} tabIndex={-1} style={{ margin: 0, fontSize: '1.25rem' }}>
+        {c.replay.compareHeading}
+      </h1>
+      <div className={s.compare} data-testid="compare">
+        <div className={s.compareItem} data-kind="manual">
+          {c.replay.manual}
+          <strong>{pct(r.manualUptime)}%</strong>
+        </div>
+        <div className={s.compareItem} data-kind="auto">
+          {c.replay.auto}
+          <strong>{pct(r.uptime)}%</strong>
+        </div>
+      </div>
+      <p className={ui.muted} style={{ margin: 0 }}>
+        {fill(c.result.cost, { n: Math.round(r.cost), budget: r.budget })} ·{' '}
+        {fill(c.replay.podsSummary, { start: r.startPods, peak: r.peakPods })}
+      </p>
+      <p className={ui.body} data-testid="diagnosis" data-diagnosis={r.diagnosis}>
+        {c.diagnosis[diagnosis]}
+      </p>
+      <div className={s.go}>
+        {canTweak && r.diagnosis !== 'perfect' && (
+          <button type="button" className={ui.btn} onClick={onTweak}>
+            {c.replay.tweak}
+          </button>
+        )}
+        <button type="button" className={`${ui.btn} ${ui.primary}`} onClick={() => onAccept({ uptime: r.uptime, cost: r.cost, budget: r.budget })}>
+          {c.replay.accept}
+        </button>
+      </div>
     </section>
   );
 }

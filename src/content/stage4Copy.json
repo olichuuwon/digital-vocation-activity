@@ -69,7 +69,9 @@
     "pod": "Pod {n}",
     "podCrashed": "Pod {n} crashed! Tap Restart to bring it back.",
     "podsSummary": "Pods: {start} at the start, {peak} at the peak.",
-    "stormOver": "Storm over. By hand {manual}%, with Kubernetes {auto}%."
+    "stormOver": "Storm over. By hand {manual}%, with Kubernetes {auto}%.",
+    "fastForward": "Fast-forward",
+    "crashes": "{n} pods crashed. Tap Restart to bring them back."
   },
   "diagnosis": {
     "perfect": "Spot on! Your pods handled the whole storm, and you stayed under budget.",
@@ -78,7 +80,9 @@
     "thresholdHigh": "New pods arrived too late. They take 4 seconds to start, so set a lower busy level.",
     "noLoadBalancer": "Without a load balancer, one pod got swamped while others sat quiet. Turn it on to spread users evenly.",
     "noHealing": "Crashed pods stayed down, waiting for a human. Turn on self-healing so Kubernetes restarts them in seconds.",
-    "noRolling": "The bad update hit every pod at once. Turn on rolling updates to test it on one pod first."
+    "noRolling": "The bad update hit every pod at once. Turn on rolling updates to test it on one pod first.",
+    "overBudgetShaky": "Too pricey and still wobbly. Pick a sensible busy level and fewer Max pods, not more pods everywhere.",
+    "overBudgetMinOne": "Over budget: pods get added too eagerly. Raise the busy level a little, or lower Max pods."
   },
   "hint": "Turn on all three switches. Keep Min pods low, allow enough Max pods for the peak, and add pods early.",
   "timeUp": "Time's up! Let's see how it held up.",

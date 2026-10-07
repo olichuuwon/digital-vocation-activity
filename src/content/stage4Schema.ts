@@ -78,6 +78,8 @@ export const stage4CopySchema = z.object({
     podCrashed: words(12),
     podsSummary: words(12),
     stormOver: words(12),
+    fastForward: words(2),
+    crashes: words(10),
   }),
   /** One line after the replay explaining the result (bad configs fail in teachable ways, §7.4). */
   diagnosis: z.object({
@@ -88,6 +90,10 @@ export const stage4CopySchema = z.object({
     noLoadBalancer: words(20),
     noHealing: words(20),
     noRolling: words(20),
+    /** Over budget AND below 99%: cost isn't the only problem. */
+    overBudgetShaky: words(20),
+    /** Over budget with Min pods already 1: lowering Min can't help. */
+    overBudgetMinOne: words(20),
   }),
   hint: words(20),
   timeUp: words(12),
