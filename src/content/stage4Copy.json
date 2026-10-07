@@ -20,7 +20,13 @@
     "traffic": "Traffic ×{n}",
     "crashToast": "Server {n} crashed! Tap Restart to bring it back.",
     "deployToast": "A bad update went out. Tap Roll back!",
-    "rolledBack": "Rolled back. Everything's working again."
+    "rolledBack": "Rolled back. Everything's working again.",
+    "pause": "Pause",
+    "resume": "Resume",
+    "paused": "Paused. Tap Resume when you're ready.",
+    "overloaded": "Server {n} is overloaded!",
+    "stormLeft": "{s} seconds of storm left.",
+    "stormOver": "Storm over. Uptime {pct}%."
   },
   "configure": {
     "heading": "Set up Kubernetes",
@@ -43,7 +49,9 @@
     "budget": "Budget: {n} credits/min",
     "overBudget": "Over budget. Fewer pods will cost less.",
     "underBudget": "Under budget. Nice!",
-    "go": "Replay the storm"
+    "go": "Replay the storm",
+    "thresholdLabel": "Add pods when busier than",
+    "changed": "{setting}: {value}."
   },
   "replay": {
     "pods": "Pods: {n}",
@@ -57,7 +65,11 @@
     "manual": "By hand",
     "auto": "With Kubernetes",
     "tweak": "Tweak settings",
-    "accept": "Keep this result"
+    "accept": "Keep this result",
+    "pod": "Pod {n}",
+    "podCrashed": "Pod {n} crashed! Tap Restart to bring it back.",
+    "podsSummary": "Pods: {start} at the start, {peak} at the peak.",
+    "stormOver": "Storm over. By hand {manual}%, with Kubernetes {auto}%."
   },
   "diagnosis": {
     "perfect": "Spot on! Your pods handled the whole storm, and you stayed under budget.",

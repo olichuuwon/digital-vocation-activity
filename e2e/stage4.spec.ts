@@ -25,7 +25,7 @@ async function setSensible(page: Page) {
     await page.getByRole('group', { name, exact: true }).getByRole('button', { name: 'On' }).click();
   await page.getByRole('button', { name: 'More: Min pods' }).click(); // 2
   for (let i = 0; i < 7; i++) await page.getByRole('button', { name: 'More: Max pods' }).click(); // 10
-  await page.getByLabel(/Add pods when busier/).fill('65');
+  await page.locator('#threshold').fill('65');
 }
 
 test('Stage 4: manual storm, Kubernetes, a sensible config beats manual and earns 3 stars', async ({ page }) => {
@@ -48,7 +48,7 @@ test('Stage 4: manual storm, Kubernetes, a sensible config beats manual and earn
   await page.getByRole('button', { name: 'Continue' }).click();
   await expect(page.getByText('3 of 3 stars')).toBeAttached();
   await page.getByRole('button', { name: 'Continue' }).click();
-  await expect(page.getByRole('heading', { name: 'Finale' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Mission live' })).toBeVisible();
 });
 
 test('Stage 4: the default config fails in a teachable way, and Tweak goes back with a hint', async ({ page }) => {

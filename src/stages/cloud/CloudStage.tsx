@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { useScreenHeading } from '../../app/screenFocus';
+import { buzz } from '../../app/haptics';
+import { useAnnouncer, useScreenHeading } from '../../app/screenFocus';
 import { BriefingCard } from '../../components/BriefingCard';
 import { HintBox } from '../../components/HintBox';
 import { RealityCheck } from '../../components/RealityCheck';
@@ -194,27 +195,50 @@ function Clock({ tick }: { tick: number }) {
   );
 }
 
-/** Live toasts for things that happen to the cluster (one at a time, never per tick). */
-function useClusterEvents(state: SimState, auto: boolean) {
+/** Ticks left in the storm when "30 seconds left" is spoken (the clock bar is visual only). */
+const STORM_WARN_TICKS = 300;
+/** Sim ticks between "overloaded" warnings for the same server (5 s). */
+const OVERLOAD_WARN_GAP = 50;
+
+/**
+ * Live feedback for things that happen to the cluster: one toast or announcement at a time, never
+ * per tick. Events the player didn't cause use 'info' toasts (no "Wrong:" prefix) plus a buzz.
+ * Screen readers also hear a warning when a server goes over 100% (it crashes 1.5 s later) and
+ * when 30 seconds of storm are left.
+ */
+function useClusterEvents(state: SimState, auto: boolean, selfHealing = false) {
+  const announce = useAnnouncer((a) => a.announce);
   const prev = useRef<SimState | null>(null);
   const lastScale = useRef(-1e9);
+  const lastWarn = useRef(new Map<number, number>());
   useEffect(() => {
     const p = prev.current;
     prev.current = state;
-    if (!p) return;
-    const was = new Map(p.pods.map((x) => [x.id, x.status]));
-    const crashed = state.pods.find((x) => x.status === 'crashed' && was.get(x.id) !== 'crashed');
+    if (!p || state.done) return;
+    if (p.tick < PHASE_TICKS - STORM_WARN_TICKS && state.tick >= PHASE_TICKS - STORM_WARN_TICKS)
+      announce(fill(c.manual.stormLeft, { s: STORM_WARN_TICKS / 10 }));
+    const was = new Map(p.pods.map((x) => [x.id, x]));
+    const crashed = state.pods.find((x) => x.status === 'crashed' && was.get(x.id)?.status !== 'crashed');
     if (crashed) {
-      return void toast(
-        auto ? fill(c.manual.crashToast, { n: crashed.id + 1 }) : fill(c.manual.crashToast, { n: crashed.id + 1 }),
-        'error',
-      );
+      // With self-healing on, Kubernetes fixes it: only the "replaced it" news is worth a toast.
+      if (auto && selfHealing) return;
+      buzz('error');
+      return void toast(fill(auto ? c.replay.podCrashed : c.manual.crashToast, { n: crashed.id + 1 }), 'info');
     }
-    if (p.deploy !== 'bad' && state.deploy === 'bad') return void toast(c.manual.deployToast, 'error');
+    if (p.deploy !== 'bad' && state.deploy === 'bad') {
+      buzz('error');
+      return void toast(c.manual.deployToast, 'info');
+    }
     if (p.deploy === 'bad' && state.deploy === 'rolledBack') return void toast(c.manual.rolledBack, 'success');
-    if (p.deploy === 'canary' && state.deploy === 'rolledBack') return void toast(c.replay.autoRollback, 'success');
+    if (p.deploy === 'canary' && state.deploy === 'rolledBack') return void toast(c.replay.autoRollback, 'info');
+    // Manual mode only: the player must act before a hot server crashes (1.5 s later).
+    const hot = auto ? undefined : state.pods.find((x) => x.status === 'ready' && x.cpu > 1 && (was.get(x.id)?.cpu ?? 0) <= 1);
+    if (hot && state.tick - (lastWarn.current.get(hot.id) ?? -1e9) >= OVERLOAD_WARN_GAP) {
+      lastWarn.current.set(hot.id, state.tick);
+      announce(fill(c.manual.overloaded, { n: hot.id + 1 }));
+    }
     if (!auto) return;
-    const healed = state.pods.find((x) => x.status === 'ready' && was.get(x.id) === 'crashed');
+    const healed = state.pods.find((x) => x.status === 'ready' && was.get(x.id)?.status === 'crashed');
     if (healed) return void toast(c.replay.healed, 'info');
     // Scale events: at most one toast every 6 s of sim time.
     if (state.tick - lastScale.current < 60) return;
@@ -225,7 +249,7 @@ function useClusterEvents(state: SimState, auto: boolean) {
       lastScale.current = state.tick;
       toast(c.replay.scaledDown, 'info');
     }
-  }, [state, auto]);
+  }, [state, auto, selfHealing, announce]);
 }
 
 function PodBar({ pod }: { pod: Pod }) {
@@ -237,6 +261,54 @@ function PodBar({ pod }: { pod: Pod }) {
   );
 }
 
+/**
+ * Bottom bar during a storm (thumb zone, §9): Pause/Resume and Roll back. Both stay rendered, so
+ * focus never drops when the bad update is rolled back (Roll back is aria-disabled until needed).
+ */
+function StormBar({ paused, onPause, canRollback, onRollback }: { paused: boolean; onPause: () => void; canRollback: boolean; onRollback: () => void }) {
+  return (
+    <div className={s.go}>
+      <button type="button" className={ui.btn} aria-pressed={paused} onClick={onPause}>
+        <span aria-hidden="true">{paused ? '▶ ' : '⏸ '}</span>
+        {paused ? c.manual.resume : c.manual.pause}
+      </button>
+      <button
+        type="button"
+        className={`${ui.btn} ${s.rollback}`}
+        data-kind="rollback"
+        aria-disabled={!canRollback || undefined}
+        onClick={() => canRollback && onRollback()}
+      >
+        <span aria-hidden="true">↩ </span>
+        {c.manual.rollback}
+      </button>
+    </div>
+  );
+}
+
+function usePause() {
+  const [paused, setPaused] = useState(false);
+  const announce = useAnnouncer((a) => a.announce);
+  const toggle = () => {
+    setPaused((p) => {
+      if (!p) announce(c.manual.paused);
+      return !p;
+    });
+  };
+  return { paused, toggle };
+}
+
+function BadUpdate() {
+  return (
+    <div className={s.banner}>
+      <span>
+        <span aria-hidden="true">⚠️ </span>
+        {c.manual.badDeploy}
+      </span>
+    </div>
+  );
+}
+
 // ---------------------------------------------------------------------------------------
 // Phase A: manual
 // ---------------------------------------------------------------------------------------
@@ -245,14 +317,22 @@ function ManualPlay({ traffic, debug, onDone }: { traffic: Traffic; debug: boole
   const headingRef = useScreenHeading<HTMLHeadingElement>(levelName('cloud-manual'));
   const settingsOpen = useGame((g) => g.settingsOpen);
   const relaxed = useRelaxed();
+  const announce = useAnnouncer((a) => a.announce);
   const [tutorialSeen, setTutorialSeen] = useState(false);
+  const { paused, toggle } = usePause();
   const { state, act } = useSimLoop(() => initManual(traffic), stepManual, {
-    running: tutorialSeen && !settingsOpen,
+    running: tutorialSeen && !settingsOpen && !paused,
     speed: (relaxed ? 1 / RELAXED_FACTOR : 1) * debugSpeed(debug),
   });
   useClusterEvents(state, false);
   const uptime = uptimeSoFar(state);
   const mult = Math.max(1, Math.round(state.last.demand / (BASE_RPS * traffic.scale)));
+  const continueRef = useRef<HTMLButtonElement>(null);
+  useEffect(() => {
+    if (!state.done) return;
+    announce(fill(c.manual.stormOver, { pct: pct(uptimeSoFar(state)) }));
+    continueRef.current?.focus();
+  }, [state.done]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <section className={s.level}>
@@ -265,17 +345,7 @@ function ManualPlay({ traffic, debug, onDone }: { traffic: Traffic; debug: boole
       </div>
       <Clock tick={state.tick} />
       {!tutorialSeen && <TutorialOverlay gesture="tap" text={c.tutorialHint} onDismiss={() => setTutorialSeen(true)} />}
-      {state.deploy === 'bad' && !state.done && (
-        <div className={s.banner} role="alert">
-          <span>
-            <span aria-hidden="true">⚠️ </span>
-            {c.manual.badDeploy}
-          </span>
-          <button type="button" className={s.act} data-kind="rollback" onClick={() => act({ type: 'rollback' })}>
-            {c.manual.rollback}
-          </button>
-        </div>
-      )}
+      {state.deploy === 'bad' && !state.done && <BadUpdate />}
       <ul className={s.servers} role="list">
         {[...state.pods]
           .sort((a, b) => a.id - b.id)
@@ -283,12 +353,16 @@ function ManualPlay({ traffic, debug, onDone }: { traffic: Traffic; debug: boole
             <ServerCard key={pod.id} pod={pod} act={act} />
           ))}
       </ul>
-      {state.done && (
+      {state.done ? (
         <div className={s.go}>
-          <button type="button" className={`${ui.btn} ${ui.primary}`} onClick={() => onDone(uptime)}>
+          <button ref={continueRef} type="button" className={`${ui.btn} ${ui.primary}`} onClick={() => onDone(uptime)}>
             {t.continue}
           </button>
         </div>
+      ) : (
+        tutorialSeen && (
+          <StormBar paused={paused} onPause={toggle} canRollback={state.deploy === 'bad'} onRollback={() => act({ type: 'rollback' })} />
+        )
       )}
     </section>
   );
@@ -342,10 +416,11 @@ function ServerCard({ pod, act }: { pod: Pod; act: (a: Action) => void }) {
 // Phase B: configure the cluster
 // ---------------------------------------------------------------------------------------
 
-function Toggle({ value, onChange, label }: { value: boolean; onChange: (v: boolean) => void; label: string }) {
+function Toggle({ value, onChange, labelledBy, describedBy }: { value: boolean; onChange: (v: boolean) => void; labelledBy: string; describedBy: string }) {
   return (
-    <span className={s.toggle} role="group" aria-label={label}>
+    <span className={s.toggle} role="group" aria-labelledby={labelledBy} aria-describedby={describedBy}>
       <button type="button" aria-pressed={value} onClick={() => onChange(true)}>
+        {value && <span aria-hidden="true">✓ </span>}
         {c.configure.on}
       </button>
       <button type="button" aria-pressed={!value} onClick={() => onChange(false)}>
@@ -355,14 +430,44 @@ function Toggle({ value, onChange, label }: { value: boolean; onChange: (v: bool
   );
 }
 
-function Stepper({ value, min, max, onChange, label }: { value: number; min: number; max: number; onChange: (v: number) => void; label: string }) {
+function Stepper({
+  value,
+  min,
+  max,
+  step = 1,
+  onChange,
+  label,
+  labelledBy,
+  describedBy,
+  format = String,
+}: {
+  value: number;
+  min: number;
+  max: number;
+  step?: number;
+  onChange: (v: number) => void;
+  label: string;
+  labelledBy: string;
+  describedBy: string;
+  format?: (v: number) => string;
+}) {
   return (
-    <span className={s.stepper} role="group" aria-label={label}>
-      <button type="button" aria-label={`${c.configure.fewer}: ${label}`} aria-disabled={value <= min || undefined} onClick={() => value > min && onChange(value - 1)}>
+    <span className={s.stepper} role="group" aria-labelledby={labelledBy} aria-describedby={describedBy}>
+      <button
+        type="button"
+        aria-label={`${c.configure.fewer}: ${label}`}
+        aria-disabled={value <= min || undefined}
+        onClick={() => value > min && onChange(Math.max(min, value - step))}
+      >
         −
       </button>
-      <output aria-live="polite">{value}</output>
-      <button type="button" aria-label={`${c.configure.more}: ${label}`} aria-disabled={value >= max || undefined} onClick={() => value < max && onChange(value + 1)}>
+      <output>{format(value)}</output>
+      <button
+        type="button"
+        aria-label={`${c.configure.more}: ${label}`}
+        aria-disabled={value >= max || undefined}
+        onClick={() => value < max && onChange(Math.min(max, value + step))}
+      >
         +
       </button>
     </span>
@@ -381,11 +486,26 @@ function Configure({
   onDone: (c: ClusterConfig) => void;
 }) {
   const headingRef = useScreenHeading<HTMLHeadingElement>(c.configure.heading);
+  const announce = useAnnouncer((a) => a.announce);
   const [config, setConfigState] = useState<ClusterConfig>(initial);
-  const setConfig = (patch: Partial<ClusterConfig>) => setConfigState((x) => normalizeConfig({ ...x, ...patch }));
   // The live cost meter (§7.3): a dry run of this setup against the storm, cost only.
   const cost = useMemo(() => previewCluster(config, traffic).cost, [config, traffic]);
   const over = cost > traffic.budget;
+  const costText = `${fill(c.configure.cost, { n: Math.round(cost) })} · ${fill(c.configure.budget, { n: traffic.budget })}`;
+  // One announcement per change: the setting's new value, then the cost (debounced for the slider).
+  const pendingSay = useRef<string | null>(null);
+  useEffect(() => {
+    if (pendingSay.current === null) return;
+    const said = `${pendingSay.current} ${costText}. ${over ? c.configure.overBudget : c.configure.underBudget}`;
+    pendingSay.current = null;
+    const id = setTimeout(() => announce(said), 400);
+    return () => clearTimeout(id);
+  }, [config, costText, over, announce]);
+  const setConfig = (patch: Partial<ClusterConfig>, setting: string, value: string) => {
+    pendingSay.current = fill(c.configure.changed, { setting, value });
+    setConfigState((x) => normalizeConfig({ ...x, ...patch }));
+  };
+  const onOff = (v: boolean) => (v ? c.configure.on : c.configure.off);
   const hint = tweaks >= 2 ? 'answer' : tweaks >= 1 ? 'hint' : 'none';
   const answer = [
     `${c.configure.loadBalancer}, ${c.configure.selfHealing}, ${c.configure.rolling}: ${c.configure.on}`,
@@ -401,30 +521,74 @@ function Configure({
         {c.configure.heading}
       </h1>
       <Timer seconds={CONFIGURE_SECONDS} onExpire={() => onDone(config)} />
+      {/* Compact cost meter near the top: always in view without covering the settings. */}
+      <div className={s.meter} data-over={over || undefined} data-testid="cost-meter">
+        <span>
+          <span aria-hidden="true">{over ? '⚠️ ' : '💰 '}</span>
+          {costText} · {over ? c.configure.overBudget : c.configure.underBudget}
+        </span>
+        <span className={s.bar} aria-hidden="true">
+          <span className={s.barFill} data-over={over || undefined} style={{ width: `${Math.min(100, (cost / traffic.budget) * 100)}%` }} />
+        </span>
+      </div>
       <HintBox level={hint} hint={c.hint} answer={answer} />
       <ul className={s.settings} role="list">
         <li className={s.setting}>
           <div className={s.settingHead}>
-            <span id="lb-label">{c.configure.loadBalancer}</span>
-            <Toggle label={c.configure.loadBalancer} value={config.loadBalancer} onChange={(v) => setConfig({ loadBalancer: v })} />
+            <span id="cfg-lb">{c.configure.loadBalancer}</span>
+            <Toggle labelledBy="cfg-lb" describedBy="cfg-lb-help" value={config.loadBalancer} onChange={(v) => setConfig({ loadBalancer: v }, c.configure.loadBalancer, onOff(v))} />
           </div>
-          <p className={s.help}>{c.configure.loadBalancerHelp}</p>
+          <p className={s.help} id="cfg-lb-help">
+            {c.configure.loadBalancerHelp}
+          </p>
         </li>
         <li className={s.setting}>
           <div className={s.settingHead}>
-            <span>{c.configure.minPods}</span>
-            <Stepper label={c.configure.minPods} value={config.minPods} min={PODS_MIN} max={PODS_MAX} onChange={(v) => setConfig({ minPods: v, maxPods: Math.max(v, config.maxPods) })} />
+            <span id="cfg-min">{c.configure.minPods}</span>
+            <Stepper
+              label={c.configure.minPods}
+              labelledBy="cfg-min"
+              describedBy="cfg-pods-help"
+              value={config.minPods}
+              min={PODS_MIN}
+              max={PODS_MAX}
+              onChange={(v) => setConfig({ minPods: v, maxPods: Math.max(v, config.maxPods) }, c.configure.minPods, String(v))}
+            />
           </div>
           <div className={s.settingHead}>
-            <span>{c.configure.maxPods}</span>
-            <Stepper label={c.configure.maxPods} value={config.maxPods} min={PODS_MIN} max={PODS_MAX} onChange={(v) => setConfig({ maxPods: v, minPods: Math.min(v, config.minPods) })} />
+            <span id="cfg-max">{c.configure.maxPods}</span>
+            <Stepper
+              label={c.configure.maxPods}
+              labelledBy="cfg-max"
+              describedBy="cfg-pods-help"
+              value={config.maxPods}
+              min={PODS_MIN}
+              max={PODS_MAX}
+              onChange={(v) => setConfig({ maxPods: v, minPods: Math.min(v, config.minPods) }, c.configure.maxPods, String(v))}
+            />
           </div>
-          <p className={s.help}>{c.configure.podsHelp}</p>
+          <p className={s.help} id="cfg-pods-help">
+            {c.configure.podsHelp}
+          </p>
         </li>
         <li className={s.setting}>
-          <label className={s.settingHead} htmlFor="threshold">
-            {fill(c.configure.threshold, { pct: thresholdPct })}
-          </label>
+          <div className={s.settingHead}>
+            <label id="cfg-th" htmlFor="threshold">
+              {c.configure.thresholdLabel}
+            </label>
+            {/* Buttons as well as the slider: no dragging needed (§10). */}
+            <Stepper
+              label={c.configure.thresholdLabel}
+              labelledBy="cfg-th"
+              describedBy="cfg-th-help"
+              value={thresholdPct}
+              min={pct(CPU_MIN)}
+              max={pct(CPU_MAX)}
+              step={5}
+              format={(v) => `${v}%`}
+              onChange={(v) => setConfig({ scaleUpCpu: v / 100 }, c.configure.thresholdLabel, `${v}%`)}
+            />
+          </div>
           <input
             id="threshold"
             className={s.range}
@@ -434,37 +598,33 @@ function Configure({
             step={5}
             value={thresholdPct}
             aria-valuetext={`${thresholdPct}%`}
-            onChange={(e) => setConfig({ scaleUpCpu: Number(e.target.value) / 100 })}
+            aria-describedby="cfg-th-help"
+            onChange={(e) => setConfig({ scaleUpCpu: Number(e.target.value) / 100 }, c.configure.thresholdLabel, `${e.target.value}%`)}
           />
-          <p className={s.help}>{c.configure.thresholdHelp}</p>
+          <p className={s.help} id="cfg-th-help">
+            {c.configure.thresholdHelp}
+          </p>
         </li>
         <li className={s.setting}>
           <div className={s.settingHead}>
-            <span>{c.configure.selfHealing}</span>
-            <Toggle label={c.configure.selfHealing} value={config.selfHealing} onChange={(v) => setConfig({ selfHealing: v })} />
+            <span id="cfg-heal">{c.configure.selfHealing}</span>
+            <Toggle labelledBy="cfg-heal" describedBy="cfg-heal-help" value={config.selfHealing} onChange={(v) => setConfig({ selfHealing: v }, c.configure.selfHealing, onOff(v))} />
           </div>
-          <p className={s.help}>{c.configure.selfHealingHelp}</p>
+          <p className={s.help} id="cfg-heal-help">
+            {c.configure.selfHealingHelp}
+          </p>
         </li>
         <li className={s.setting}>
           <div className={s.settingHead}>
-            <span>{c.configure.rolling}</span>
-            <Toggle label={c.configure.rolling} value={config.rollingUpdate} onChange={(v) => setConfig({ rollingUpdate: v })} />
+            <span id="cfg-roll">{c.configure.rolling}</span>
+            <Toggle labelledBy="cfg-roll" describedBy="cfg-roll-help" value={config.rollingUpdate} onChange={(v) => setConfig({ rollingUpdate: v }, c.configure.rolling, onOff(v))} />
           </div>
-          <p className={s.help}>{c.configure.rollingHelp}</p>
+          <p className={s.help} id="cfg-roll-help">
+            {c.configure.rollingHelp}
+          </p>
         </li>
       </ul>
-      {/* Cost meter rides with the button, so it's always in view while settings change (§7.3). */}
-      <div className={`${s.go} ${s.goStack}`}>
-      <div className={s.meter} data-over={over || undefined} data-testid="cost-meter" role="status">
-          <span>
-            <span aria-hidden="true">{over ? '⚠️ ' : '💰 '}</span>
-            {fill(c.configure.cost, { n: Math.round(cost) })} · {fill(c.configure.budget, { n: traffic.budget })}
-          </span>
-          <span className={s.bar} aria-hidden="true">
-            <span className={s.barFill} data-over={over || undefined} style={{ width: `${Math.min(100, (cost / traffic.budget) * 100)}%` }} />
-          </span>
-          <span>{over ? c.configure.overBudget : c.configure.underBudget}</span>
-        </div>
+      <div className={s.go}>
         <button type="button" className={`${ui.btn} ${ui.primary}`} onClick={() => onDone(config)}>
           {c.configure.go}
         </button>
@@ -509,16 +669,27 @@ function Replay({
   const headingRef = useScreenHeading<HTMLHeadingElement>(levelName('cloud-replay'));
   const settingsOpen = useGame((g) => g.settingsOpen);
   const relaxed = useRelaxed();
+  const announce = useAnnouncer((a) => a.announce);
+  const { paused, toggle } = usePause();
   const step = useMemo(() => (st: SimState, dt: number, a: Action | null) => stepCluster(st, dt, config, a), [config]);
   const { state, podHistory, act } = useSimLoop(() => initCluster(config, traffic), step, {
-    running: !settingsOpen,
+    running: !settingsOpen && !paused,
     speed: (relaxed ? 1 / RELAXED_FACTOR : 1) * debugSpeed(debug),
   });
-  useClusterEvents(state, true);
+  useClusterEvents(state, true, config.selfHealing);
   const uptime = uptimeSoFar(state);
   const cost = costPerMin(state);
   const summary = state.done ? summarize(state) : null;
   const diagnosis = summary ? diagnose(config, summary) : null;
+  const compareRef = useRef<HTMLHeadingElement>(null);
+  useEffect(() => {
+    if (!state.done) return;
+    const sum = summarize(state);
+    announce(
+      `${fill(c.replay.stormOver, { manual: pct(manualUptime), auto: pct(sum.uptime) })} ${c.diagnosis[diagnose(config, sum)]}`,
+    );
+    compareRef.current?.focus();
+  }, [state.done]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <section className={s.level}>
@@ -532,42 +703,47 @@ function Replay({
       </div>
       <Clock tick={state.tick} />
       <PodsGraph history={podHistory} max={PODS_MAX} />
-      {state.deploy === 'bad' && !state.done && (
-        <div className={s.banner} role="alert">
-          <span>
-            <span aria-hidden="true">⚠️ </span>
-            {c.manual.badDeploy}
-          </span>
-          <button type="button" className={s.act} data-kind="rollback" onClick={() => act({ type: 'rollback' })}>
-            {c.manual.rollback}
-          </button>
-        </div>
-      )}
+      {state.deploy === 'bad' && !state.done && <BadUpdate />}
       {!summary && (
         <ul className={s.pods} role="list" aria-label={fill(c.replay.pods, { n: state.pods.length })}>
-          {state.pods.map((pod) => (
-            <li key={pod.id} className={s.pod} data-status={pod.status}>
-              <span>
-                <span aria-hidden="true">{pod.status === 'crashed' ? '💥 ' : pod.status === 'starting' ? '⏳ ' : '✅ '}</span>
-                {pod.status === 'crashed'
-                  ? c.manual.crashed
-                  : pod.status === 'starting'
-                    ? c.manual.rebooting
-                    : fill(c.manual.busy, { pct: pct(pod.cpu) })}
-              </span>
-              {pod.status === 'ready' && <PodBar pod={pod} />}
-              {pod.status === 'crashed' && (
-                <button type="button" className={s.act} data-kind="restart" onClick={() => act({ type: 'restart', pod: pod.id })}>
-                  {c.manual.restart}
-                </button>
-              )}
-            </li>
-          ))}
+          {state.pods.map((pod) => {
+            const name = fill(c.replay.pod, { n: pod.id + 1 });
+            return (
+              <li key={pod.id} className={s.pod} data-status={pod.status}>
+                <span>
+                  <span aria-hidden="true">{pod.status === 'crashed' ? '💥 ' : pod.status === 'starting' ? '⏳ ' : '✅ '}</span>
+                  {name}:{' '}
+                  {pod.status === 'crashed'
+                    ? c.manual.crashed
+                    : pod.status === 'starting'
+                      ? c.manual.rebooting
+                      : fill(c.manual.busy, { pct: pct(pod.cpu) })}
+                </span>
+                {pod.status === 'ready' && <PodBar pod={pod} />}
+                {pod.status === 'crashed' && (
+                  <button
+                    type="button"
+                    className={s.act}
+                    data-kind="restart"
+                    aria-label={`${c.manual.restart}: ${name}`}
+                    onClick={() => act({ type: 'restart', pod: pod.id })}
+                  >
+                    {c.manual.restart}
+                  </button>
+                )}
+              </li>
+            );
+          })}
         </ul>
+      )}
+      {!summary && (
+        <StormBar paused={paused} onPause={toggle} canRollback={state.deploy === 'bad'} onRollback={() => act({ type: 'rollback' })} />
       )}
       {summary && diagnosis && (
         <>
-          <h2 style={{ margin: 0, fontSize: '1.125rem' }}>{c.replay.compareHeading}</h2>
+          <h2 ref={compareRef} tabIndex={-1} style={{ margin: 0, fontSize: '1.125rem' }}>
+            {c.replay.compareHeading}
+          </h2>
           <div className={s.compare} data-testid="compare">
             <div className={s.compareItem} data-kind="manual">
               {c.replay.manual}
@@ -579,9 +755,10 @@ function Replay({
             </div>
           </div>
           <p className={ui.muted} style={{ margin: 0 }}>
-            {fill(c.result.cost, { n: Math.round(summary.cost), budget: summary.budget })}
+            {fill(c.result.cost, { n: Math.round(summary.cost), budget: summary.budget })} ·{' '}
+            {fill(c.replay.podsSummary, { start: podHistory[0] ?? config.minPods, peak: summary.peakPods })}
           </p>
-          <p className={ui.body} role="status" data-testid="diagnosis" data-diagnosis={diagnosis}>
+          <p className={ui.body} data-testid="diagnosis" data-diagnosis={diagnosis}>
             {c.diagnosis[diagnosis]}
           </p>
           <div className={s.go}>

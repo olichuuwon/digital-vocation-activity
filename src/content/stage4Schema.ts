@@ -29,6 +29,12 @@ export const stage4CopySchema = z.object({
     crashToast: words(10),
     deployToast: words(10),
     rolledBack: words(8),
+    pause: words(2),
+    resume: words(2),
+    paused: words(10),
+    overloaded: words(8),
+    stormLeft: words(8),
+    stormOver: words(8),
   }),
   configure: z.object({
     heading: words(5),
@@ -52,6 +58,8 @@ export const stage4CopySchema = z.object({
     overBudget: words(10),
     underBudget: words(10),
     go: words(4),
+    thresholdLabel: words(6),
+    changed: txt,
   }),
   replay: z.object({
     pods: txt,
@@ -66,6 +74,10 @@ export const stage4CopySchema = z.object({
     auto: words(3),
     tweak: words(4),
     accept: words(4),
+    pod: txt,
+    podCrashed: words(12),
+    podsSummary: words(12),
+    stormOver: words(12),
   }),
   /** One line after the replay explaining the result (bad configs fail in teachable ways, §7.4). */
   diagnosis: z.object({

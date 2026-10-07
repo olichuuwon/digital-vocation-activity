@@ -61,7 +61,7 @@
   background: var(--surface);
   padding: 8px 10px;
   display: grid;
-  grid-template-columns: 1fr auto;
+  grid-template-columns: minmax(0, 1fr) auto;
   gap: 6px 10px;
   align-items: center;
 }
@@ -97,18 +97,20 @@
 .barFill {
   display: block;
   height: 100%;
-  background: var(--cloud);
+  background: var(--cloud-ink);
   transition: width 0.1s linear;
 }
 
 /* Over 100%: striped fill, so overload isn't shown by colour alone. */
 .barFill[data-over='true'] {
-  background: repeating-linear-gradient(45deg, var(--danger), var(--danger) 6px, var(--danger-soft, #ffb4ab) 6px, var(--danger-soft, #ffb4ab) 12px);
+  /* Stripes against the surface colour stay visible in both themes. */
+  background: repeating-linear-gradient(45deg, var(--danger), var(--danger) 6px, var(--surface) 6px, var(--surface) 12px);
 }
 
 .act {
   min-height: var(--tap);
-  min-width: 6.5rem;
+  min-width: min(6.5rem, 100%);
+  overflow-wrap: anywhere;
   border-radius: 10px;
   border: 2px solid var(--cloud-ink);
   background: var(--surface);
@@ -170,7 +172,7 @@
 }
 
 .toggle button {
-  min-height: 44px;
+  min-height: var(--tap);
   min-width: 3.5rem;
   border: 0;
   background: var(--surface);
@@ -181,7 +183,8 @@
 
 .toggle button[aria-pressed='true'] {
   background: var(--cloud-ink);
-  color: #fff;
+  /* --bg is near-white in light and near-black in dark: ≥ 4.5:1 on --cloud-ink both ways. */
+  color: var(--bg);
 }
 
 .stepper {
@@ -304,7 +307,7 @@
 
 .compare {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 8rem), 1fr));
   gap: 8px;
 }
 
@@ -325,4 +328,13 @@
 .compareItem[data-kind='auto'] {
   border-color: var(--cloud-ink);
   border-width: 3px;
+}
+
+.rollback {
+  border-color: var(--danger);
+}
+
+.rollback[aria-disabled='true'] {
+  opacity: 0.5;
+  cursor: not-allowed;
 }

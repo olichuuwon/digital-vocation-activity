@@ -28,7 +28,7 @@ test('a booth run starts Stage 1, resumes after reload, and later stages reach t
 
   // Every stage is playable now; the finale placeholder is reachable via debug.
   await page.goto('/?debug=1&stage=5');
-  await expect(page.getByRole('heading', { name: 'Finale' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Mission live' })).toBeVisible();
 });
 
 test('full mode via facilitator param starts a full run', async ({ page }) => {
