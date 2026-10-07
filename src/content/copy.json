@@ -15,7 +15,11 @@
     "booth": "Booth run",
     "boothDetail": "About 16 minutes",
     "full": "Full run",
-    "fullDetail": "About 25–30 minutes, with bonus levels"
+    "fullDetail": "About 25–30 minutes, with bonus levels",
+    "stageHeading": "Where do you want to start?",
+    "fromStart": "From the beginning",
+    "finale": "Finale: Mission Live",
+    "devNote": "Stage select is on for testing. Earlier stages count as not played."
   },
   "settings": {
     "heading": "Settings",

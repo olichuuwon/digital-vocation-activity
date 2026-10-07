@@ -34,7 +34,10 @@ export const copySchema = z.object({
     title: text, tagline: text, playSolo: text, createGroup: text, joinGroup: text,
     leaderboard: text, comingSoon: text, resume: text, newRun: text,
   }),
-  length: z.object({ heading: text, booth: text, boothDetail: text, full: text, fullDetail: text }),
+  length: z.object({
+    heading: text, booth: text, boothDetail: text, full: text, fullDetail: text,
+    stageHeading: text, fromStart: text, finale: text, devNote: text,
+  }),
   settings: z.object({
     heading: text, theme: text, themeSystem: text, themeLight: text, themeDark: text,
     sound: text, relaxed: text, quit: text, close: text,
@@ -140,3 +143,9 @@ export type Briefing = z.infer<typeof briefingsFileSchema>['briefings'][number];
 export type Rule = z.infer<typeof rulebookFileSchema>['rules'][number];
 export type RealityCheckContent = z.infer<typeof realityCheckSchema>;
 export type RealityVisual = z.infer<typeof realityVisual>;
+
+/**
+ * Feature flags (src/content/flags.json). stageSelect: solo players pick a starting stage after the
+ * run length (dev/testing; switch off before the event so solo runs play in order).
+ */
+export const flagsSchema = z.object({ stageSelect: z.boolean() });

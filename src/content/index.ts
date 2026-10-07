@@ -3,9 +3,11 @@ import copyJson from './copy.json';
 import briefingsJson from './briefings.json';
 import rulebookJson from './rulebook.json';
 import realityChecksJson from './realityChecks.json';
+import flagsJson from './flags.json';
 import {
   briefingsFileSchema,
   copySchema,
+  flagsSchema,
   realityChecksFileSchema,
   rulebookFileSchema,
   stagesFileSchema,
@@ -21,6 +23,7 @@ export const copy = copySchema.parse(copyJson);
 export const briefings = briefingsFileSchema.parse(briefingsJson).briefings;
 export const rulebook = rulebookFileSchema.parse(rulebookJson);
 export const realityChecks = realityChecksFileSchema.parse(realityChecksJson).checks;
+export const flags = flagsSchema.parse(flagsJson);
 
 export function briefingFor(stage: number): Briefing | undefined {
   return briefings.find((b) => b.stage === stage);

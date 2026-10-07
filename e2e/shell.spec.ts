@@ -17,6 +17,7 @@ test('home shows solo play and a primary action within reach', async ({ page }) 
 test('a booth run starts Stage 1, resumes after reload, and later stages reach the finale', async ({ page }) => {
   await page.getByRole('button', { name: 'Play solo' }).click();
   await page.getByRole('button', { name: /Booth run/ }).click();
+  await page.getByRole('button', { name: 'From the beginning' }).click();
   await expect(page.getByTestId('stage-heading')).toHaveText('Prologue');
   await page.getByRole('button', { name: 'Finish level' }).click(); // → Stage 1 briefing
   await page.getByRole('button', { name: 'Start sorting' }).click();
@@ -34,6 +35,7 @@ test('a booth run starts Stage 1, resumes after reload, and later stages reach t
 test('full mode via facilitator param starts a full run', async ({ page }) => {
   await page.goto('/?mode=full&debug=1');
   await page.getByRole('button', { name: 'Play solo' }).click();
+  await page.getByRole('button', { name: 'From the beginning' }).click();
   await page.getByText('Debug').click();
   await expect(page.locator('.debug-panel')).toContainText('mode full');
 });
@@ -74,7 +76,16 @@ test('at 200% text the strip and settings button stay on screen', async ({ page 
 test('focus moves to the new heading after finishing a level', async ({ page }) => {
   await page.getByRole('button', { name: 'Play solo' }).click();
   await page.getByRole('button', { name: /Booth run/ }).click();
+  await page.getByRole('button', { name: 'From the beginning' }).click();
   await page.getByRole('button', { name: 'Finish level' }).click();
   await expect(page.getByRole('heading', { level: 1 })).toBeFocused();
   await expect(page).toHaveTitle(/· Let's Ship It$/);
+});
+
+test('stage select (feature flag): a solo run can start at any stage', async ({ page }) => {
+  await page.getByRole('button', { name: 'Play solo' }).click();
+  await page.getByRole('button', { name: /Full run/ }).click();
+  await expect(page.getByRole('heading', { name: 'Where do you want to start?' })).toBeVisible();
+  await page.getByRole('button', { name: /3\. Build the Logic/ }).click();
+  await expect(page.getByRole('heading', { name: 'Build the logic' })).toBeVisible();
 });

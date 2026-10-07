@@ -1,7 +1,7 @@
 import { useState } from 'react';
-import { copy } from '../../content';
+import { copy, flags, stages } from '../../content';
 import { useGame } from '../../state/store';
-import type { Mode } from '../../state/types';
+import type { Mode, Stage } from '../../state/types';
 import { useScreenHeading } from '../screenFocus';
 import ui from '../ui.module.css';
 
@@ -21,14 +21,48 @@ export function Home({
   // A finished run isn't resumed: its debrief is done (§3.1).
   const hasRun = useGame((s) => s.run !== null && !s.run.finishedAt);
   const startRunInStore = useGame((s) => s.startRun);
-  const startRun = (mode: Mode) => {
+  const jumpToStage = useGame((s) => s.jumpToStage);
+  const [picking, setPicking] = useState(false);
+  // Feature flag (src/content/flags.json): after the length, pick a starting stage.
+  const [stageFor, setStageFor] = useState<Mode | null>(null);
+  const startRun = (mode: Mode, stage?: Stage) => {
+    if (stage === undefined && flags.stageSelect) return setStageFor(mode);
     startRunInStore(mode);
+    if (stage !== undefined && stage > 0) jumpToStage(stage);
     onEnter();
   };
-  const [picking, setPicking] = useState(false);
-  const headingRef = useScreenHeading<HTMLHeadingElement>(picking ? l.heading : t.title);
+  const headingRef = useScreenHeading<HTMLHeadingElement>(stageFor ? l.stageHeading : picking ? l.heading : t.title);
 
   const playSolo = () => (facilitatorMode ? startRun(facilitatorMode) : setPicking(true));
+
+  if (stageFor) {
+    return (
+      <main className={ui.screen}>
+        <h1 className={ui.hero} ref={headingRef} tabIndex={-1}>
+          {l.stageHeading}
+        </h1>
+        <p className={ui.muted}>{l.devNote}</p>
+        <div className={ui.actions}>
+          <button type="button" className={`${ui.btn} ${ui.primary}`} onClick={() => startRun(stageFor, 0)}>
+            {l.fromStart}
+          </button>
+          {stages.map((st) => (
+            <button key={st.stage} type="button" className={ui.btn} onClick={() => startRun(stageFor, st.stage as Stage)}>
+              <span aria-hidden="true">{st.icon} </span>
+              {st.stage}. {st.title}
+            </button>
+          ))}
+          <button type="button" className={ui.btn} onClick={() => startRun(stageFor, 5)}>
+            <span aria-hidden="true">🚚 </span>
+            {l.finale}
+          </button>
+          <button type="button" className={ui.btn} onClick={() => setStageFor(null)}>
+            <span aria-hidden="true">←</span> Back
+          </button>
+        </div>
+      </main>
+    );
+  }
 
   if (picking) {
     return (
