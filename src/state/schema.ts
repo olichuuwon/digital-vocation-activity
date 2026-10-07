@@ -22,6 +22,8 @@ export const gameStateSchema = z.object({
   startedAt: z.number(),
   /** Set at the debrief (M6): the run is over; Home offers a new run, not Resume. */
   finishedAt: z.number().optional(),
+  /** Chapter-select replays of this run (varies the Live Ops deal). */
+  replays: count.optional(),
 });
 
 export const settingsSchema = z.object({

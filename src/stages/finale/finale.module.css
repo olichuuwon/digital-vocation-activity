@@ -240,3 +240,8 @@
     position: sticky;
   }
 }
+
+/* During feedback the buttons ignore taps: dim them so that's visible too. */
+.teams[data-waiting='true'] .team {
+  opacity: 0.6;
+}

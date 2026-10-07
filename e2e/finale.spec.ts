@@ -59,3 +59,23 @@ test('Finale: wrong routes cost families; Play again goes Home with no Resume', 
   await expect(page.getByRole('button', { name: 'Play solo' })).toBeVisible();
   await expect(page.getByRole('button', { name: 'Resume run' })).toHaveCount(0);
 });
+
+test('Finale: a reload right after the last incident still reaches the debrief (no dead end)', async ({ page }) => {
+  test.setTimeout(150_000);
+  await page.goto('/?debug=1&stage=5');
+  await page.getByRole('button', { name: 'Go live' }).click();
+  await page.getByRole('button', { name: 'Start shift' }).click();
+  for (let i = 0; i < 8; i++) {
+    const card = page.getByTestId('incident');
+    const team = await card.getAttribute('data-team');
+    await page.locator(`button[data-team="${team}"]`).click();
+    if (i < 7) await expect(page.getByTestId('feedback')).toHaveCount(0, { timeout: 10_000 });
+  }
+  // Reload inside the final feedback gap.
+  await page.goto('/');
+  await page.getByRole('button', { name: 'Resume run' }).click();
+  await expect(page.getByRole('heading', { name: 'Mission complete' })).toBeVisible();
+  // Home now offers chapter select (§8.3).
+  await page.getByRole('button', { name: 'Play again' }).click();
+  await expect(page.getByRole('button', { name: 'Replay a stage' })).toBeVisible();
+});

@@ -22,7 +22,7 @@ No coding knowledge needed. No account, no app to install, and no personal data 
 ## How to play
 
 1. Open the link (or scan the QR code at the booth) on your phone. Hold it upright.
-2. Tap **Play solo** and pick a length:
+2. Tap **Play solo** and pick a length (during development you can then pick which stage to start from):
    - **Booth run**, about 16 minutes (main levels only)
    - **Full run**, about 25–30 minutes (adds bonus levels)
 3. Each stage follows the same pattern: a short briefing, a quick tutorial, two or three timed levels, then a **Reality Check** that shows how professionals do the same job, and finally your stars (0–3).
@@ -39,9 +39,9 @@ No coding knowledge needed. No account, no app to install, and no personal data 
 
 **🧩 Stage 3: Build the Logic.** Tap blocks (Move forward, Turn, Drop supplies, Repeat, If the road ahead is flooded…) to program a supply truck, then press Run and watch it go. Step runs one block at a time. In a full run you also debug a broken program and use your Stage 2 AI to work out what each house needs. At the end you see your blocks turned into real Python.
 
-**☁️ Stage 4: Keep It Alive** *(coming soon).* Keep the servers running by hand, then meet Kubernetes and let automation do it.
+**☁️ Stage 4: Keep It Alive.** Keep three servers alive by hand through a traffic storm: boost, restart, roll back a bad update. Then meet Kubernetes, choose its settings within a budget, and watch it handle the same storm.
 
-**🚚 Finale: Mission Live** *(coming soon).* Everything you built comes together. Route live incidents to the right team.
+**🚚 Finale: Mission Live.** See how your data, AI, logic and uptime add up to families reached, then route live incidents to the right team. The debrief shows your C4X Digital match and what you learned, with a card that's easy to screenshot. After your first finish you can replay any stage.
 
 ### Playing as a group *(coming soon)*
 

@@ -114,8 +114,9 @@ describe('finishRun / replayFrom (M6)', () => {
 
   it('records families, keeps the best, unlocks chapter select, marks the run finished', () => {
     useGame.getState().startRun('booth');
-    useGame.getState().finishRun(820);
+    useGame.getState().finishRun(820, 6);
     const g = useGame.getState();
+    expect(g.run!.scores.finale.incidentsRouted).toBe(6);
     expect(g.bestFamilies).toBe(820);
     expect(g.chapterUnlocked).toBe(true);
     expect(g.run!.finishedAt).toBeTypeOf('number');
@@ -133,5 +134,6 @@ describe('finishRun / replayFrom (M6)', () => {
     expect(r.levelIndex).toBe(0);
     expect(r.finishedAt).toBeUndefined();
     expect(r.scores.finale.familiesReached).toBe(700);
+    expect(r.replays).toBe(1);
   });
 });

@@ -23,7 +23,10 @@ import { finaleFor, useFinaleProgress } from './progress';
 import s from './finale.module.css';
 
 const nf = new Intl.NumberFormat('en-SG');
-const pct = (x: number) => Math.round(x * 100);
+/** Finale progress belongs to one play-through: a chapter replay (run.replays) starts fresh. */
+const finaleKey = (run: GameState) => run.startedAt * 100 + Math.min(99, run.replays ?? 0);
+/** Rounded down, so 99.7% uptime never shows as a perfect 100%. */
+const pct = (x: number) => Math.floor(x * 100 + 1e-9);
 const TEAM_ICON: Record<Team, string> = { data: '📊', ai: '🧠', logic: '🧩', cloud: '☁️' };
 
 /**
@@ -31,17 +34,17 @@ const TEAM_ICON: Record<Team, string> = { data: '📊', ai: '🧠', logic: '🧩
  * so a reload resumes where the player was and Live Ops can't be replayed for a better score.
  */
 export default function FinaleStage({ run, onHome, onLeaderboard }: { run: GameState; onHome: () => void; onLeaderboard: () => void }) {
-  const saved = finaleFor(run.startedAt);
+  const saved = finaleFor(finaleKey(run));
   const [phase, setPhaseState] = useState(saved.phase);
   const p = useMemo(() => pipeline(run), [run]);
   const patch = (x: Parameters<ReturnType<typeof useFinaleProgress.getState>['patch']>[1]) =>
-    useFinaleProgress.getState().patch(run.startedAt, x);
+    useFinaleProgress.getState().patch(finaleKey(run), x);
   const go = (ph: typeof phase) => {
     patch({ phase: ph });
     setPhaseState(ph);
   };
 
-  if (phase === 'reveal') return <Reveal p={p} onGo={() => go('intro')} />;
+  if (phase === 'reveal') return <Reveal p={p} logicPlayed={played(run).logic} onGo={() => go('intro')} />;
   if (phase === 'intro') return <LiveIntro onStart={() => go('live')} />;
   if (phase === 'live')
     return (
@@ -52,7 +55,7 @@ export default function FinaleStage({ run, onHome, onLeaderboard }: { run: GameS
           const families = liveOpsFamilies(p.families, results, finale.liveOps);
           const newBest = families > useGame.getState().bestFamilies;
           patch({ results, families, newBest, phase: 'debrief' });
-          useGame.getState().finishRun(families);
+          useGame.getState().finishRun(families, results.filter((r) => r === 'right').length);
           setPhaseState('debrief');
         }}
       />
@@ -72,13 +75,15 @@ function CountUp({ to }: { to: number }) {
 }
 
 /** §8.1: the chain of the player's own numbers, then the families counter. */
-function Reveal({ p, onGo }: { p: ReturnType<typeof pipeline>; onGo: () => void }) {
+function Reveal({ p, logicPlayed, onGo }: { p: ReturnType<typeof pipeline>; logicPlayed: boolean; onGo: () => void }) {
   const reduce = useReducedMotion();
   const headingRef = useScreenHeading<HTMLHeadingElement>(c.reveal.heading);
   const links: [string, string][] = [
     ['📊', fill(c.reveal.data, { pct: pct(p.data) })],
     ['🧠', fill(c.reveal.model, { pct: pct(p.model) })],
-    ['🧩', fill(c.reveal.logic, { pct: pct(p.logic) })],
+    // Display only: the formula still uses logicScore (1 with no hints), but "100%" for a stage
+    // nobody played would mislead.
+    ['🧩', logicPlayed ? fill(c.reveal.logic, { pct: pct(p.logic) }) : c.reveal.notPlayed],
     ['☁️', fill(c.reveal.uptime, { pct: pct(p.uptime) })],
   ];
   return (
@@ -133,15 +138,16 @@ function LiveIntro({ onStart }: { onStart: () => void }) {
 
 /** §8.2: route each incident to the right team before the timer runs out. */
 function LiveOps({ run, base, onDone }: { run: GameState; base: number; onDone: (r: ReturnType<typeof routeResult>[]) => void }) {
-  const saved = finaleFor(run.startedAt);
+  const saved = finaleFor(finaleKey(run));
   const dealt: DealtIncident[] = useMemo(() => {
     if (saved.dealt.length) {
       const byId = new Map(finale.incidents.map((i) => [i.id, i]));
       const back = saved.dealt.map((id) => byId.get(id)).filter((x): x is DealtIncident => !!x);
       if (back.length) return back;
     }
-    const d = dealIncidents(finale.incidents, finale.liveOps.count, mulberry32(run.startedAt + 77));
-    useFinaleProgress.getState().patch(run.startedAt, { dealt: d.map((x) => x.id) });
+    // A chapter replay deals a different set, so answers can't be memorised for a better best.
+    const d = dealIncidents(finale.incidents, finale.liveOps.count, mulberry32(run.startedAt + 77 + (run.replays ?? 0) * 1009));
+    useFinaleProgress.getState().patch(finaleKey(run), { dealt: d.map((x) => x.id) });
     return d;
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [run.startedAt]);
@@ -157,9 +163,11 @@ function LiveOps({ run, base, onDone }: { run: GameState; base: number; onDone: 
   const families = liveOpsFamilies(base, results, finale.liveOps);
   const incidentLabel = (n: number) => `${fill(c.liveOps.incidentOf, { n: n + 1, total: dealt.length })}: ${c.incidents[dealt[n]!.id]?.text ?? ''}`;
 
-  // The first incident is spoken on arrival (focus goes to the heading, the timer is already running).
+  // On arrival: speak the first incident, or, after a reload during the last feedback gap, finish
+  // straight away (every incident is already routed; the debrief was the next step).
   useEffect(() => {
-    if (dealt[results.length]) announce(incidentLabel(results.length));
+    if (results.length >= dealt.length) onDone(results);
+    else announce(incidentLabel(results.length));
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const route = (team: Team | null) => {
@@ -167,7 +175,7 @@ function LiveOps({ run, base, onDone }: { run: GameState; base: number; onDone: 
     const r = routeResult(incident, team);
     const next = [...results, r];
     setResults(next);
-    useFinaleProgress.getState().patch(run.startedAt, { results: next });
+    useFinaleProgress.getState().patch(finaleKey(run), { results: next });
     const teamName = c.teamButtons[incident.team];
     const why = c.incidents[incident.id]?.why ?? '';
     const text =
@@ -205,6 +213,8 @@ function LiveOps({ run, base, onDone }: { run: GameState; base: number; onDone: 
         running={!feedback}
         showPaused={false}
         announceAt={[0]}
+        extendable={false}
+        urgentAt={3}
         onExpire={() => route(null)}
       />
       <motion.article
@@ -230,7 +240,7 @@ function LiveOps({ run, base, onDone }: { run: GameState; base: number; onDone: 
       ) : (
         <p className={s.question}>{c.liveOps.route}</p>
       )}
-      <div className={s.teams} role="group" aria-label={c.liveOps.route}>
+      <div className={s.teams} role="group" aria-label={c.liveOps.route} data-waiting={feedback ? true : undefined}>
         {(['data', 'ai', 'logic', 'cloud'] as const).map((team) => (
           <button key={team} type="button" className={s.team} data-team={team} onClick={() => route(team)}>
             <span aria-hidden="true">{TEAM_ICON[team]} </span>
@@ -242,22 +252,36 @@ function LiveOps({ run, base, onDone }: { run: GameState; base: number; onDone: 
   );
 }
 
-function learnedLines(run: GameState): string[] {
+/** Which stages this run actually played (stage select can skip some). */
+function played(run: GameState): Record<Team, boolean> {
   const s1 = stage1For(run.startedAt).outcomes.filter((o) => o.levelId !== 'data-tutorial');
-  const cleaned = s1.reduce((n, o) => n + o.results.length, 0) || 20;
   const o2 = stage2For(run.startedAt).outcomes;
-  const labelled = (o2['ai-l1']?.points.length ?? 0) + (o2['ai-l2']?.points.filter((x) => x > 0).length ?? 0) || 20;
+  return {
+    data: s1.length > 0 || run.stars.data > 0,
+    ai: Object.keys(o2).length > 0 || run.stars.ai > 0,
+    logic: run.scores.logic.puzzlesSolved > 0 || run.stars.logic > 0 || run.scores.logic.hintsUsed > 0,
+    cloud: run.scores.cloud.autoUptime > 0 || run.scores.cloud.manualUptime > 0,
+  };
+}
+
+/** One line per stage from the player's real numbers; a skipped stage says so (never invent). */
+function learnedLines(run: GameState): string[] {
+  const p = played(run);
+  const s1 = stage1For(run.startedAt).outcomes.filter((o) => o.levelId !== 'data-tutorial');
+  const cleaned = s1.reduce((n, o) => n + o.results.length, 0);
+  const o2 = stage2For(run.startedAt).outcomes;
+  const labelled = (o2['ai-l1']?.points.length ?? 0) + (o2['ai-l2']?.points.filter((x) => x > 0).length ?? 0);
   return [
-    fill(dataCopy.learned, { count: cleaned }),
-    fill(aiCopy.learned, { count: labelled }),
-    fill(logicCopy.learned, { count: run.scores.logic.puzzlesSolved }),
-    stage4Learned(run.scores.cloud.manualUptime, run.scores.cloud.autoUptime),
+    p.data ? fill(dataCopy.learned, { count: cleaned }) : c.debrief.skipped,
+    p.ai ? fill(aiCopy.learned, { count: labelled }) : c.debrief.skipped,
+    p.logic ? fill(logicCopy.learned, { count: run.scores.logic.puzzlesSolved }) : c.debrief.skipped,
+    p.cloud ? stage4Learned(run.scores.cloud.manualUptime, run.scores.cloud.autoUptime) : c.debrief.skipped,
   ];
 }
 
 /** §8.3 debrief. The top card fits one 360×740 screen for a screenshot (name-free). */
 function Debrief({ run, onHome, onLeaderboard }: { run: GameState; onHome: () => void; onLeaderboard: () => void }) {
-  const saved = finaleFor(run.startedAt);
+  const saved = finaleFor(finaleKey(run));
   const families = saved.families ?? run.scores.finale.familiesReached;
   const rank = rankFor(families, finale.ranks);
   const headingRef = useScreenHeading<HTMLHeadingElement>(c.debrief.heading);
@@ -388,7 +412,6 @@ function ChapterSelect({ onBack }: { onBack: () => void }) {
             type="button"
             className={ui.btn}
             onClick={() => {
-              useFinaleProgress.getState().patch(-1, {});
               replayFrom(st.stage as Stage);
             }}
           >

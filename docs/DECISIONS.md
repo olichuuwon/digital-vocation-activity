@@ -88,6 +88,7 @@
 | 2026-10-07 | Stage 4 QA fixes (UI) | Kubernetes cards once per run; Phase B edits survive reload; a finished replay is saved and shown on reload; crash toasts throttled (summary for cascades); hardware-fault message; Pause and Roll back in a bottom bar (bad-update notice grows it, cards don't jump); fast-forward ×3 in Phase C; toasts cleared between screens; diagnosis only says "rock solid but pricey" at ≥ 99%; hint now says "around 60–70%". | Yes |
 | 2026-10-07 | Stage 4 timing | QA: first-timer ≈ 261 s (booth budget 180), expert ≈ 171 s; the spec's two 75 s storms alone are 150 s. Fast-forward in Phase C helps; shorter storms are an M8 option (owner item 29). | Yes |
 | 2026-10-07 | Finale (M6, in progress) | Pipeline reveal (18 s count-up), Live Ops: 8 of 16 incidents (≥ 1 per team), 8 s each, +15 right / −12 wrong or time-out, 1.8 s feedback gap; families clamped 0–1200; ranks Relief rookie 0 / Rapid responder 500 / Supply coordinator 700 / Ops commander 900 / Mission lead 1100. C4X match ranks the four by normalised stage performance. Debrief screenshot card fits 360×740 (e2e). Finished runs aren't resumed; chapter select unlocks after the first finish (replay from a stage, keeping scores). | Yes |
+| 2026-10-07 | Finale QA/a11y fixes | Live Ops feedback inline (not a toast over the next incident), spoken as verdict + next incident; gap scales with speech (1.8–4 s, relaxed ×1.5); no "+30 seconds" on the 8 s incident timer (real-time event; relaxed ×1.5 and Settings pause still apply), urgent style only in the last 3 s; reload after the last incident goes to the debrief (no dead end); each chapter replay deals a different incident set; "What you learned" says "You skipped this stage" instead of inventing numbers; the reveal shows "Logic score: not played" when Stage 3 was skipped; percentages round down (99.7% never shows as 100%); incidentsRouted saved; chapter select also on Home after a finish. | Yes |
 
 ## Copy needing owner approval
 <!-- NEEDS OWNER APPROVAL --> Reality Check cards in `src/content/realityChecks.json` with `needsApproval: true` (career-facing, D14). Preview them at `/dev/components`.
@@ -98,7 +99,7 @@
 4. **Cloud, "This is a real job":** "Site reliability engineers (SREs) keep apps like this running for millions of people. They set up alerts so a human only gets woken up when automation can't fix it."
 
 ## Milestone status
-- [x] M0 · [x] M0.5 · [x] M1 · [x] M2 · [x] M3 · [x] M4 · [x] M5 · [ ] M6 · [ ] M6.5 · [ ] M7 · [ ] M8
+- [x] M0 · [x] M0.5 · [x] M1 · [x] M2 · [x] M3 · [x] M4 · [x] M5 · [x] M6 · [ ] M6.5 · [ ] M7 · [ ] M8
 
 ### M0 notes (2026-10-06)
 - Lint, typecheck, unit tests (Vitest) and e2e (Playwright, iPhone 12 + Pixel 5) green.
@@ -146,3 +147,9 @@
 - Acceptance: sim unit tests (§7.5 rules, determinism, monotonicity, budget band, self-healing matters) ✅; manual < auto uptime for a sensible config (≈ 70% vs ≈ 99.7%) ✅.
 - a11y: Pause + Roll back in a bottom bar, storm end announced + focused, overload/30 s warnings, no Wrong/Correct prefixes on events, quiet Configure, 200% reflow, contrast fixes.
 - Carried: booth timing over budget (owner item 29); group support cards (M6.5).
+
+### M6 notes (2026-10-07)
+- Finale "Mission Live" (pipeline reveal, Live Ops), debrief (screenshot card, C4X match, what you learned, why digital matters, solo note) and chapter select, solo. Finished runs aren't resumed; best families kept.
+- Acceptance: formula tests (§3.2 in `src/state/scoring.test.ts`, finale logic in `src/stages/finale/logic.test.ts`) ✅; screenshot card fits 360×740 (e2e; QA also checked 390×844 and 360×640) ✅.
+- Timing (QA): finale + debrief ≈ 2:10–2:40 against 3:00.
+- Carried: the Prologue (stage 0) is still a placeholder screen ("Finish level"); group mode (M6.5).

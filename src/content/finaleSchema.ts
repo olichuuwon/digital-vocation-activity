@@ -51,6 +51,7 @@ export const finaleCopySchema = z.object({
     uptime: txt,
     families: txt,
     go: words(4),
+    notPlayed: txt,
   }),
   liveOps: z.object({
     heading: words(4),
@@ -92,6 +93,8 @@ export const finaleCopySchema = z.object({
     leaderboard: words(3),
     home: words(3),
     back: words(4),
+    /** "What you learned" for a stage skipped with stage select (never invent numbers). */
+    skipped: words(10),
   }),
 });
 export type FinaleCopy = z.infer<typeof finaleCopySchema>;

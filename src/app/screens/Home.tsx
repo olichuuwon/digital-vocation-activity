@@ -22,6 +22,10 @@ export function Home({
   const hasRun = useGame((s) => s.run !== null && !s.run.finishedAt);
   const startRunInStore = useGame((s) => s.startRun);
   const jumpToStage = useGame((s) => s.jumpToStage);
+  // Chapter select (§8.3): after the first finish, replay a stage of the finished run from Home too.
+  const canReplay = useGame((s) => s.chapterUnlocked && !!s.run?.finishedAt);
+  const replayFrom = useGame((s) => s.replayFrom);
+  const [replaying, setReplaying] = useState(false);
   const [picking, setPicking] = useState(false);
   // Feature flag (src/content/flags.json): after the length, pick a starting stage.
   const [stageFor, setStageFor] = useState<Mode | null>(null);
@@ -31,9 +35,40 @@ export function Home({
     if (stage !== undefined && stage > 0) jumpToStage(stage);
     onEnter();
   };
-  const headingRef = useScreenHeading<HTMLHeadingElement>(stageFor ? l.stageHeading : picking ? l.heading : t.title);
+  const headingRef = useScreenHeading<HTMLHeadingElement>(
+    replaying ? t.replayStage : stageFor ? l.stageHeading : picking ? l.heading : t.title,
+  );
 
   const playSolo = () => (facilitatorMode ? startRun(facilitatorMode) : setPicking(true));
+
+  if (replaying) {
+    return (
+      <main className={ui.screen}>
+        <h1 className={ui.hero} ref={headingRef} tabIndex={-1}>
+          {t.replayStage}
+        </h1>
+        <div className={ui.actions}>
+          {stages.map((st) => (
+            <button
+              key={st.stage}
+              type="button"
+              className={ui.btn}
+              onClick={() => {
+                replayFrom(st.stage as Stage);
+                onEnter();
+              }}
+            >
+              <span aria-hidden="true">{st.icon} </span>
+              {st.stage}. {st.title}
+            </button>
+          ))}
+          <button type="button" className={ui.btn} onClick={() => setReplaying(false)}>
+            <span aria-hidden="true">←</span> {l.back}
+          </button>
+        </div>
+      </main>
+    );
+  }
 
   if (stageFor) {
     return (
@@ -102,6 +137,11 @@ export function Home({
         <button type="button" className={`${ui.btn} ${hasRun ? '' : ui.primary}`} onClick={playSolo}>
           {hasRun ? t.newRun : t.playSolo}
         </button>
+        {canReplay && (
+          <button type="button" className={ui.btn} onClick={() => setReplaying(true)}>
+            {t.replayStage}
+          </button>
+        )}
         <button type="button" className={ui.btn} aria-disabled="true">
           {t.createGroup} <span className={ui.detail}>{t.comingSoon}</span>
         </button>

@@ -7,7 +7,8 @@
     "logic": "Logic score {pct}%",
     "uptime": "Uptime {pct}%",
     "families": "{n} families reached",
-    "go": "Go live"
+    "go": "Go live",
+    "notPlayed": "Logic score: not played"
   },
   "liveOps": {
     "heading": "Live ops",
@@ -137,6 +138,7 @@
     "chapterIntro": "Jump back into any stage and try to beat your best score.",
     "leaderboard": "Leaderboard",
     "home": "Home",
-    "back": "Back to results"
+    "back": "Back to results",
+    "skipped": "You skipped this stage in this run."
   }
 }

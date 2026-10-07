@@ -23,6 +23,8 @@ export interface GameState {
   startedAt: number;
   /** Set when the run reaches the debrief (finished runs aren't resumed). */
   finishedAt?: number;
+  /** Chapter-select replays of this run (varies the Live Ops deal). */
+  replays?: number;
 }
 
 export type Theme = 'system' | 'light' | 'dark';

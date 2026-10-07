@@ -49,7 +49,8 @@ import s from './cloud.module.css';
 type LevelId = 'cloud-manual' | 'cloud-configure' | 'cloud-replay';
 type Phase = 'briefing' | 'k8s' | 'intro' | 'play' | EndPhase;
 
-const pct = (x: number) => Math.round(x * 100);
+/** Rounded down, so 99.7% uptime never shows as a perfect 100% (3★ needs 99%). */
+const pct = (x: number) => Math.floor(x * 100 + 1e-9);
 const levelName = (id: LevelId) => stageContent(4)!.levels.find((l) => l.id === id)?.name ?? '';
 /** Most "Tweak settings" round trips after a replay. */
 const MAX_TWEAKS = 2;

@@ -32,7 +32,7 @@ const text = z.string().min(1);
 export const copySchema = z.object({
   home: z.object({
     title: text, tagline: text, playSolo: text, createGroup: text, joinGroup: text,
-    leaderboard: text, comingSoon: text, resume: text, newRun: text,
+    leaderboard: text, comingSoon: text, resume: text, newRun: text, replayStage: text,
   }),
   length: z.object({
     heading: text, booth: text, boothDetail: text, full: text, fullDetail: text,

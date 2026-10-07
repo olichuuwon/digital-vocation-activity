@@ -67,7 +67,7 @@ interface Store {
   recordStage: <D extends Discipline>(d: D, scores: Scores[D], stars: StarCount) => void;
   jumpToStage: (stage: Stage) => void;
   /** Debrief reached: record families, best score, unlock chapter select. Idempotent per run. */
-  finishRun: (families: number) => void;
+  finishRun: (families: number, incidentsRouted?: number) => void;
   /** Chapter select: replay from a stage (keeps earlier scores; the run continues from there). */
   replayFrom: (stage: Stage) => void;
   quitRun: () => void;
@@ -91,7 +91,7 @@ export const useGame = create<Store>()(
           s.run ? { run: { ...s.run, scores: { ...s.run.scores, [d]: scores }, stars: { ...s.run.stars, [d]: stars } } } : s,
         ),
       jumpToStage: (stage) => set((s) => (s.run ? { run: { ...s.run, stage, levelIndex: 0 } } : s)),
-      finishRun: (families) =>
+      finishRun: (families, incidentsRouted = 0) =>
         set((s) => {
           if (!s.run) return s;
           const best = Math.max(s.bestFamilies, families);
@@ -101,7 +101,7 @@ export const useGame = create<Store>()(
             run: {
               ...s.run,
               finishedAt: s.run.finishedAt ?? Date.now(),
-              scores: { ...s.run.scores, finale: { ...s.run.scores.finale, familiesReached: families } },
+              scores: { ...s.run.scores, finale: { familiesReached: families, incidentsRouted } },
             },
           };
         }),
@@ -110,7 +110,7 @@ export const useGame = create<Store>()(
           if (!s.run) return s;
           const { finishedAt: _done, ...rest } = s.run;
           void _done;
-          return { run: { ...rest, stage, levelIndex: 0 } };
+          return { run: { ...rest, stage, levelIndex: 0, replays: (rest.replays ?? 0) + 1 } };
         }),
       quitRun: () => set({ run: null }),
       updateSettings: (patch) => set((s) => ({ settings: { ...s.settings, ...patch } })),

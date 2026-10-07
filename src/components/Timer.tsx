@@ -21,6 +21,8 @@ export function Timer({
   onExtend,
   showPaused = true,
   announceAt = ANNOUNCE_AT,
+  extendable = true,
+  urgentAt = 10,
 }: {
   seconds: number;
   /** Pass false while a dialog (Rulebook, Settings) is open. */
@@ -32,6 +34,10 @@ export function Timer({
   showPaused?: boolean;
   /** Seconds-left checkpoints spoken to screen readers (short per-item timers can pass [0]). */
   announceAt?: readonly number[];
+  /** "+30 seconds" (WCAG 2.2.1). Off only for short real-time events (Live Ops: relaxed ×1.5 + pause). */
+  extendable?: boolean;
+  /** Seconds left when the urgent style starts. */
+  urgentAt?: number;
 }) {
   const relaxed = useRelaxed();
   const settingsOpen = useGame((g) => g.settingsOpen);
@@ -84,7 +90,7 @@ export function Timer({
   }, [running, total, announce]);
 
   const left = secondsLeft(total, elapsedMs);
-  const urgent = left <= 10;
+  const urgent = left <= urgentAt;
   const extend = () => {
     const n = extensions + 1;
     setExtensions(n);
@@ -104,7 +110,7 @@ export function Timer({
         <span className={s.timerFill} style={{ display: 'block', width: `${total > 0 ? (left / total) * 100 : 0}%` }} />
       </span>
       {showPaused && !running && left > 0 && <span className={s.muted}>{t.paused}</span>}
-      {running && canExtend(left, extensions) && (
+      {extendable && running && canExtend(left, extensions) && (
         <button type="button" className={s.extendBtn} onClick={extend}>
           {t.extend}
         </button>
