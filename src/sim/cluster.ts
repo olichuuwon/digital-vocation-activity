@@ -86,8 +86,8 @@ export const BAD_DEPLOY_S = 32;
 export const BAD_DEPLOY_ERROR = 0.5;
 export const AUTO_ROLLBACK_S = 2;
 /** Phase A Boost: +BOOST_CAPACITY req/s on one server for BOOST_S, then BOOST_COOLDOWN_S before it can boost again. */
-export const BOOST_CAPACITY = 100;
-export const BOOST_S = 5;
+export const BOOST_CAPACITY = 150;
+export const BOOST_S = 4;
 export const BOOST_COOLDOWN_S = 4;
 export const MANUAL_SERVERS = 3;
 export const CREDITS_PER_POD_MIN = 10;
