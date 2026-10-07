@@ -224,7 +224,6 @@ export const stage2CopySchema = z.object({
     miss: words(12),
     hint: words(15),
     answer: words(15),
-    overlap: txt,
     credit: words(25),
   }),
   audit: z.object({

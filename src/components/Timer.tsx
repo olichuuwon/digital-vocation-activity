@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useAnnouncer } from '../app/screenFocus';
 import { copy, fill } from '../content';
-import { useRelaxed } from '../state/store';
+import { useGame, useRelaxed } from '../state/store';
 import { ANNOUNCE_AT, canExtend, EXTEND_BY_SECONDS, formatClock, levelSeconds, secondsLeft } from '../state/timer';
 import s from './components.module.css';
 
@@ -11,12 +11,12 @@ const MAX_TICK_MS = 500;
 
 /**
  * Level countdown (§2). Relaxed mode adds ×1.5 (§10). Pauses while `running` is false or the
- * tab is hidden. Screen readers hear only checkpoints (30s, 10s, time up), not every second.
+ * tab is hidden or Settings is open. Screen readers hear only checkpoints (30s, 10s, time up), not every second.
  * Remount with a new `key` to restart.
  */
 export function Timer({
   seconds,
-  running = true,
+  running: runningProp = true,
   onExpire,
   onExtend,
 }: {
@@ -28,6 +28,8 @@ export function Timer({
   onExtend?: (extensions: number) => void;
 }) {
   const relaxed = useRelaxed();
+  const settingsOpen = useGame((g) => g.settingsOpen);
+  const running = runningProp && !settingsOpen;
   const [extensions, setExtensions] = useState(0);
   const total = levelSeconds(seconds, relaxed) + extensions * EXTEND_BY_SECONDS;
   const [elapsedMs, setElapsedMs] = useState(0);

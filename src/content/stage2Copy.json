@@ -71,7 +71,6 @@
     "miss": "That box missed: {pct}% overlap. Hug the edges.",
     "hint": "Tighter! Each side of your box should touch the item's edge.",
     "answer": "The dashed outline shows the right box. Match it, then lock it in.",
-    "overlap": "Overlap {pct}%",
     "credit": "These are stand-in drawings. Real AI teams train on huge collections of photos, each labelled with boxes just like yours."
   },
   "audit": {

@@ -52,6 +52,8 @@ interface Store {
   settings: Settings;
   /** ?relaxed=1 for this page load only, so a shared booth phone doesn't stay relaxed. */
   relaxedThisSession: boolean;
+  /** Settings sheet open: every level timer and sim clock pauses (WCAG 2.2.1). Not persisted. */
+  settingsOpen: boolean;
   startRun: (mode: Mode) => void;
   completeLevel: () => void;
   /** Save a stage's normalised scores and stars (persisted with the run). */
@@ -68,6 +70,7 @@ export const useGame = create<Store>()(
       bestFamilies: 0,
       settings: DEFAULT_SETTINGS,
       relaxedThisSession: false,
+      settingsOpen: false,
       startRun: (mode) => set((s) => ({ run: { ...newRun(mode), bestFamilies: s.bestFamilies } })),
       completeLevel: () =>
         set((s) => (s.run ? { run: { ...s.run, ...nextPosition(s.run, s.run.mode) } } : s)),

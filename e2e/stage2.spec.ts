@@ -116,3 +116,26 @@ test('Stage 2 full mode: Draw the Box with buttons only, then the answer outline
   await expect(page.getByTestId('truth-box')).toBeAttached();
   await expect(page.getByTestId('hint')).toContainText('dashed outline');
 });
+
+test('Stage 2: Settings pauses the level timer, and a reload after the last level resumes there', async ({ page }) => {
+  await page.goto('/?debug=1&stage=2');
+  await page.getByRole('button', { name: 'Start labelling' }).click();
+  await page.getByRole('button', { name: 'Start', exact: true }).click();
+  await playLabels(page);
+  await page.getByRole('button', { name: 'Start', exact: true }).click();
+  await page.getByRole('button', { name: 'Settings' }).click();
+  const clock = page.getByRole('timer');
+  const before = await clock.textContent();
+  await page.waitForTimeout(2500);
+  expect(await clock.textContent()).toBe(before);
+  await page.getByRole('button', { name: 'Close' }).first().click();
+  await playLabels(page);
+  await page.getByRole('button', { name: 'Start', exact: true }).click();
+  await playCovered(page);
+  await page.getByRole('button', { name: 'Start', exact: true }).click();
+  await playAudit(page);
+  await expect(page.getByRole('heading', { name: 'Confidence, not certainty' })).toBeVisible();
+  await page.goto('/');
+  await page.getByRole('button', { name: 'Resume run' }).click();
+  await expect(page.getByRole('heading', { name: 'Confidence, not certainty' })).toBeVisible();
+});

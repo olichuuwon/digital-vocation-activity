@@ -425,13 +425,16 @@ export function earlyGuessBonus(l2Bonuses: readonly number[], l2Dealt: number): 
   return clamp(s / l2Dealt, 0, 1);
 }
 
-/** clamp((caught − 0.5·falseFlags) / wrongDealt, 0, 1). */
-export function auditCatch(results: readonly { kind: AuditKind }[], wrongDealt: number): number {
+/**
+ * clamp((Σ caught credit − 0.5·falseFlags) / wrongDealt, 0, 1). A catch is worth 1, or
+ * 0.75 / 0.5 when the hint / answer was showing (§2: "the answer with reduced score").
+ */
+export function auditCatch(results: readonly { kind: AuditKind; assist?: HintLevel }[], wrongDealt: number): number {
   if (wrongDealt <= 0) return 0;
   let caught = 0;
   let falseFlags = 0;
   for (const r of results) {
-    if (r.kind === 'caught') caught++;
+    if (r.kind === 'caught') caught += ASSIST_POINTS[r.assist ?? 'none'];
     else if (r.kind === 'falseFlag') falseFlags++;
   }
   return clamp((caught - 0.5 * falseFlags) / wrongDealt, 0, 1);

@@ -147,10 +147,11 @@ export default function AiStage({ run, debug }: { run: GameState; debug: boolean
   const l2 = outcomes['ai-l2'];
   const l3 = outcomes['ai-l3'];
   const l4 = outcomes['ai-l4'];
-  const labelled = (l1?.points.length ?? 0) + (l2?.points.length ?? 0);
+  // Pictures actually labelled (unanswered at time-up don't count).
+  const labelled = (l1?.points.length ?? 0) + (l2?.points.filter((x) => x > 0).length ?? 0);
 
   if (phase === 'reality')
-    return <RealityCheck check={realityCheck('ai')} vars={{ labelled: labelled || 20 }} onDone={() => setPhase('result')} />;
+    return <RealityCheck check={realityCheck('ai')} vars={{ labelled }} onDone={() => setPhase('result')} />;
 
   if (phase === 'result') {
     const label = labelAccuracy(
@@ -161,7 +162,7 @@ export default function AiStage({ run, debug }: { run: GameState; debug: boolean
     );
     const early = earlyGuessBonus(l2?.bonuses ?? [], l2?.dealt ?? 0);
     const audit = auditCatch(
-      (l4?.kinds ?? []).map((kind) => ({ kind: kind as AuditKind })),
+      (l4?.kinds ?? []).map((kind, i) => ({ kind: kind as AuditKind, assist: (l4?.assists?.[i] ?? 'none') as HintLevel })),
       l4?.wrongDealt ?? 0,
     );
     const box = run.mode === 'full' ? boxScore(l3?.points ?? [], l3?.dealt ?? 0, stage2.box.perfect) : null;
@@ -411,7 +412,8 @@ function CoveredPlay({ salt, debug, onDone }: { salt: number; debug: boolean; on
   const [guideOpen, setGuideOpen] = useState(false);
   const [finished, setFinished] = useState(false);
   const img = deck[index];
-  const running = !guideOpen && !finished;
+  const settingsOpen = useGame((g) => g.settingsOpen);
+  const running = !guideOpen && !finished && !settingsOpen;
 
   // Tiles lift on a steady clock; paused while the field guide is open or the tab is hidden.
   useEffect(() => {
@@ -485,6 +487,7 @@ function CoveredPlay({ salt, debug, onDone }: { salt: number; debug: boolean; on
         order={orders[index] ?? []}
         shown={shown}
       />
+      <p className={s.credit}>{c.covered.instruction}</p>
       <div className={s.revealRow} data-testid="covered-label" data-label={debug ? img.label : undefined}>
         <span className={ui.muted}>
           {shown >= total ? c.covered.allShown : fill(c.covered.tilesLeft, { n: total - shown })}
@@ -540,7 +543,8 @@ function BoxPlay({ salt, debug, onDone }: { salt: number; debug: boolean; onDone
   const lock = () => {
     if (!img) return;
     const { iou, grade } = judgeBox(box, img.box, cfg);
-    const all = [...ious, iou];
+    // Tracing the shown answer (§2 "answer with reduced score") earns at most half credit.
+    const all = [...ious, hint === 'answer' ? Math.min(iou, cfg.perfect / 2) : iou];
     setIous(all);
     if (grade === 'miss') setMisses((m) => m + 1);
     const upcoming = deck[index + 1];
@@ -571,6 +575,7 @@ function BoxPlay({ salt, debug, onDone }: { salt: number; debug: boolean; onDone
         }}
       />
       <p className={s.question}>{fill(c.box.findLabel, { label: labelName(img.label) })}</p>
+      <p className={s.credit}>{c.box.instruction}</p>
       <div data-truth={debug ? img.box.join(',') : undefined} data-testid="box-level" style={{ display: 'contents' }}>
         <BoxDrawer
           key={img.id}
@@ -613,6 +618,7 @@ function AuditPlay({ salt, debug, onDone }: { salt: number; debug: boolean; onDo
       dealt: final.items.length,
       points: [],
       kinds: final.results.map((r) => r.kind),
+      assists: final.results.map((r) => r.assist),
       wrongDealt: auditWrongDealt(final),
     });
   };

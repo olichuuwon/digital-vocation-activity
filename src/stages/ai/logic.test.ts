@@ -388,3 +388,11 @@ describe('scoring', () => {
     expect(mid).toEqual({ labelAccuracy: 0.8, earlyGuessBonus: 0.4, auditCatch: 0.6, modelAccuracy: modelAccuracy(0.8, 0.7, 0.6) });
   });
 });
+
+describe('auditCatch with help showing', () => {
+  it('a catch made with the hint or answer showing earns less (§2 reduced score)', () => {
+    expect(auditCatch([{ kind: 'caught', assist: 'none' }], 1)).toBe(1);
+    expect(auditCatch([{ kind: 'caught', assist: 'hint' }], 1)).toBe(0.75);
+    expect(auditCatch([{ kind: 'caught', assist: 'answer' }], 1)).toBe(0.5);
+  });
+});

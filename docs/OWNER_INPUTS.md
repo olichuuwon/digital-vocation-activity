@@ -1,50 +1,53 @@
 # Owner inputs needed
 
-Items that need a decision, content or approval from the project owner. The game runs on the defaults shown until you answer. Full history is in `docs/DECISIONS.md`.
+Items waiting for the project owner. The game currently runs on the default shown for each one, so none of them block building.
 
-Reply by editing this file (put your answer under **Your answer**) or by telling Claude in a session.
+**How to answer:** tell Claude the item numbers, e.g. `1 ok, 6 ok, 7 change: 3★ at 85%`. Anything you don't mention keeps its default. Claude ticks the box, applies the change and logs it in `docs/DECISIONS.md`.
 
----
+Last updated: 2026-10-07 (after M3).
 
-## Open now
+## A. Text that needs your approval (D14)
+Preview these at `/dev/components`, under "Reality Check". The text lives in `src/content/realityChecks.json`.
 
-### 1. Approve career/DIS copy (D14)
-Reality Check cards marked `needsApproval: true` in `src/content/realityChecks.json`. You can preview them at `/dev/components`. The text is listed under "Copy needing owner approval" in `docs/DECISIONS.md`.
-**Default:** shown as drafted.
-**Your answer:**
+- [ ] **1. Data:** "You cleaned {n} records by hand. Data scientists write each rule once as code. A pipeline, an automatic chain of steps, then applies it to millions of records in seconds."
+- [ ] **2. AI:** title "Your {n} labels did this" (new in M3: shows the player's own count); "Every picture you labelled helped train your model…" and "Your model says this road is clear, 91% sure. It's flooded. Your model never saw night photos. Real AI teams hunt for gaps like this and keep humans checking the results."
+- [ ] **3. Software:** "Your blocks just turned into Python…" and "Software engineers also write automatic tests: small checks that run your program on thousands of maps before real people use it. Each tick is a passed test."
+- [ ] **4. Cloud:** "Site reliability engineers (SREs) keep apps like this running for millions of people. They set up alerts so a human only gets woken up when automation can't fix it."
 
-### 2. Stage 2 "Draw the Box": real photos or drawings? (§5.4, M3)
-The spec asks for real open-dataset photos (e.g. Open Images, CC BY) for this bonus level. M3 ships in-repo SVG drawings because the milestone calls for placeholders and every photo needs a licence check by a person. Options:
-- **a)** Keep drawings (zero licence risk, true boxes exact). The credit line says they're stand-ins.
-- **b)** Pick ~5–8 photos (no faces or number plates, licence allows reuse with attribution) and send links. Claude will compress them to WebP (≤60 KB), add boxes and add `assets/CREDITS.md` plus a "Photo credits" link in settings.
+## B. Stage 1 gameplay (play it first)
+Try it: https://digital-vocation-activity.vercel.app/?debug=1&stage=1
 
-**Default:** a.
-**Your answer:**
+- [ ] **5. Level sizes:** the tutorial has 3 cards. Level 1 is 10 cards in 40s. Level 2 is 10 cards in 60s. *Default: keep as is.*
+- [ ] **6. Rules per level:** the spec says one new rule per level, but levels 1 and 2 each show two (2+3, then 4+5). *Default: two.*
+- [ ] **7. Stars:** 1★ at 30%, 2★ at 65%, 3★ at 88%. A careful player gets about 3★ and a first-timer about 2★. *Default: keep.*
+- [ ] **8. Automate question:** "Which rule would you turn into code first?" The correct answer is "trash repeated household IDs". The wrong answers are "trash households over 12 people" and "trash every typo". *Default: keep.*
+- [ ] **9. Full mode is short:** Stage 1 takes about 2.6 min against the 5–6 min budget. *Default: add content after the M8 playtests.*
+- [ ] **10. Extra Rulebook examples:** these aren't in the spec: "People: 0", "Water: 900 L", "ID 1042 (second time)". *Default: keep.*
 
-### 3. Stage 2 balance and scoring (M3)
-Proposed by the game designer, to be checked in M8 playtests:
-- Stage score = 55% labels + 15% early-guess bonus + 30% audit (+5% box, full run only). Stars at 0.30 / 0.62 / 0.87.
-- Being accurate but always waiting for every tile gives 2★. 3★ needs some early guessing and a clean audit.
-- L1 is 12 pictures in 30 s (spec value). That may feel fast for 12-year-olds.
+## C. Branding and look
+- [ ] **11. Colours (D2):** teal, violet, amber and blue from spec §9. Do you have DIS brand colours to use instead? *Default: spec colours.*
+- [ ] **12. Logos (Q1):** none; text "DIS" and "C4X Digital" only. *Default: no logos.*
+- [ ] **13. Fonts:** the phone's system fonts. *Default: system fonts.*
 
-**Default:** as above.
-**Your answer:**
+## D. Spec defaults to confirm
+- [ ] **14. Ranking (Q5):** most families first; on a tie, the faster group wins. *Default: keep.*
+- [ ] **15. Group names (Q6):** pick a generated name ("Swift Kingfisher") or type your own (filtered, and the facilitator can hide it). *Default: keep.*
+- [ ] **16. Big screen (Q7):** I've assumed the booth has a TV for `/host`. *Default: yes; the game works without it.*
+- [ ] **17. Prizes (Q9):** none in the game. *Default: none.*
+- [ ] **18. Local place names (`[FILL]`):** records use sector letters A–F. Do you want real Singapore areas instead? *Default: letters.*
 
-### 4. Earlier defaults still waiting for a yes/no
-These are marked "Owner to confirm? Yes" in `docs/DECISIONS.md`:
-- Brand colours (D2): spec §9 discipline colours
-- No logos, text-only "DIS" / "C4X Digital" (Q1)
-- System fonts (no web fonts)
-- Leaderboard: extra columns `mode` and `group_token`; global rate limit of 30 runs per minute
-- Stage 1 extras: rulebook examples, two new rules per level, scoring and stars, the "which rule to automate" options, and full-run Stage 1 length (≈2.6 min against a 5–6 min budget)
+## E. Backend safety
+- [ ] **19. Rate limit:** at most 30 group scores per minute across all players. Is that OK for your event size? *Default: 30.*
 
-**Your answer:**
+## F. Stage 2 gameplay (play it first)
+Try it: https://digital-vocation-activity.vercel.app/?debug=1&stage=2 (add `&mode=full` for Draw the Box)
 
-### 5. Optional: local place or sector names (§4.4)
-Stage 1 uses sectors A–F. If you'd like Singapore place names instead, list them here.
-**Your answer:**
+- [ ] **20. Draw the Box pictures:** the spec asks for real open-dataset photos. M3 uses the game's own drawings (no licence risk, boxes exact). Want real photos? If so, send ~5–8 you like (no faces or number plates, reusable with attribution) and Claude adds them with credits. *Default: drawings.*
+- [ ] **21. Level sizes:** tutorial 2 pictures (the spec says 1). Level 1 is 12 pictures in 30s. Covered Up is 8 pictures in 60s, a tile every 0.6s, 2 tiles shown at the start, and 2 Reveal taps. Audit is 8 in 40s with 3 wrong. Draw the Box is 5 in 45s. *Default: keep.*
+- [ ] **22. Stars and scoring:** 55% labels, 15% early-guess bonus, 30% audit, plus 5% box in full mode. Stars at 30% / 62% / 87%. Accurate but always waiting for every tile gives 2★, and 3★ needs some quick guesses and a clean audit. *Default: keep.*
+- [ ] **23. Stage 2 is short:** booth about 2.1 min against 3; full about 2.9 min against 5–6. Covered Up plays in 10–25s against "~60s". *Default: tune after the M8 playtests (e.g. slower tiles, more pictures in full mode).*
+- [ ] **24. The 64 pictures:** review them all at `/dev/components` → "Stage 2 pictures". *Default: keep.*
 
----
-
-## Setup notes (no answer needed)
-- **Supabase keys:** in a session, Claude puts them in `.env.local`, which git ignores, and never commits them. The live site reads them from Vercel's environment variables (Project → Settings → Environment Variables: `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`). If the deployed leaderboard ever says "unavailable", check them there.
+## G. Setup notes (no answer needed)
+- Supabase keys: Claude keeps them in `.env.local` (git-ignored) and never commits them. The live site reads them from Vercel → Project → Settings → Environment Variables (`VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`).
+- **Deploys:** Vercel deploys `main`. Claude works on the branch `claude/beautiful-allen-ne188s`. Merge it into `main` (PR or fast-forward) to put M3 live.

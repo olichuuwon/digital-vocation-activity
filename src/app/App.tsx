@@ -69,7 +69,8 @@ function GameApp() {
   // Reopening with a saved run lands on Home so the player can choose Resume (§3.1).
   const [onHome, setOnHome] = useState(() => !(params.debug && params.stage !== null));
   const [boardOpen, setBoardOpen] = useState(false);
-  const [settingsOpen, setSettingsOpen] = useState(false);
+  const settingsOpen = useGame((s) => s.settingsOpen);
+  const setSettingsOpen = (open: boolean) => useGame.setState({ settingsOpen: open });
   useTheme(theme);
 
   // Facilitator and debug params apply once on load.

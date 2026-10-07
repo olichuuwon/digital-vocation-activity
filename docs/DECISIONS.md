@@ -1,5 +1,7 @@
 # Decisions & assumptions log
 
+> **Pending owner inputs:** see `docs/OWNER_INPUTS.md` (numbered checklist). Add new items there at the end of each milestone.
+
 | Date | Item | Decision / default used | Owner to confirm? |
 |------|------|-------------------------|-------------------|
 |      | D1–D17 | See GAME_SPEC.md §0 | Yes |
@@ -49,10 +51,10 @@
 | 2026-10-07 | Full-mode Stage 1 length | Measured ≈2.6 min against the §2 full budget of 5–6 min (booth ≈2 min against 3). Revisit with `game-designer` in M8 playtests (more outlier charts or a longer L2). | Yes |
 | 2026-10-07 | Supabase env (owner request) | Owner supplied the project URL + publishable key. Saved to git-ignored `.env.local` for local runs; not committed (CLAUDE.md "never commit secrets"). Production reads them from Vercel env vars. | No |
 | 2026-10-07 | README | Added a player/facilitator-facing `README.md` (how to play, settings, facilitator params, privacy). Developer notes folded at the bottom. Stages 3–4, finale and groups marked "coming soon". | No |
-| 2026-10-07 | `docs/OWNER_INPUTS.md` | New single list of everything waiting on the owner (approvals, open `[FILL]`s, balance sign-off). | No |
+| 2026-10-07 | `docs/OWNER_INPUTS.md` | Owner's numbered checklist (from `main`) kept; M3 adds items 20–24. | No |
 | 2026-10-07 | Stage 2 images (§5.4) | 64 in-repo SVG scenes (7 day images per class + 8 night roads), drawn procedurally from `aiImages.json` (backdrop, item box, style, props). The item is drawn to fill its `box`, so boxes are exact. **Draw the Box also uses SVG**, not open-dataset photos (M3 says "placeholder SVG assets"; photo licences need a human check). No people/faces. | Yes |
 | 2026-10-07 | Night images | Never dealt in training levels (L1/L2/L3), so "your model never saw night photos" (§5.3) is literally true. They appear only in the audit pool (incl. night flooded road → "clear road 91%"). | No |
-| 2026-10-07 | Stage 2 levels | Spec values kept: tutorial 2 images / 3 options untimed; L1 12 / 30s / 4 options; L2 8 / 60s, 4×4, a tile every 600 ms, wrong guess +1 tile; bonus L3 5 boxes / 45s, IoU good 0.5 / perfect 0.75; L4 8 / 40s with 3 wrong, ≥1 low-confidence (<60%) correct and ≥1 high-confidence (≥85%) wrong. Not in the spec: L2 starts with 2 tiles shown, wrong guess −0.25, solo Reveal power 2 charges per level. | Yes |
+| 2026-10-07 | Stage 2 levels | Tutorial 2 images / 3 options untimed (spec says one image; two gives a second easy win); spec values kept: L1 12 / 30s / 4 options; L2 8 / 60s, 4×4, a tile every 600 ms, wrong guess +1 tile; bonus L3 5 boxes / 45s, IoU good 0.5 / perfect 0.75; L4 8 / 40s with 3 wrong, ≥1 low-confidence (<60%) correct and ≥1 high-confidence (≥85%) wrong. Not in the spec: L2 starts with 2 tiles shown, wrong guess −0.25, solo Reveal power 2 charges per level. | Yes |
 | 2026-10-07 | Covered Up reveal order | Seeded shuffle, at most 1 of the 4 centre tiles among the first 3 lifted, so a picture is never given away instantly. | No |
 | 2026-10-07 | Stage 2 scoring | labelAccuracy = (L1 points + L2 points) ÷ (L1 + L2 dealt); L1 card = 1 / 0.75 after hint / 0.5 with answer; L2 image = 1 − 0.25 per wrong guess, capped 0.75/0.5 by hint/answer; unanswered 0. earlyGuessBonus = mean of (16 − tiles shown) ÷ (16 − 2) at the right guess. auditCatch = (caught − 0.5·false flags) ÷ wrong dealt. Stage score = 0.55·label + 0.15·early + 0.30·audit + 0.05·box (full only). Stars ≥0.30 / 0.62 / 0.87. modelAccuracy per §3.2 with Stage 1 accuracy. "+30 seconds" is free. | Yes |
 | 2026-10-07 | Stage 2 hint ladder | L1/L4: like Stage 1 (per level, after a wrong answer the next item shows hint at 2 wrong, answer at 3+). L2: per image (2 wrong guesses → hint, 3 → answer marked). L3: per level, 2 missed boxes → hint, 3+ → the true box shown as a dashed outline. | No |
@@ -60,6 +62,9 @@
 | 2026-10-07 | Stage 2 alt text | Each picture's accessible name is "Picture n of N." plus the field-guide visual clue (not the label name), so screen-reader players can play. | No |
 | 2026-10-07 | AI Reality Check | Training-curve card shows "{labelled} from you" (L1+L2 answers); card title now "Your {labelled} labels did this" (still needs approval). | Yes |
 | 2026-10-07 | Stage 2 lazy-loaded | `AiStage` is a separate chunk (≈9 KB gz + content). `/dev/components` gained a "Stage 2 pictures" sheet showing every image with its true box. | No |
+| 2026-10-07 | Answer shown = reduced score (Stage 2) | QA fix: audit catches count 0.75 with the hint and 0.5 with the answer showing; a box locked while the true box is drawn earns at most half credit. | No |
+| 2026-10-07 | Settings pauses timers | QA fix: the store has `settingsOpen` (not persisted); every `Timer` and the Covered Up tile clock pause while Settings is open (Stage 1 too, via Timer). | No |
+| 2026-10-07 | Stage 2 timing | QA measured booth ≈ 127 s (budget 3 min) and full ≈ 171 s (5–6 min). Same pattern as Stage 1; tune in M8 (owner item 23). | Yes |
 | 2026-10-07 | e2e browser | `playwright.config.ts` honours `PW_CHROMIUM_PATH` (sandbox Chromium); CI still installs its own. | No |
 
 ## Copy needing owner approval
@@ -70,7 +75,7 @@
 4. **Cloud, "This is a real job":** "Site reliability engineers (SREs) keep apps like this running for millions of people. They set up alerts so a human only gets woken up when automation can't fix it."
 
 ## Milestone status
-- [x] M0 · [x] M0.5 · [x] M1 · [x] M2 · [ ] M3 · [ ] M4 · [ ] M5 · [ ] M6 · [ ] M6.5 · [ ] M7 · [ ] M8
+- [x] M0 · [x] M0.5 · [x] M1 · [x] M2 · [x] M3 · [ ] M4 · [ ] M5 · [ ] M6 · [ ] M6.5 · [ ] M7 · [ ] M8
 
 ### M0 notes (2026-10-06)
 - Lint, typecheck, unit tests (Vitest) and e2e (Playwright, iPhone 12 + Pixel 5) green.
@@ -97,3 +102,11 @@
 - Initial JS ≈ 167 KB gz (budget 250). Lazy-load Stages 2–4 as they land; `LazyMotion` in M7.
 - QA fixes: end step persisted across reloads; fix answers name the option (and the picker marks it); outlier help arrives as hint then answer; fresh deck on replay; rule-5 trash names rule 5.
 - a11y fixes: focus after fix picker and new charts; outlier timer pauses with Rulebook; card values never break mid-ID; sticky actions; valid-card help; next card announced; amber borders ≥3:1; outlier units spoken.
+
+### M3 notes (2026-10-07)
+- Stage 2 "Teach the Machine to See" playable end to end: tutorial, Build the Training Set, Covered Up, Draw the Box (full), Audit the AI, Reality Check, stars, hand-off. 320 unit tests (IoU, reveal order and scoring, decks over hundreds of seeds, audit pool guarantees, content schemas) and 68 e2e tests green.
+- Acceptance: occlusion reveal (`src/sim/reveal.ts`) and IoU (`src/sim/iou.ts`) tested ✅; placeholder SVG assets ✅.
+- Timing (QA, human pace): booth ≈ 127 s, full ≈ 171 s. Initial JS ≈ 170 KB gz; Stage 2 lazy-loaded (≈17 KB gz).
+- QA fixes: Settings pauses timers; the answer step reduces audit and box credit; real labelled count in the Reality Check; level instructions shown; Stage 2 reload + pause e2e.
+- a11y fixes (axe clean): focus stays on option buttons (slot keys, `aria-disabled`); the next picture's clue and any new help spoken in one announcement (HintBox `quiet`); night and position alt text; spoken box readout; relaxed mode slows the tiles; nudge buttons reflow at 200%; frame leaves room for buttons; touch capture only in Draw the Box; answer outline ≥3:1; larger handles; ruled-out/suggested options named for screen readers.
+- Carried to M7: toasts sit over the top row (streak / Field guide) while playing fast; arrow-key nudging in Draw the Box.

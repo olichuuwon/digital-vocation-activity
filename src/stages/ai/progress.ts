@@ -18,6 +18,8 @@ export interface AiOutcome {
   bonuses?: number[];
   /** L4: verdict kinds ('caught' | 'missed' | 'falseFlag' | 'trusted'). */
   kinds?: string[];
+  /** L4: help showing per verdict ('none' | 'hint' | 'answer'). */
+  assists?: string[];
   /** L4: wrong predictions dealt. */
   wrongDealt?: number;
 }
