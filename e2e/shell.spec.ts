@@ -18,8 +18,8 @@ test('a booth run starts Stage 1, resumes after reload, and later stages reach t
   await page.getByRole('button', { name: 'Play solo' }).click();
   await page.getByRole('button', { name: /Booth run/ }).click();
   await page.getByRole('button', { name: 'From the beginning' }).click();
-  await expect(page.getByTestId('stage-heading')).toHaveText('Prologue');
-  await page.getByRole('button', { name: 'Finish level' }).click(); // → Stage 1 briefing
+  await expect(page.getByTestId('prologue-heading')).toContainText('Mission: flood relief');
+  await page.getByRole('button', { name: 'Start the mission' }).click(); // → Stage 1 briefing
   await page.getByRole('button', { name: 'Start sorting' }).click();
   await expect(page.getByRole('heading', { name: 'Tutorial', level: 1 })).toBeVisible();
 
@@ -77,7 +77,7 @@ test('focus moves to the new heading after finishing a level', async ({ page }) 
   await page.getByRole('button', { name: 'Play solo' }).click();
   await page.getByRole('button', { name: /Booth run/ }).click();
   await page.getByRole('button', { name: 'From the beginning' }).click();
-  await page.getByRole('button', { name: 'Finish level' }).click();
+  await page.getByRole('button', { name: 'Start the mission' }).click();
   await expect(page.getByRole('heading', { level: 1 })).toBeFocused();
   await expect(page).toHaveTitle(/· Let's Ship It$/);
 });

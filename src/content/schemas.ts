@@ -43,6 +43,14 @@ export const copySchema = z.object({
     sound: text, relaxed: text, quit: text, close: text,
   }),
   placeholder: z.object({ note: text, finishLevel: text, finale: text, finaleNote: text, backHome: text }),
+  /** Stage 0 (§2 prologue): mission briefing + a 10-second "how to play". */
+  prologue: z.object({
+    heading: text,
+    body: text.refine((s) => s.trim().split(/\s+/).length <= 30, 'max 30 words'),
+    tipsHeading: text,
+    tips: z.array(z.object({ icon: text, text: text.refine((s) => s.trim().split(/\s+/).length <= 14, 'max 14 words') })).length(3),
+    go: text,
+  }),
   leaderboard: z.object({
     heading: text, tabsLabel: text, today: text, all: text, dateLabel: text, allTime: text,
     allTimeNote: text, dateNote: text, todayNote: text, loading: text, emptyToday: text,

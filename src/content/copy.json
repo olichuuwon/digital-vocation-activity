@@ -129,5 +129,25 @@
     "toastSuccess": "Correct:",
     "toastError": "Wrong:",
     "tutorialHint": "Try it, or tap Got it."
+  },
+  "prologue": {
+    "heading": "Mission: flood relief",
+    "body": "Floods have hit the city. Your job: get supplies to as many of 1,200 families as you can, using data, AI, software and the cloud.",
+    "tipsHeading": "How to play",
+    "tips": [
+      {
+        "icon": "⏱️",
+        "text": "Each stage has short, timed levels. Beat the clock."
+      },
+      {
+        "icon": "💡",
+        "text": "Stuck? A hint appears after 2 misses, the answer after 3."
+      },
+      {
+        "icon": "🔗",
+        "text": "Every stage feeds the next. Good data makes a better AI."
+      }
+    ],
+    "go": "Start the mission"
   }
 }

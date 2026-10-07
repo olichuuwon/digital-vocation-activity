@@ -1,0 +1,97 @@
+{
+  "common": {
+    "supporting": "You're supporting {name}",
+    "waiting": "Nothing to do yet. Watch the main screen and help out.",
+    "newInfo": "New info!",
+    "tabsLabel": "Your support cards",
+    "yourCard": "Your card: {title}"
+  },
+  "cards": {
+    "rulebook": {
+      "title": "Rulebook",
+      "instruction": "Read the rules out loud. The main player can't see them."
+    },
+    "duplicates": {
+      "title": "Duplicate scanner",
+      "instruction": "Duplicates are the same household twice. Shout \"Seen it!\" when a kept ID returns.",
+      "seen": "Already kept: {ids}",
+      "none": "Nothing kept yet. Watch this space."
+    },
+    "fixKit": {
+      "title": "Fix kit",
+      "instruction": "Some records can be fixed. Shout the correct fix so the main player picks it.",
+      "none": "No fix needed for this one.",
+      "answer": "Correct fix: {fix}"
+    },
+    "reveal": {
+      "title": "Reveal power",
+      "instruction": "Tap to uncover an extra tile on the main phone. Charges are limited!",
+      "button": "Reveal a tile",
+      "left": "{n} left",
+      "none": "No charges left. Help by talking instead!"
+    },
+    "fieldGuide": {
+      "title": "Field guide",
+      "instruction": "Describe what each item looks like to help the main player label it."
+    },
+    "auditor": {
+      "title": "Auditor",
+      "instruction": "Confidence: how sure the AI is. Read each number out loud.",
+      "confidence": "{label}: {pct}% sure",
+      "none": "Nothing to audit yet."
+    },
+    "scout": {
+      "title": "Scout map",
+      "instruction": "Only you see the flooded roads. Guide the main player around them.",
+      "flooded": "Flooded: {where}",
+      "dry": "Dry: {where}",
+      "none": "No floods on this map. All roads are clear."
+    },
+    "manifest": {
+      "title": "Manifest",
+      "instruction": "A manifest is a supply list. Tell the main player what each house needs.",
+      "needs": "{house}: {item}",
+      "route": "No supplies to match here. Call out where each house is.",
+      "none": "No supply list for this level."
+    },
+    "debugger": {
+      "title": "Debugger",
+      "instruction": "You see the failed run step by step. Shout where it went wrong.",
+      "stepOf": "Step {n} of {total}: {block}",
+      "none": "No failed run yet. Fingers crossed!",
+      "stoppedAt": "Stopped at {block}"
+    },
+    "servers": {
+      "title": "Server controls",
+      "instruction": "Servers run the app. Boost busy ones. Restart crashed ones fast.",
+      "none": "No server assigned to you. Watch the dashboard."
+    },
+    "balancer": {
+      "title": "Balancer and self-healing",
+      "instruction": "Set these switches. Balancer shares users across pods (app copies); self-healing restarts crashed ones."
+    },
+    "autoscaler": {
+      "title": "Autoscaler",
+      "instruction": "The autoscaler adds pods (app copies) when busy. Set min, max and busy level."
+    },
+    "routing": {
+      "title": "Incident routing",
+      "instruction": "Incidents (live problems) for your specialisation appear here. Shout them out, then tap to send.",
+      "allHands": "All hands! Tap Ready now!",
+      "confirm": "Ready!",
+      "waiting": "Waiting for the next incident. Watch the feed!"
+    }
+  },
+  "main": {
+    "askRulebook": "Your team has the rulebook. Ask them to read it out!",
+    "askGuide": "Not sure what something is? Your team has the field guide. Ask!",
+    "askScout": "Your map is foggy. Your scouts know which roads are flooded. Ask them!",
+    "askServers": "Your teammates control the server buttons. Call out which server needs help!",
+    "askIncidents": "Each incident goes to the teammate with that specialisation. Call it out, then confirm!"
+  },
+  "allHands": [
+    { "id": "ah1", "text": "Major storm: all teams confirm ready!" },
+    { "id": "ah2", "text": "Big supply drop incoming. Every team, tap Ready!" },
+    { "id": "ah3", "text": "Night shift starts: all teams check in now!" }
+  ]
+}
