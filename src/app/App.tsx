@@ -1,14 +1,22 @@
 import { MotionConfig } from 'framer-motion';
 import { lazy, Suspense, useEffect, useMemo, useState } from 'react';
 import { ToastHost } from '../components/Toast';
+import { groupActions, useGroup, useGroupStore } from '../net/group';
 import { useGame } from '../state/store';
 import { DebugPanel } from './DebugPanel';
 import { isDevComponentsPath, isHostPath, parseParams } from './params';
 import { PipelineStrip } from './PipelineStrip';
 import { useAnnouncer } from './screenFocus';
+import { GroupCreate } from './screens/GroupCreate';
+import { GroupDebugBar } from './screens/GroupDebugBar';
+import { GroupEnded } from './screens/GroupEnded';
+import { GroupJoin } from './screens/GroupJoin';
+import { GroupLobby } from './screens/GroupLobby';
+import { GroupPill } from './screens/GroupPill';
 import { Home } from './screens/Home';
 import { Leaderboard } from './screens/Leaderboard';
 import { StagePlaceholder } from './screens/StagePlaceholder';
+import { SupportScreen } from './screens/SupportScreen';
 import { DataStage } from '../stages/data/DataStage';
 import { SettingsDialog } from './SettingsDialog';
 import ui from './ui.module.css';
@@ -70,8 +78,11 @@ function GameApp() {
   const theme = useGame((s) => s.settings.theme);
   const announcement = useAnnouncer((s) => s.message);
   // Reopening with a saved run lands on Home so the player can choose Resume (§3.1).
-  const [onHome, setOnHome] = useState(() => !(params.debug && params.stage !== null));
+  // A ?join=CODE link (the lobby QR) opens Join with the code filled in.
+  const [onHome, setOnHome] = useState(() => !(params.debug && params.stage !== null) && !params.join);
   const [boardOpen, setBoardOpen] = useState(false);
+  const [groupScreen, setGroupScreen] = useState<'create' | 'join' | null>(params.join ? 'join' : null);
+  const group = useGroup();
   const settingsOpen = useGame((s) => s.settingsOpen);
   const setSettingsOpen = (open: boolean) => useGame.setState({ settingsOpen: open });
   useTheme(theme);
@@ -87,12 +98,43 @@ function GameApp() {
     }
   }, [params]);
 
-  const inRun = run !== null && !onHome;
+  // Group play (§3.5): rejoin from this device's token after a reload; drop ?join from the
+  // address bar so a later reload doesn't reopen Join.
+  useEffect(() => {
+    groupActions.resumeIfStored();
+    if (params.join) {
+      const url = new URL(window.location.href);
+      url.searchParams.delete('join');
+      window.history.replaceState(null, '', url);
+    }
+  }, [params]);
+  // Leaving a group goes straight Home; a lobby or run reached from Create/Join replaces that screen.
+  useEffect(
+    () =>
+      useGroupStore.subscribe(({ snap }, prev) => {
+        if (snap.ended === 'left' && prev.snap.ended !== 'left') {
+          groupActions.dismiss();
+          setGroupScreen(null);
+          setOnHome(true);
+        }
+        if (snap.status !== prev.snap.status && (snap.status === 'lobby' || snap.status === 'playing')) setGroupScreen(null);
+      }),
+    [],
+  );
+
+  const groupRun = group.active && run !== null && run.startedAt === group.snap.session?.startedAt;
+  // Support phones show their support screen; the main phone (and everyone at the debrief) plays.
+  const supportView = group.active && !onHome && (!groupRun || (!group.amMain && !run?.finishedAt));
+  const inRun = run !== null && !onHome && (!group.active || groupRun);
+  const leaveFinishedGroup = () => {
+    if (group.active) groupActions.leave();
+    setOnHome(true);
+  };
 
   return (
     <div className={ui.shell}>
       <header className={ui.topbar}>
-        {inRun ? <PipelineStrip stage={run.stage} /> : <span style={{ flex: 1 }} />}
+        {run && (inRun || (supportView && groupRun)) ? <PipelineStrip stage={run.stage} /> : <span style={{ flex: 1 }} />}
         <button
           type="button"
           className={ui.iconBtn}
@@ -102,7 +144,35 @@ function GameApp() {
           <span aria-hidden="true">⚙️</span>
         </button>
       </header>
-      {inRun && run.stage === 1 ? (
+      {group.snap.ended && group.snap.ended !== 'left' ? (
+        <GroupEnded
+          reason={group.snap.ended}
+          onOk={() => {
+            groupActions.dismiss();
+            setOnHome(true);
+          }}
+        />
+      ) : groupScreen === 'join' && (group.status === 'idle' || group.status === 'joining') ? (
+        <GroupJoin
+          initialCode={params.join ?? ''}
+          onBack={() => {
+            setGroupScreen(null);
+            setOnHome(true);
+          }}
+        />
+      ) : groupScreen === 'create' && group.status === 'idle' ? (
+        <GroupCreate
+          facilitatorMode={params.mode}
+          onBack={() => {
+            setGroupScreen(null);
+            setOnHome(true);
+          }}
+        />
+      ) : !onHome && group.status === 'lobby' ? (
+        <GroupLobby />
+      ) : supportView ? (
+        <SupportScreen />
+      ) : inRun && run.stage === 1 ? (
         <main style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
           <DataStage key={`${run.startedAt}-1-${run.levelIndex}`} run={run} debug={params.debug} />
         </main>
@@ -130,7 +200,7 @@ function GameApp() {
             <FinaleStage
               key={`${run.startedAt}-5`}
               run={run}
-              onHome={() => setOnHome(true)}
+              onHome={leaveFinishedGroup}
               onLeaderboard={() => {
                 setOnHome(true);
                 setBoardOpen(true);
@@ -151,6 +221,14 @@ function GameApp() {
           facilitatorMode={params.mode}
           onEnter={() => setOnHome(false)}
           onLeaderboard={() => setBoardOpen(true)}
+          onCreateGroup={() => {
+            setGroupScreen('create');
+            setOnHome(false);
+          }}
+          onJoinGroup={() => {
+            setGroupScreen('join');
+            setOnHome(false);
+          }}
         />
       )}
       <SettingsDialog open={settingsOpen} onClose={() => setSettingsOpen(false)} />
@@ -158,7 +236,9 @@ function GameApp() {
         {announcement}
       </p>
       <ToastHost />
+      <GroupPill />
       {params.debug && <DebugPanel />}
+      {params.debug && params.fakePeers > 0 && <GroupDebugBar />}
     </div>
   );
 }

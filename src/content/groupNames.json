@@ -1,0 +1,13 @@
+{
+  "adjectives": [
+    "Swift", "Bold", "Brave", "Bright", "Clever", "Calm", "Daring", "Eager", "Fearless", "Golden",
+    "Happy", "Jolly", "Keen", "Lucky", "Mighty", "Nimble", "Plucky", "Quick", "Rapid", "Sharp",
+    "Speedy", "Steady", "Stellar", "Sunny", "Super", "Trusty", "Wise", "Zippy", "Cosmic", "Epic"
+  ],
+  "nouns": [
+    "Kingfisher", "Merlion", "Otter", "Hornbill", "Pangolin", "Macaque", "Mousedeer", "Dugong",
+    "Sunbird", "Bulbul", "Myna", "Heron", "Sea Eagle", "Junglefowl", "Squirrel", "Turtle",
+    "Seahorse", "Pufferfish", "Gecko", "Orchid", "Supertree", "Durian", "Sentosa", "Changi",
+    "Ubin", "Kranji", "Punggol", "Marina", "Bukit", "Rambutan"
+  ]
+}

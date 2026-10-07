@@ -65,6 +65,15 @@ Try them with stage select (Play solo → pick a length → pick a stage).
 - [ ] **32. Live Ops balance:** 8 incidents, 8 s each, +15 families for a right answer and −12 for a wrong one or time-out. Live Ops can move you about one rank. *Default: keep.*
 - [ ] **33. Stage select flag:** on for development (`src/content/flags.json`). *Default: switch off before the event, unless you want it.*
 
+## J. Group play (M6.5)
+Try it: open the site on 2–3 phones, Create group on one, scan its QR with the others.
+
+- [ ] **34. Profanity list:** `src/content/blocklist.json` has English plus common Singlish, Hokkien and Malay swear words and slurs. Please check it covers what students at your event would try, and that nothing innocent is blocked. Names like "Kan" and "Lan" are allowed on purpose (common names). *Default: as drafted.*
+- [ ] **35. Generated group names:** 30 adjectives × 30 Singapore animals and places in `src/content/groupNames.json` (e.g. "Swift Kingfisher", "Bold Merlion", "Lucky Changi"). Remove any you don't like. *Default: keep.*
+- [ ] **36. Who plays the finale:** the main-phone turn keeps rotating into the finale. With 4 players, player 1 plays it; with 3, player 2 gets a second turn; with 2, they alternate. Alternative: the leader always plays the finale. *Default: keep rotating.*
+- [ ] **37. Live group names on `/host`:** groups playing now (name, size, stage) appear on the booth screen. A custom name shows there before a facilitator could hide it from the board. Show only generated names there, or hide the list? *Default: show all names.*
+- [ ] **38. Joining replaces a solo run:** a phone that creates or joins a group drops any unfinished solo run on it. *Default: keep (booth phones play one run at a time).*
+
 ## I. Setup notes (no answer needed)
 - Supabase keys: Claude keeps them in `.env.local` (git-ignored) and never commits them. The live site reads them from Vercel → Project → Settings → Environment Variables (`VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`).
 - **Deploys:** Vercel deploys `main`. Claude works on the branch `claude/beautiful-allen-ne188s`. Merge it into `main` (PR or fast-forward) to put M3 live.

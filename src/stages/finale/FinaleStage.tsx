@@ -7,6 +7,8 @@ import { buzz } from '../../app/haptics';
 import ui from '../../components/components.module.css';
 import { fill, stageContent, stages } from '../../content';
 import type { Team } from '../../content/finaleSchema';
+import { GroupRank } from '../../app/screens/GroupRank';
+import { useGroup } from '../../net/group';
 import { formatBoardDate, sgtDate } from '../../net/sgtTime';
 import { useGame, useRelaxed } from '../../state/store';
 import type { GameState, Stage } from '../../state/types';
@@ -37,6 +39,9 @@ export default function FinaleStage({ run, onHome, onLeaderboard }: { run: GameS
   const saved = finaleFor(finaleKey(run));
   const [phase, setPhaseState] = useState(saved.phase);
   const p = useMemo(() => pipeline(run), [run]);
+  // Group mode: the finale's main phone plays Live Ops; once it finishes, every phone shows
+  // the debrief (their local finale progress never saw the earlier phases).
+  const groupActive = useGroup().active;
   const patch = (x: Parameters<ReturnType<typeof useFinaleProgress.getState>['patch']>[1]) =>
     useFinaleProgress.getState().patch(finaleKey(run), x);
   const go = (ph: typeof phase) => {
@@ -44,6 +49,7 @@ export default function FinaleStage({ run, onHome, onLeaderboard }: { run: GameS
     setPhaseState(ph);
   };
 
+  if (groupActive && run.finishedAt && phase !== 'debrief') return <Debrief run={run} onHome={onHome} onLeaderboard={onLeaderboard} />;
   if (phase === 'reveal') return <Reveal p={p} logicPlayed={played(run).logic} onGo={() => go('intro')} />;
   if (phase === 'intro') return <LiveIntro onStart={() => go('live')} />;
   if (phase === 'live')
@@ -290,6 +296,7 @@ function Debrief({ run, onHome, onLeaderboard }: { run: GameState; onHome: () =>
   const match = matchRanking(run);
   // finishedAt is set when Live Ops ends; fall back to the run start for old saves.
   const date = formatBoardDate(sgtDate(run.finishedAt ?? run.startedAt));
+  const group = useGroup();
 
   if (chapters)
     return (
@@ -333,7 +340,8 @@ function Debrief({ run, onHome, onLeaderboard }: { run: GameState; onHome: () =>
           ))}
         </ul>
         <p className={ui.muted}>{fill(c.debrief.date, { date })}</p>
-        <p className={s.solo}>{c.debrief.soloNote}</p>
+        {/* Group mode (§8.3): the leaderboard rank reveal replaces the solo note. */}
+        {group.active ? <GroupRank /> : <p className={s.solo}>{c.debrief.soloNote}</p>}
       </div>
 
       <section aria-labelledby="match-h" className={s.block}>
@@ -382,7 +390,8 @@ function Debrief({ run, onHome, onLeaderboard }: { run: GameState; onHome: () =>
         <button type="button" className={`${ui.btn} ${ui.primary}`} onClick={onHome}>
           {c.debrief.playAgain}
         </button>
-        {unlocked && (
+        {/* A group's run is shared and already submitted: no chapter replays from it. */}
+        {unlocked && !group.active && (
           <button type="button" className={ui.btn} data-testid="replay-stage" onClick={() => setChapters(true)}>
             {c.debrief.replayStage}
           </button>

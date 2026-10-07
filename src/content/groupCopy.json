@@ -1,0 +1,106 @@
+{
+  "home": {
+    "backToGroup": "Back to {name}",
+    "leaveGroup": "Leave group",
+    "unavailable": "Group play needs the internet"
+  },
+  "create": {
+    "heading": "Create a group",
+    "nameLabel": "Pick a group name",
+    "moreNames": "More names",
+    "ownName": "Type our own name",
+    "useGenerated": "Pick from the list",
+    "customLabel": "Group name",
+    "customHint": "Up to 20 characters. Keep it friendly: it goes on the leaderboard.",
+    "nicknameLabel": "Your nickname",
+    "nicknameHint": "Only your group sees it. It never leaves your group's phones.",
+    "lengthLabel": "Run length",
+    "lengthSet": "Run length: {length} (set by the booth)",
+    "create": "Create group",
+    "back": "Back"
+  },
+  "join": {
+    "heading": "Join a group",
+    "codeLabel": "Group code",
+    "codeHint": "4 characters, shown on the leader's phone",
+    "nicknameLabel": "Your nickname",
+    "nicknameHint": "Only your group sees it. It never leaves your group's phones.",
+    "join": "Join",
+    "looking": "Looking for the group…",
+    "back": "Back"
+  },
+  "errors": {
+    "nameEmpty": "Type a group name.",
+    "nameTooLong": "Use 20 characters or fewer.",
+    "nameBlocked": "Please pick a different name.",
+    "nickEmpty": "Type a nickname.",
+    "nickTooLong": "Use 16 characters or fewer.",
+    "nickBlocked": "Please pick a different nickname.",
+    "badCode": "Codes are 4 letters and numbers, like K7QM.",
+    "notFound": "Can't find that group. Check the code with your leader.",
+    "full": "That group is full. Groups have up to 4 players.",
+    "started": "That group has already started.",
+    "noNetwork": "Can't reach the game server. Check the internet and try again."
+  },
+  "lobby": {
+    "codeLabel": "Code",
+    "scanHint": "Teammates scan this, or tap Join group and type the code.",
+    "qrAlt": "QR code to join {name}, code {code}",
+    "playersHeading": "Players ({n} of 4)",
+    "rotationNote": "The order sets who holds the main phone in each stage.",
+    "you": "you",
+    "leaderTag": "leader",
+    "playerN": "Player {n}",
+    "reconnecting": "reconnecting…",
+    "leadsStages": "Main phone: stage {stages}",
+    "leadsFinale": "and the finale",
+    "moveUp": "Move {name} up",
+    "moveDown": "Move {name} down",
+    "shuffle": "Shuffle order",
+    "start": "Start",
+    "needTwo": "You need at least 2 players to start.",
+    "waiting": "Waiting for {name} to start…",
+    "lengthLine": "{length}",
+    "closesIn": "This lobby closes in {min} min.",
+    "leave": "Leave group",
+    "close": "Close group"
+  },
+  "support": {
+    "supporting": "You're supporting {name}",
+    "mainHint": "Watch {name}'s phone. Your card shows what they can't see.",
+    "waitingCard": "Your support card appears here.",
+    "paused": "Waiting for {name}'s phone… {s}s",
+    "promoted": "{name} now has the main phone.",
+    "upNext": "You're up next!",
+    "upNextBody": "Take the main phone role for {stage}.",
+    "ready": "I'm ready",
+    "lobbyStage": "Getting started",
+    "finale": "Finale"
+  },
+  "pill": {
+    "reconnecting": "Reconnecting…",
+    "sending": "Score saved. Sending when you're back online."
+  },
+  "ended": {
+    "closed": "The leader closed the group.",
+    "lobbyExpired": "The lobby closed after 15 minutes without a start.",
+    "runExpired": "This group run has ended (60-minute limit).",
+    "left": "You left the group.",
+    "ok": "OK"
+  },
+  "debrief": {
+    "groupLine": "{name} · {size} players",
+    "submitting": "Adding your group to today's board…",
+    "rank": "You're #{rank} today!",
+    "onBoard": "You're on the board!",
+    "notRanked": "This run couldn't go on the board.",
+    "retrying": "No connection yet. We'll keep trying."
+  },
+  "host": {
+    "none": "No groups playing right now.",
+    "lobby": "In the lobby",
+    "stage": "Stage {n}: {title}",
+    "finale": "Finale",
+    "size": "{n} players"
+  }
+}

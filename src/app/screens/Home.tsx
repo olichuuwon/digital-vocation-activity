@@ -1,5 +1,7 @@
 import { useState } from 'react';
-import { copy, flags, stages } from '../../content';
+import { copy, fill, flags, stages } from '../../content';
+import { groupCopy } from '../../content/groupSchema';
+import { groupActions, groupAvailable, useGroup } from '../../net/group';
 import { useGame } from '../../state/store';
 import type { Mode, Stage } from '../../state/types';
 import { useScreenHeading } from '../screenFocus';
@@ -8,16 +10,22 @@ import ui from '../ui.module.css';
 const t = copy.home;
 const l = copy.length;
 
-/** Entry screen (§3.5.1). Group play arrives in M6.5. */
+/** Entry screen (§3.5.1): Play solo, Create group, Join group, Leaderboard. */
 export function Home({
   facilitatorMode,
   onEnter,
   onLeaderboard,
+  onCreateGroup,
+  onJoinGroup,
 }: {
   facilitatorMode: Mode | null;
   onEnter: () => void;
   onLeaderboard: () => void;
+  onCreateGroup: () => void;
+  onJoinGroup: () => void;
 }) {
+  const group = useGroup();
+  const groupName = group.snap.session?.name;
   // A finished run isn't resumed: its debrief is done (§3.1).
   const hasRun = useGame((s) => s.run !== null && !s.run.finishedAt);
   const startRunInStore = useGame((s) => s.startRun);
@@ -128,6 +136,20 @@ export function Home({
         </h1>
         <p className={ui.muted}>{t.tagline}</p>
       </div>
+      {group.inGroup && groupName ? (
+        // In a group (e.g. after a reload): rejoin at the current stage, or leave.
+        <div className={ui.actions}>
+          <button type="button" className={`${ui.btn} ${ui.primary}`} onClick={onEnter}>
+            {fill(groupCopy.home.backToGroup, { name: groupName })}
+          </button>
+          <button type="button" className={ui.btn} onClick={() => groupActions.leave()}>
+            {groupCopy.home.leaveGroup}
+          </button>
+          <button type="button" className={ui.btn} onClick={onLeaderboard}>
+            {t.leaderboard}
+          </button>
+        </div>
+      ) : (
       <div className={ui.actions}>
         {hasRun && (
           <button type="button" className={`${ui.btn} ${ui.primary}`} onClick={onEnter}>
@@ -142,16 +164,30 @@ export function Home({
             {t.replayStage}
           </button>
         )}
-        <button type="button" className={ui.btn} aria-disabled="true">
-          {t.createGroup} <span className={ui.detail}>{t.comingSoon}</span>
-        </button>
-        <button type="button" className={ui.btn} aria-disabled="true">
-          {t.joinGroup} <span className={ui.detail}>{t.comingSoon}</span>
-        </button>
+        {groupAvailable() ? (
+          <>
+            <button type="button" className={ui.btn} onClick={onCreateGroup}>
+              {t.createGroup}
+            </button>
+            <button type="button" className={ui.btn} onClick={onJoinGroup}>
+              {t.joinGroup}
+            </button>
+          </>
+        ) : (
+          <>
+            <button type="button" className={ui.btn} aria-disabled="true">
+              {t.createGroup} <span className={ui.detail}>{groupCopy.home.unavailable}</span>
+            </button>
+            <button type="button" className={ui.btn} aria-disabled="true">
+              {t.joinGroup} <span className={ui.detail}>{groupCopy.home.unavailable}</span>
+            </button>
+          </>
+        )}
         <button type="button" className={ui.btn} onClick={onLeaderboard}>
           {t.leaderboard}
         </button>
       </div>
+      )}
     </main>
   );
 }

@@ -2,6 +2,8 @@ import type { Page, Route } from '@playwright/test';
 
 /** Fake Supabase origin baked into e2e builds (see playwright.config.ts). */
 export const E2E_SUPABASE_URL = 'https://e2e-test.supabase.co';
+/** Port of the group-play WebSocket relay (e2e/groupRelay.ts) e2e builds use instead of Realtime. */
+export const E2E_RELAY_PORT = 4174;
 
 export type RpcHandler = (args: Record<string, unknown>) =>
   | { status?: number; body: unknown }

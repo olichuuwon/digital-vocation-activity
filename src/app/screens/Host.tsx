@@ -1,7 +1,10 @@
 import QRCode from 'qrcode';
 import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { BoardView } from '../../components/BoardList';
-import { copy, fill } from '../../content';
+import { copy, fill, stageContent } from '../../content';
+import { groupCopy } from '../../content/groupSchema';
+import { watchHost, type HostGroup } from '../../net/group/hostChannel';
+import { sharedTransport } from '../../net/group/store';
 import { hostListRecent, LeaderboardError, setHidden, type HostRow, type HostStatus } from '../../net/leaderboard';
 import { formatSgtTime } from '../../net/sgtTime';
 import type { Mode } from '../../state/types';
@@ -10,6 +13,7 @@ import { useScreenHeading } from '../screenFocus';
 import ui from '../ui.module.css';
 import { useBoard } from '../useBoard';
 import s from './Host.module.css';
+import g from './Group.module.css';
 
 const t = copy.host;
 const POLL_MS = 10_000;
@@ -61,14 +65,49 @@ export default function Host({ mode }: { mode: Mode | null }) {
           <BoardView board={board} emptyText={copy.leaderboard.emptyToday} label={t.board} />
         </section>
 
-        <section className={ui.card} aria-labelledby="host-playing" data-testid="host-playing">
-          <h2 id="host-playing">{t.playing}</h2>
-          <p className={ui.muted}>{t.playingSoon}</p>
-        </section>
+        <PlayingNow />
 
         <FacilitatorPanel onChanged={board.reload} />
       </div>
     </main>
+  );
+}
+
+/**
+ * Groups playing right now (§3.5.1): each group's main phone shows {name, size, stage} in the
+ * presence of today's host channel. Nothing is stored; a group vanishes when it finishes.
+ */
+function PlayingNow() {
+  const [groups, setGroups] = useState<HostGroup[]>([]);
+  const [transport] = useState(() => sharedTransport());
+  useEffect(() => (transport ? watchHost(transport, setGroups) : undefined), [transport]);
+  const where = (x: HostGroup) =>
+    x.stage === null
+      ? groupCopy.host.lobby
+      : x.stage === 5
+        ? groupCopy.host.finale
+        : x.stage === 0
+          ? groupCopy.support.lobbyStage
+          : fill(groupCopy.host.stage, { n: x.stage, title: stageContent(x.stage)?.title ?? '' });
+  return (
+    <section className={ui.card} aria-labelledby="host-playing" data-testid="host-playing">
+      <h2 id="host-playing">{t.playing}</h2>
+      {groups.length === 0 ? (
+        <p className={ui.muted}>{transport ? groupCopy.host.none : t.playingSoon}</p>
+      ) : (
+        <ul className={g.hostList} role="list">
+          {groups.map((x) => (
+            <li key={x.id} className={g.hostRow} data-testid="host-group">
+              <strong>{x.name}</strong>
+              <span className={ui.muted}>
+                <span aria-hidden="true">👥 </span>
+                {fill(groupCopy.host.size, { n: x.size })} · {where(x)}
+              </span>
+            </li>
+          ))}
+        </ul>
+      )}
+    </section>
   );
 }
 

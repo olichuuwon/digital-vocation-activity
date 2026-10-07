@@ -1,12 +1,15 @@
 import type { Mode, Stage } from '../state/types';
 
-// URL params from spec §2 and §11: ?mode=booth|full|quick, ?debug=1, ?stage=N, ?relaxed=1, ?fakePeers=N
+// URL params from spec §2 and §11: ?mode=booth|full|quick, ?debug=1, ?stage=N, ?relaxed=1, ?fakePeers=N,
+// and ?join=CODE (the group lobby QR, §3.5.1).
 export interface UrlParams {
   mode: Mode | null;
   debug: boolean;
   stage: Stage | null;
   relaxed: boolean;
   fakePeers: number;
+  /** Group code from the leader's QR (upper-cased; null if missing or malformed). */
+  join: string | null;
 }
 
 const truthy = (v: string | null) => v === '1' || v === 'true';
@@ -25,7 +28,10 @@ export function parseParams(search: string): UrlParams {
   const peers = Number(p.get('fakePeers'));
   const fakePeers = Number.isInteger(peers) ? Math.min(Math.max(peers, 0), 3) : 0;
 
-  return { mode, debug: truthy(p.get('debug')), stage, relaxed: truthy(p.get('relaxed')), fakePeers };
+  const rawJoin = (p.get('join') ?? '').trim().toUpperCase();
+  const join = /^[A-HJ-NP-Z2-9]{4}$/.test(rawJoin) ? rawJoin : null;
+
+  return { mode, debug: truthy(p.get('debug')), stage, relaxed: truthy(p.get('relaxed')), fakePeers, join };
 }
 
 /** True on the booth screen route (`/host`), respecting a deploy sub-path (BASE_PATH). */

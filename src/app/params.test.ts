@@ -2,7 +2,7 @@ import { gameUrl, isHostPath, parseParams } from './params';
 
 describe('parseParams', () => {
   it('returns defaults for an empty query', () => {
-    expect(parseParams('')).toEqual({ mode: null, debug: false, stage: null, relaxed: false, fakePeers: 0 });
+    expect(parseParams('')).toEqual({ mode: null, debug: false, stage: null, relaxed: false, fakePeers: 0, join: null });
   });
 
   it('treats quick as an alias of booth', () => {
@@ -48,5 +48,12 @@ describe('gameUrl', () => {
     expect(gameUrl('https://game.example', '/', null)).toBe('https://game.example/');
     expect(gameUrl('https://game.example', '/', 'full')).toBe('https://game.example/?mode=full');
     expect(gameUrl('https://game.example', '/ship-it/', 'booth')).toBe('https://game.example/ship-it/?mode=booth');
+  });
+
+  it('reads a group code from the lobby QR (?join=CODE)', () => {
+    expect(parseParams('?join=k7qm').join).toBe('K7QM');
+    expect(parseParams('?join=K7Q').join).toBeNull();
+    expect(parseParams('?join=K1QM').join).toBeNull(); // 1 is never used in codes
+    expect(parseParams('?join=<script>').join).toBeNull();
   });
 });
