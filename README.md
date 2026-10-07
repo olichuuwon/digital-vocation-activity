@@ -37,7 +37,7 @@ No coding knowledge needed. No account, no app to install, and no personal data 
 
 **🧠 Stage 2: Teach the Machine to See.** Label pictures of relief supplies to train your AI. Then guess pictures hidden under tiles (guess early for more points), draw boxes around items (full run only), and audit your AI's answers. Being *sure* isn't the same as being *right*! The 📖 Field guide shows what each item looks like.
 
-**🧩 Stage 3: Build the Logic** *(coming soon).* Snap together steps to drive a supply truck around flooded roads.
+**🧩 Stage 3: Build the Logic.** Tap blocks (Move forward, Turn, Drop supplies, Repeat, If the road ahead is flooded…) to program a supply truck, then press Run and watch it go. Step runs one block at a time. In a full run you also debug a broken program and use your Stage 2 AI to work out what each house needs. At the end you see your blocks turned into real Python.
 
 **☁️ Stage 4: Keep It Alive** *(coming soon).* Keep the servers running by hand, then meet Kubernetes and let automation do it.
 

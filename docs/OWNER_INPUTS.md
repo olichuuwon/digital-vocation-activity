@@ -4,7 +4,7 @@ Items waiting for the project owner. The game currently runs on the default show
 
 **How to answer:** tell Claude the item numbers, e.g. `1 ok, 6 ok, 7 change: 3★ at 85%`. Anything you don't mention keeps its default. Claude ticks the box, applies the change and logs it in `docs/DECISIONS.md`.
 
-Last updated: 2026-10-07 (after M3).
+Last updated: 2026-10-07 (during M4).
 
 ## A. Text that needs your approval (D14)
 Preview these at `/dev/components`, under "Reality Check". The text lives in `src/content/realityChecks.json`.
@@ -48,6 +48,14 @@ Try it: https://digital-vocation-activity.vercel.app/?debug=1&stage=2 (add `&mod
 - [ ] **23. Stage 2 is short:** booth about 2.1 min against 3; full about 2.9 min against 5–6. Covered Up plays in 10–25s against "~60s". *Default: tune after the M8 playtests (e.g. slower tiles, more pictures in full mode).*
 - [ ] **24. The 64 pictures:** review them all at `/dev/components` → "Stage 2 pictures". *Default: keep.*
 
-## G. Setup notes (no answer needed)
+## G. Stage 3 gameplay (play it first)
+Try it: https://digital-vocation-activity.vercel.app/?debug=1&stage=3 (add `&mode=full` for Debug It and Ask the AI)
+
+- [ ] **25. Choose the Road block limit:** the spec says 7. The solver proved no 7-block answer a 12-year-old would write exists, so the limit is 9 (the best answer uses 8). *Default: 9.*
+- [ ] **26. Stars and scoring:** all puzzles solved with no help gives 3★ at any block count within the limit, and each hint costs about a star. Stars at 20% / 60% / 90%. *Default: keep.*
+- [ ] **27. "AI misread" link (§3.2):** the spec puts it in "Level 3". It's built into the full-mode bonus Ask the AI, where a weaker Stage 2 model makes wrong drops. Booth players don't play that level. Should booth players see it too, for example as a note in the Stage 3 Reality Check? *Default: full mode only.*
+- [ ] **28. Stage 3 length:** the designer estimates about 3.5 min for booth (budget 3) and about 4.9 min for full (budget 5–6). Stages 1–3 together still fit the 16-min booth run. *Default: tune in M8.*
+
+## H. Setup notes (no answer needed)
 - Supabase keys: Claude keeps them in `.env.local` (git-ignored) and never commits them. The live site reads them from Vercel → Project → Settings → Environment Variables (`VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`).
 - **Deploys:** Vercel deploys `main`. Claude works on the branch `claude/beautiful-allen-ne188s`. Merge it into `main` (PR or fast-forward) to put M3 live.
