@@ -30,4 +30,4 @@ _None yet._
 - QA fixes: bad saves no longer blank the screen; debug reload resumes mid-stage; sw returns a network error instead of `undefined`.
 - a11y fixes: header survives 200% text; focus moves to each new screen heading; tab titles per screen; shared polite live region (`useAnnouncer`); current pipeline stage has ▶ + bold + underline; borders ≥3:1; decorative emoji hidden; "Coming soon" buttons stay focusable (`aria-disabled`).
 - Carried to M2+: wire `MotionConfig reducedMotion="user"` and `useRelaxed()` into timers once they exist.
-- "Deploys" acceptance waits on the owner creating the git repo and importing it into Vercel.
+- Deployed 2026-10-07: https://digital-vocation-activity.vercel.app (Vercel, auto-deploys on push to `main`). Per-deployment URLs (`…-<hash>-….vercel.app`) sit behind Vercel login (Deployment Protection); share the production URL.
