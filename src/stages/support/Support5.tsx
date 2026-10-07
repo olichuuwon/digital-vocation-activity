@@ -46,7 +46,7 @@ export default function Support5() {
             </p>
             <div className={s.grid}>
               {mine.map((team) => (
-                <button key={team} type="button" className={s.actionBtn} data-team={team} onClick={() => sendAction(ROUTE, { team })}>
+                <button key={team} type="button" className={s.actionBtn} data-team={team} onClick={() => sendAction(ROUTE, { team, id: t.incident!.id })}>
                   <span aria-hidden="true">{ICON[team]} </span>
                   {finaleCopy.teamButtons[team]}
                 </button>

@@ -90,8 +90,24 @@
     "askIncidents": "Each incident goes to the teammate with that specialisation. Call it out, then confirm!"
   },
   "allHands": [
-    { "id": "ah1", "text": "Major storm: all teams confirm ready!" },
-    { "id": "ah2", "text": "Big supply drop incoming. Every team, tap Ready!" },
-    { "id": "ah3", "text": "Night shift starts: all teams check in now!" }
-  ]
+    {
+      "id": "ah1",
+      "text": "Major storm: all teams confirm ready!"
+    },
+    {
+      "id": "ah2",
+      "text": "Big supply drop incoming. Every team, tap Ready!"
+    },
+    {
+      "id": "ah3",
+      "text": "Night shift starts: all teams check in now!"
+    }
+  ],
+  "allHandsUi": {
+    "call": "All hands! Every phone taps Ready within {s} seconds.",
+    "ready": "{n} of {total} ready",
+    "button": "Ready!",
+    "right": "Everyone's in! +{n} families reached.",
+    "missed": "Not everyone tapped in time. Call it out louder!"
+  }
 }

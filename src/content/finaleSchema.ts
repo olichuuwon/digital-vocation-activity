@@ -32,6 +32,10 @@ export const finaleFileSchema = z.object({
     penalty: z.number().int().min(0).max(200),
     /** Pause between incidents (ms), so feedback can be read. */
     gapMs: z.number().int().min(0).max(3000),
+    /** Group mode with supports: "all hands" calls added to the deal (§8.2: 2). */
+    allHandsCount: z.number().int().min(0).max(4),
+    /** Seconds for every member to tap Ready on an all-hands call (§8.2: 5). */
+    allHandsSeconds: z.number().int().min(3).max(15),
   }),
   incidents: z.array(incidentSchema).min(8),
   /** Rank titles by families reached (ascending thresholds; the highest met wins). */

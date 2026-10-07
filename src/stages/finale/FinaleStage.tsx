@@ -1,14 +1,14 @@
 import { animate, motion, useReducedMotion } from 'framer-motion';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useAnnouncer, useScreenHeading } from '../../app/screenFocus';
 import { Timer } from '../../components/Timer';
 import { toastMs } from '../../components/toastStore';
 import { buzz } from '../../app/haptics';
 import ui from '../../components/components.module.css';
 import { fill, stageContent, stages } from '../../content';
-import type { Team } from '../../content/finaleSchema';
+import { TEAMS, type Team } from '../../content/finaleSchema';
 import { GroupRank } from '../../app/screens/GroupRank';
-import { useGroup } from '../../net/group';
+import { publish, registerBotBehaviour, useActions, useGroup } from '../../net/group';
 import { formatBoardDate, sgtDate } from '../../net/sgtTime';
 import { useGame, useRelaxed } from '../../state/store';
 import type { GameState, Stage } from '../../state/types';
@@ -16,11 +16,13 @@ import { c as aiCopy } from '../ai/content';
 import { stage2For } from '../ai/progress';
 import { stage4Learned } from '../cloud/learned';
 import { c as dataCopy } from '../data/content';
-import { mulberry32 } from '../data/logic';
+import { mulberry32, shuffleInPlace } from '../data/logic';
 import { stage1For } from '../data/progress';
 import { c as logicCopy } from '../logic/content';
 import { c, finale, t } from './content';
-import { dealIncidents, liveOpsFamilies, matchRanking, pipeline, rankFor, routeResult, type DealtIncident } from './logic';
+import { sc } from '../support/content';
+import { ALL_HANDS_TAP, allHandsTapSchema, ROUTE, routeSchema, S5, s5Schema, useCoop } from '../support/topics';
+import { allHandsDone, dealIncidents, liveOpsFamilies, matchRanking, pipeline, rankFor, routeResult, withAllHands, type LiveItem, type RouteResult } from './logic';
 import { finaleFor, useFinaleProgress } from './progress';
 import s from './finale.module.css';
 
@@ -145,14 +147,20 @@ function LiveIntro({ onStart }: { onStart: () => void }) {
 /** §8.2: route each incident to the right team before the timer runs out. */
 function LiveOps({ run, base, onDone }: { run: GameState; base: number; onDone: (r: ReturnType<typeof routeResult>[]) => void }) {
   const saved = finaleFor(finaleKey(run));
-  const dealt: DealtIncident[] = useMemo(() => {
+  const g = useGroup();
+  // Group mode with supports (§3.5.2): routing buttons live on the support phones, and two
+  // "all hands" calls need every member to tap Ready.
+  const coop = useCoop();
+  const dealt: LiveItem[] = useMemo(() => {
     if (saved.dealt.length) {
-      const byId = new Map(finale.incidents.map((i) => [i.id, i]));
-      const back = saved.dealt.map((id) => byId.get(id)).filter((x): x is DealtIncident => !!x);
+      const byId = new Map<string, LiveItem>([...finale.incidents, ...sc.allHands.map((a) => ({ id: a.id, team: null }))].map((i) => [i.id, i]));
+      const back = saved.dealt.map((id) => byId.get(id)).filter((x): x is LiveItem => !!x);
       if (back.length) return back;
     }
     // A chapter replay deals a different set, so answers can't be memorised for a better best.
-    const d = dealIncidents(finale.incidents, finale.liveOps.count, mulberry32(run.startedAt + 77 + (run.replays ?? 0) * 1009));
+    const rng = mulberry32(run.startedAt + 77 + (run.replays ?? 0) * 1009);
+    const incidents = dealIncidents(finale.incidents, finale.liveOps.count, rng);
+    const d = coop ? withAllHands(incidents, shuffleInPlace(sc.allHands.map((a) => a.id), rng), finale.liveOps.allHandsCount) : incidents;
     useFinaleProgress.getState().patch(finaleKey(run), { dealt: d.map((x) => x.id) });
     return d;
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -162,12 +170,27 @@ function LiveOps({ run, base, onDone }: { run: GameState; base: number; onDone: 
   const [results, setResults] = useState(saved.results);
   /** Feedback for the incident just routed, shown in place (a toast would cover the next incident). */
   const [feedback, setFeedback] = useState<{ ok: boolean; text: string; why: string } | null>(null);
+  /** Members who tapped Ready on the current all-hands call. */
+  const [tapped, setTapped] = useState<string[]>([]);
+  /** The item already settled (guards a route and a time-out landing together). */
+  const settled = useRef(-1);
   const headingRef = useScreenHeading<HTMLHeadingElement>(c.liveOps.heading);
   // While feedback shows, keep the incident just answered on screen (also for the last one).
   const shown = feedback ? Math.max(0, results.length - 1) : results.length;
   const incident = dealt[shown];
+  const allHands = !!incident && incident.team === null;
   const families = liveOpsFamilies(base, results, finale.liveOps);
-  const incidentLabel = (n: number) => `${fill(c.liveOps.incidentOf, { n: n + 1, total: dealt.length })}: ${c.incidents[dealt[n]!.id]?.text ?? ''}`;
+  const itemText = (it: LiveItem) =>
+    it.team === null ? sc.allHands.find((a) => a.id === it.id)?.text ?? '' : c.incidents[it.id]?.text ?? '';
+  const incidentLabel = (n: number) => {
+    const it = dealt[n]!;
+    const head = `${fill(c.liveOps.incidentOf, { n: n + 1, total: dealt.length })}: ${itemText(it)}`;
+    return it.team === null ? `${head} ${fill(sc.allHandsUi.call, { s: finale.liveOps.allHandsSeconds })}` : head;
+  };
+  const meId = g.me?.id ?? 'me';
+  // Everyone still in the group must tap (the main phone too); solo, just this phone.
+  const needed = g.active ? g.members.filter((m) => m.present && !m.gone).map((m) => m.id) : [meId];
+  if (g.active && !needed.includes(meId)) needed.push(meId);
 
   // On arrival: speak the first incident, or, after a reload during the last feedback gap, finish
   // straight away (every incident is already routed; the debrief was the next step).
@@ -176,18 +199,24 @@ function LiveOps({ run, base, onDone }: { run: GameState; base: number; onDone: 
     else announce(incidentLabel(results.length));
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const route = (team: Team | null) => {
-    if (!incident || feedback) return;
-    const r = routeResult(incident, team);
+  const settle = (r: RouteResult) => {
+    if (!incident || feedback || settled.current === shown) return;
+    settled.current = shown;
     const next = [...results, r];
     setResults(next);
+    setTapped([]);
     useFinaleProgress.getState().patch(finaleKey(run), { results: next });
-    const teamName = c.teamButtons[incident.team];
-    const why = c.incidents[incident.id]?.why ?? '';
-    const text =
-      r === 'right'
-        ? fill(c.liveOps.right, { n: finale.liveOps.reward })
-        : fill(r === 'wrong' ? c.liveOps.wrong : c.liveOps.timeout, { team: teamName });
+    let text: string;
+    let why = '';
+    if (incident.team === null) text = r === 'right' ? fill(sc.allHandsUi.right, { n: finale.liveOps.reward }) : sc.allHandsUi.missed;
+    else {
+      const teamName = c.teamButtons[incident.team];
+      why = c.incidents[incident.id]?.why ?? '';
+      text =
+        r === 'right'
+          ? fill(c.liveOps.right, { n: finale.liveOps.reward })
+          : fill(r === 'wrong' ? c.liveOps.wrong : c.liveOps.timeout, { team: teamName });
+    }
     setFeedback({ ok: r === 'right', text, why });
     buzz(r === 'right' ? 'success' : 'error');
     const last = next.length >= dealt.length;
@@ -202,8 +231,57 @@ function LiveOps({ run, base, onDone }: { run: GameState; base: number; onDone: 
       if (last) onDone(next);
     }, gap);
   };
+  const route = (team: Team | null) => {
+    if (!incident) return;
+    if (incident.team === null) settle(team === null ? 'timeout' : 'wrong');
+    else settle(routeResult({ id: incident.id, team: incident.team }, team));
+  };
+  const tap = (who: string) => {
+    if (!allHands || feedback || !needed.includes(who)) return;
+    setTapped((x) => (x.includes(who) ? x : [...x, who]));
+  };
+  useEffect(() => {
+    if (allHands && !feedback && allHandsDone(tapped, needed)) settle('right');
+  });
+
+  useActions((a) => {
+    if (!incident || feedback) return;
+    if (a.type === ROUTE) {
+      const p = routeSchema.safeParse(a.payload);
+      if (p.success && incident.team !== null && (!p.data.id || p.data.id === incident.id)) route(p.data.team);
+    }
+    if (a.type === ALL_HANDS_TAP) {
+      const p = allHandsTapSchema.safeParse(a.payload);
+      if (p.success && p.data.id === incident.id) tap(a.from);
+    }
+  });
+  // Support phones see the incident (or the all-hands call) only while it can be answered.
+  const live = !!incident && !feedback;
+  const s5: S5 = {
+    incident: live && !allHands ? { id: incident.id, n: shown + 1, total: dealt.length } : null,
+    allHands: live && allHands ? { id: incident.id } : null,
+    tapped,
+  };
+  const s5Key = JSON.stringify(s5);
+  useEffect(() => {
+    if (g.active && g.amMain) publish(S5, JSON.parse(s5Key));
+  }, [g.active, g.amMain, s5Key]);
+  useEffect(() => () => publish(S5, null), []);
+  // ?fakePeers (debug): the first bot routes each incident correctly after a moment.
+  useEffect(
+    () =>
+      registerBotBehaviour((topic, payload, bot) => {
+        const p = s5Schema.safeParse(payload);
+        if (topic !== S5 || bot.index !== 0 || !p.success || !p.data.incident) return;
+        const id = p.data.incident.id;
+        const team = finale.incidents.find((i) => i.id === id)?.team;
+        if (team) setTimeout(() => bot.sendAction(ROUTE, { team, id }), 1500);
+      }),
+    [],
+  );
 
   if (!incident) return null;
+  const tappedMe = tapped.includes(meId);
   return (
     <section className={s.level}>
       <h1 className="visually-hidden" ref={headingRef} tabIndex={-1}>
@@ -215,7 +293,7 @@ function LiveOps({ run, base, onDone }: { run: GameState; base: number; onDone: 
       </div>
       <Timer
         key={`${incident.id}-${shown}`}
-        seconds={finale.liveOps.secondsEach}
+        seconds={allHands ? finale.liveOps.allHandsSeconds : finale.liveOps.secondsEach}
         running={!feedback}
         showPaused={false}
         announceAt={[0]}
@@ -229,10 +307,11 @@ function LiveOps({ run, base, onDone }: { run: GameState; base: number; onDone: 
         initial={{ opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
         data-testid="incident"
-        data-team={new URLSearchParams(window.location.search).get('debug') === '1' ? incident.team : undefined}
+        data-all-hands={allHands || undefined}
+        data-team={new URLSearchParams(window.location.search).get('debug') === '1' ? incident.team ?? undefined : undefined}
       >
-        <span aria-hidden="true">🚨 </span>
-        {c.incidents[incident.id]?.text}
+        <span aria-hidden="true">{allHands ? '📣 ' : '🚨 '}</span>
+        {itemText(incident)}
       </motion.article>
       {feedback ? (
         // Already spoken via the announcer; shown here for sighted players.
@@ -241,19 +320,41 @@ function LiveOps({ run, base, onDone }: { run: GameState; base: number; onDone: 
             {feedback.ok ? '✓ ' : '✗ '}
             {feedback.text}
           </strong>
-          <span>{feedback.why}</span>
+          {feedback.why && <span>{feedback.why}</span>}
+        </div>
+      ) : allHands ? (
+        <p className={s.question}>{fill(sc.allHandsUi.call, { s: finale.liveOps.allHandsSeconds })}</p>
+      ) : (
+        <p className={s.question}>{coop ? sc.main.askIncidents : c.liveOps.route}</p>
+      )}
+      {allHands ? (
+        <div className={s.teams} data-waiting={feedback ? true : undefined}>
+          <p className={s.question} data-testid="all-hands-count">
+            {fill(sc.allHandsUi.ready, { n: tapped.length, total: needed.length })}
+          </p>
+          <button
+            type="button"
+            className={s.team}
+            aria-disabled={tappedMe || !!feedback || undefined}
+            data-testid="all-hands-ready"
+            onClick={() => tap(meId)}
+          >
+            {tappedMe ? '✓ ' : ''}
+            {sc.allHandsUi.button}
+          </button>
         </div>
       ) : (
-        <p className={s.question}>{c.liveOps.route}</p>
+        !coop && (
+          <div className={s.teams} role="group" aria-label={c.liveOps.route} data-waiting={feedback ? true : undefined}>
+            {TEAMS.map((team) => (
+              <button key={team} type="button" className={s.team} data-team={team} onClick={() => route(team)}>
+                <span aria-hidden="true">{TEAM_ICON[team]} </span>
+                {c.teamButtons[team]}
+              </button>
+            ))}
+          </div>
+        )
       )}
-      <div className={s.teams} role="group" aria-label={c.liveOps.route} data-waiting={feedback ? true : undefined}>
-        {(['data', 'ai', 'logic', 'cloud'] as const).map((team) => (
-          <button key={team} type="button" className={s.team} data-team={team} onClick={() => route(team)}>
-            <span aria-hidden="true">{TEAM_ICON[team]} </span>
-            {c.teamButtons[team]}
-          </button>
-        ))}
-      </div>
     </section>
   );
 }

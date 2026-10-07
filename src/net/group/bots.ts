@@ -31,7 +31,9 @@ const later = (ms: number, fn: () => void) => setTimeout(fn, ms);
 const builtIn: BotBehaviour = (topic, payload, bot) => {
   const p = (payload ?? {}) as Record<string, unknown>;
   if (topic === 'handoff' && p.nextId === bot.id) later(800, () => bot.sendAction('handoff:ready'));
-  if (topic === 'allHands' && typeof p.id === 'string') later(400 + bot.index * 500, () => bot.sendAction('allHands:tap', { id: p.id }));
+  // Finale topic 's5' (src/stages/support/topics.ts): { allHands: { id } } during a call.
+  const ah = (topic === 's5' ? p.allHands : null) as { id?: unknown } | null;
+  if (ah && typeof ah.id === 'string') later(400 + bot.index * 500, () => bot.sendAction('allHands:tap', { id: ah.id }));
 };
 
 export const BOT_NAMES = ['Bot Ana', 'Bot Ben', 'Bot Cai'];

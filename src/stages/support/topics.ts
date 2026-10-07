@@ -80,7 +80,9 @@ export const s5Schema = z.object({
 });
 export type S5 = z.infer<typeof s5Schema>;
 export const ROUTE = 'route';
-export const routeSchema = z.object({ team: z.enum(['data', 'ai', 'logic', 'cloud']) });
+/** `id`: the incident it answers, so a late tap never routes the next incident. */
+export const routeSchema = z.object({ team: z.enum(['data', 'ai', 'logic', 'cloud']), id: z.string().max(10).optional() });
+export const allHandsTapSchema = z.object({ id: z.string().max(10) });
 export const ALL_HANDS_TAP = 'allHands:tap';
 
 /**

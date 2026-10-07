@@ -58,6 +58,8 @@ export const supportCopySchema = z.object({
     askIncidents: words(15),
   }),
   /** Finale "all hands" incidents (§8.2: every member taps within 5 s). */
+  /** Main phone during an all-hands call. */
+  allHandsUi: z.object({ call: words(15), ready: txt, button: words(3), right: words(12), missed: words(12) }),
   allHands: z.array(z.object({ id: z.string().regex(/^ah\d$/), text: words(14) })).min(2),
 });
 export type SupportCopy = z.infer<typeof supportCopySchema>;

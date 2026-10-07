@@ -52,6 +52,31 @@ export function dealIncidents(all: FinaleContent['incidents'], count: number, rn
   return shuffleInPlace(picked, rng);
 }
 
+/** A Live Ops item: an incident for one team, or (group mode) an "all hands" call (team null). */
+export interface LiveItem {
+  id: string;
+  team: Team | null;
+}
+
+/**
+ * Group mode (§8.2): insert `count` all-hands calls, spread evenly and never first, so the group
+ * has warmed up on ordinary routing before everyone has to tap.
+ */
+export function withAllHands(dealt: readonly DealtIncident[], ids: readonly string[], count: number): LiveItem[] {
+  const out: LiveItem[] = [...dealt];
+  const n = Math.min(count, ids.length);
+  for (let k = n - 1; k >= 0; k--) {
+    const at = Math.max(1, Math.round(((k + 1) * dealt.length) / (n + 1)));
+    out.splice(at + k, 0, { id: ids[k]!, team: null });
+  }
+  return out;
+}
+
+/** All-hands: complete once every needed member has tapped. */
+export function allHandsDone(tapped: readonly string[], needed: readonly string[]): boolean {
+  return needed.length > 0 && needed.every((id) => tapped.includes(id));
+}
+
 export type RouteResult = 'right' | 'wrong' | 'timeout';
 
 export function routeResult(incident: DealtIncident, routed: Team | null): RouteResult {

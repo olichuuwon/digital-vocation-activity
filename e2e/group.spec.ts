@@ -73,15 +73,32 @@ async function debugJump(page: Page, label: string) {
   await page.locator('.debug-panel summary').click();
 }
 
-async function playLiveOps(page: Page) {
+/**
+ * Group Live Ops: the main phone has no routing buttons; each incident is routed from the support
+ * phone holding that specialisation, and "all hands" calls need a tap on every phone.
+ */
+async function playLiveOps(main: Page, supports: Page[]) {
+  await expect(main.locator('button[data-team]')).toHaveCount(0);
+  let allHands = 0;
   for (let guard = 0; guard < 20; guard++) {
-    const card = page.getByTestId('incident');
-    if (!(await card.count())) return;
-    const team = await card.getAttribute('data-team');
+    const card = main.getByTestId('incident');
+    if (!(await card.count())) return allHands;
     const text = await card.textContent();
-    await page.locator(`button[data-team="${team}"]`).click();
-    await expect(page.getByTestId('incident').filter({ hasText: text ?? '' })).toHaveCount(0, { timeout: 10_000 });
+    if (await card.getAttribute('data-all-hands')) {
+      allHands++;
+      for (const p of supports) await p.getByTestId('support-all-hands').click();
+      await main.getByTestId('all-hands-ready').click();
+    } else {
+      const team = (await card.getAttribute('data-team'))!;
+      const holder = [];
+      for (const p of supports) if ((await p.getByTestId('support-routing').getAttribute('data-teams'))!.split(',').includes(team)) holder.push(p);
+      expect(holder).toHaveLength(1);
+      await holder[0]!.locator(`button[data-team="${team}"]`).click();
+    }
+    await expect(main.getByTestId('feedback')).toContainText('✓');
+    await expect(main.getByTestId('incident').filter({ hasText: text ?? '' })).toHaveCount(0, { timeout: 10_000 });
   }
+  return allHands;
 }
 
 const uniqueName = (prefix: string) => `${prefix} ${Math.floor(1000 + Math.random() * 9000)}`;
@@ -128,6 +145,10 @@ test('3 phones: create, join by QR link and by code, reorder, play a group run, 
   }
   await ann.getByRole('button', { name: 'Start the mission' }).click();
   for (const p of [ben, cai]) await expect(p.getByTestId('support-screen')).toHaveAttribute('data-stage', '1');
+  // Stage 1's three support cards are dealt between the two support phones (§3.5.2).
+  const cards = [];
+  for (const p of [ben, cai]) cards.push(...(await p.getByTestId('support-cards').getAttribute('data-cards'))!.split(','));
+  expect(cards.sort()).toEqual(['duplicates', 'fixKit', 'rulebook']);
 
   // Debug jump to the finale on the main phone: the run moves to Cai (rotation[4 % 3]).
   await debugJump(ann, 'F');
@@ -139,7 +160,11 @@ test('3 phones: create, join by QR link and by code, reorder, play a group run, 
 
   await cai.getByRole('button', { name: 'Go live' }).click();
   await cai.getByRole('button', { name: 'Start shift' }).click();
-  await playLiveOps(cai);
+  // Every specialisation is dealt to exactly one support phone.
+  const teams = [];
+  for (const p of [ann, ben]) teams.push(...(await p.getByTestId('support-routing').getAttribute('data-teams'))!.split(','));
+  expect(teams.sort()).toEqual(['ai', 'cloud', 'data', 'logic']);
+  expect(await playLiveOps(cai, [ann, ben])).toBe(2);
 
   // Everyone reaches the debrief and sees the shared rank instead of the solo note.
   for (const p of [ann, ben, cai]) {
