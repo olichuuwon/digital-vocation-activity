@@ -14,6 +14,7 @@ export default function Support3() {
     <SupportCards
       stage={3}
       news={{ scout: t?.flooded, manifest: t?.needs, debugger: t?.debug?.stoppedAt }}
+      live={{ scout: !!t?.flooded.length, manifest: !!t?.needs.length, debugger: !!t?.debug }}
       render={{
         scout: t && (t.flooded.length || t.dry.length) ? (
           <div data-testid="support-scout">

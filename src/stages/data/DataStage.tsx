@@ -301,7 +301,7 @@ function CardPlay({ run, level, debug, onDone }: { run: GameState; level: CardLe
       {level.seconds !== null && (
         <Timer
           seconds={level.seconds}
-          running={!rulebookOpen && !state.done}
+          running={!(rulebookOpen && !coop) && !state.done}
           onExpire={() => {
             const next = levelReducer(state, { type: 'timeUp' });
             dispatch({ type: 'timeUp' });

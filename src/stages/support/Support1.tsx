@@ -10,11 +10,12 @@ import s from './support.module.css';
 export default function Support1() {
   const t = useTopic(S1, s1Schema);
   useBuzzOnChange(t?.fix ?? null, `${sc.common.newInfo} ${sc.cards.fixKit.title}`);
-  const rules = rulebook.rules.filter((r) => (t?.rules ?? [1]).includes(r.id));
+  const rules = rulebook.rules.filter((r) => (t?.rules ?? rulebook.rules.map((r) => r.id)).includes(r.id));
   return (
     <SupportCards
       stage={1}
       news={{ duplicates: t?.kept, fixKit: t?.fix }}
+      live={{ rulebook: !!t, duplicates: !!t?.kept.length, fixKit: !!t?.fix }}
       render={{
         rulebook: (
           <ol className={s.list} data-testid="support-rules">

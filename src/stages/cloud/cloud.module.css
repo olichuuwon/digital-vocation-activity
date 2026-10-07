@@ -352,3 +352,11 @@
 .barButtons > * {
   flex: 1;
 }
+
+/* Group mode: a setting's value on the main phone while a support phone holds the control. */
+.roValue {
+  min-height: var(--tap);
+  display: inline-flex;
+  align-items: center;
+  font-size: 1.125rem;
+}

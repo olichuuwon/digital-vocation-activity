@@ -73,6 +73,8 @@ Try it: open the site on 2–3 phones, Create group on one, scan its QR with the
 - [ ] **36. Who plays the finale:** the main-phone turn keeps rotating into the finale. With 4 players, player 1 plays it; with 3, player 2 gets a second turn; with 2, they alternate. Alternative: the leader always plays the finale. *Default: keep rotating.*
 - [ ] **37. Live group names on `/host`:** groups playing now (name, size, stage) appear on the booth screen. A custom name shows there before a facilitator could hide it from the board. Show only generated names there, or hide the list? *Default: show all names.*
 - [ ] **38. Joining replaces a solo run:** a phone that creates or joins a group drops any unfinished solo run on it. *Default: keep (booth phones play one run at a time).*
+- [ ] **39. Quiet support cards:** in some booth levels a support card has little to do (e.g. Reveal has only 2 charges; Manifest matters mostly in full mode). Play a 3–4 phone group and note any phone that sat idle for a whole level. *Default: re-balance after playtests (M8).*
+- [ ] **40. Two-phone check on the live site:** group play uses Supabase Realtime, which Claude couldn't test from the cloud sandbox (no WebSockets there; the e2e tests use a local relay). Please create a group on one phone and join from another on the live site. If they never see each other: Supabase → Project Settings → Realtime → make sure public channels are allowed (not "private channels only"). *Default: n/a, needs your check.*
 
 ## I. Setup notes (no answer needed)
 - Supabase keys: Claude keeps them in `.env.local` (git-ignored) and never commits them. The live site reads them from Vercel → Project → Settings → Environment Variables (`VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`).

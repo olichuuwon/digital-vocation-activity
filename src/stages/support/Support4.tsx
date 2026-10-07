@@ -5,7 +5,7 @@ import { c as cloudCopy } from '../cloud/content';
 import { sc } from './content';
 import { SupportCards } from './SupportCards';
 import { useBuzzOnChange } from './useBuzz';
-import { BOOST, CONFIG, RESTART, S4C, S4M, s4cSchema, s4mSchema } from './topics';
+import { BOOST, CONFIG, RESTART, ROLLBACK, S4C, S4M, S4R, s4cSchema, s4mSchema, s4rSchema } from './topics';
 import s from './support.module.css';
 
 const pct = (x: number) => Math.floor(x * 100 + 1e-9);
@@ -19,9 +19,15 @@ export default function Support4() {
   const g = useGroup();
   const manual = useTopic(S4M, s4mSchema);
   const cfg = useTopic(S4C, s4cSchema);
+  const replay = useTopic(S4R, s4rSchema);
   const myServers = dealCards([0, 1, 2], g.supportCount, g.mySupportIndex);
   const myCrashed = manual?.pods.filter((p) => p.status === 'crashed' && myServers.includes(p.id)).map((p) => p.id) ?? [];
   useBuzzOnChange(myCrashed.length ? myCrashed : null, fill(cloudCopy.manual.crashToast, { n: (myCrashed[0] ?? 0) + 1 }));
+  const replayAlert = replay && (replay.badDeploy || replay.crashed.length) ? [replay.badDeploy, replay.crashed] : null;
+  useBuzzOnChange(
+    replayAlert,
+    replay?.badDeploy ? cloudCopy.manual.deployToast : fill(cloudCopy.replay.podCrashed, { n: (replay?.crashed[0] ?? 0) + 1 }),
+  );
   const announce = (m: string) => useAnnouncer.getState().announce(m);
 
   if (manual) {
@@ -64,6 +70,45 @@ export default function Support4() {
               </div>
             );
           })}
+        </article>
+      </section>
+    );
+  }
+
+  if (replay) {
+    return (
+      <section className={s.cards} data-testid="support-replay">
+        <article className={s.card}>
+          <h2 className={s.cardTitle}>{sc.cards.replay.title}</h2>
+          <p className={s.instruction}>{sc.cards.replay.instruction}</p>
+          <p className={s.big}>{fill(sc.cards.replay.uptime, { pct: pct(replay.uptime) })}</p>
+          <p className={s.row}>
+            <span>{fill(sc.cards.replay.pods, { n: replay.pods })}</span>
+            <span>
+              {fill(cloudCopy.configure.cost, { n: replay.cost })} · {fill(cloudCopy.configure.budget, { n: replay.budget })}
+            </span>
+          </p>
+          {replay.badDeploy && (
+            <button type="button" className={s.actionBtn} data-testid="support-rollback" onClick={() => sendAction(ROLLBACK)}>
+              <span aria-hidden="true">↩️ </span>
+              {sc.cards.replay.rollback}
+            </button>
+          )}
+          {replay.crashed.map((id) => {
+            const name = fill(cloudCopy.replay.pod, { n: id + 1 });
+            return (
+              <div key={id} className={s.row}>
+                <span>
+                  <span aria-hidden="true">💥 </span>
+                  {name}: {cloudCopy.manual.crashed}
+                </span>
+                <button type="button" className={s.actionBtn} aria-label={`${cloudCopy.manual.restart}: ${name}`} onClick={() => sendAction(RESTART, { pod: id })}>
+                  {cloudCopy.manual.restart}
+                </button>
+              </div>
+            );
+          })}
+          {!replay.badDeploy && replay.crashed.length === 0 && <p className={s.muted}>{sc.cards.replay.none}</p>}
         </article>
       </section>
     );
@@ -124,7 +169,10 @@ export default function Support4() {
         <span>
           {label}: <strong>{k[key]}</strong>
         </span>
-        {steps(label, k[key], lo, hi, 1, (v) => sendAction(CONFIG, { [key]: v }))}
+        {steps(label, k[key], lo, hi, 1, (v) =>
+          // Keep Min ≤ Max, as the main phone's own steppers do.
+          sendAction(CONFIG, key === 'minPods' ? { minPods: v, maxPods: Math.max(v, k.maxPods) } : { maxPods: v, minPods: Math.min(v, k.minPods) }),
+        )}
       </div>
     );
     const th = pct(k.scaleUpCpu);
@@ -135,8 +183,8 @@ export default function Support4() {
         </p>
         <SupportCards
           stage={4}
+          only={['balancer', 'autoscaler']}
           render={{
-            servers: <p className={s.muted}>{sc.common.waiting}</p>,
             balancer: (
               <>
                 {toggle('loadBalancer', cloudCopy.configure.loadBalancer)}

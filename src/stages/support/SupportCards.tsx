@@ -16,13 +16,21 @@ export function SupportCards({
   stage,
   render,
   news = {},
+  live = {},
+  only,
 }: {
   stage: SupportStage;
   render: Partial<Record<CardId, ReactNode>>;
   news?: Partial<Record<CardId, unknown>>;
+  /** Cards with something to do right now: until the player picks a tab, the first live one shows. */
+  live?: Partial<Record<CardId, boolean>>;
+  /** Deal only these of the stage's cards (a phase that doesn't use them all). */
+  only?: readonly CardId[];
 }) {
-  const cards = useDealtCards<CardId>(SUPPORT_CARDS[stage] as readonly CardId[]);
-  const [tab, setTab] = useState(0);
+  const cards = useDealtCards<CardId>(only ?? (SUPPORT_CARDS[stage] as readonly CardId[]));
+  const [picked, setPicked] = useState<number | null>(null);
+  const firstLive = cards.findIndex((id) => live[id]);
+  const tab = picked ?? Math.max(0, firstLive);
   const keyOf = (id: CardId) => JSON.stringify(news[id] ?? null);
   /** The news value each card had when last looked at. */
   const [seen, setSeen] = useState<Partial<Record<CardId, string>>>(() =>
@@ -39,7 +47,7 @@ export function SupportCards({
     const next = cards[i];
     if (!next) return;
     setSeen((x) => ({ ...x, [current]: keyOf(current), [next]: keyOf(next) }));
-    setTab(i);
+    setPicked(i);
     if (focus) tabRefs.current[i]?.focus();
   };
   const onKey = (e: KeyboardEvent) => {

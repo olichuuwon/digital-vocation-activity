@@ -18,6 +18,7 @@ export default function Support2() {
     <SupportCards
       stage={2}
       news={{ reveal: t?.level === 'covered', auditor: t?.audit }}
+      live={{ reveal: canReveal, auditor: !!t?.audit, fieldGuide: !!t }}
       render={{
         reveal:
           t?.level === 'covered' ? (

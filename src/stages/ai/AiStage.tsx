@@ -252,6 +252,10 @@ function LevelTop({
 }) {
   const coop = useCoop();
   const headingRef = useScreenHeading<HTMLHeadingElement>(levelName(levelId));
+  // A teammate joining while the guide sheet is open unmounts it: un-pause the level too.
+  useEffect(() => {
+    if (coop) onGuide(false);
+  }, [coop]); // eslint-disable-line react-hooks/exhaustive-deps
   return (
     <>
       <h1 className="visually-hidden" ref={headingRef} tabIndex={-1}>

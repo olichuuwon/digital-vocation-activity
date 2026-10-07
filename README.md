@@ -43,9 +43,13 @@ No coding knowledge needed. No account, no app to install, and no personal data 
 
 **🚚 Finale: Mission Live.** See how your data, AI, logic and uptime add up to families reached, then route live incidents to the right team. The debrief shows your C4X Digital match and what you learned, with a card that's easy to screenshot. After your first finish you can replay any stage.
 
-### Playing as a group *(coming soon)*
+### Playing as a group
 
-Groups of 2–4 will each use their own phone. One person plays on the **main phone** while the others hold **support cards** with rules, tools or secret info the main player needs, so you'll have to talk to each other. The main player changes every stage. Group runs go on the daily **leaderboard**, which resets at midnight Singapore time.
+Groups of 2–4 each use their own phone. One person taps **Create group** and picks a group name; the others scan the QR code on that screen (or tap **Join group** and type the 4-letter code). Everyone adds a nickname, which stays on their own phone.
+
+One person plays on the **main phone** while the others hold **support cards**: the rulebook, the Reveal button, the flood scout, server controls and more. The main player can't see that info, so you'll have to talk to each other. The main phone moves to the next player every stage. In the finale, each incident can only be sent from the phone holding that specialisation, and "all hands" calls need everyone to tap Ready within 5 seconds.
+
+If a phone drops, the others wait 20 seconds, then the next player takes over. Reload the page and tap **Back to** your group name to rejoin. Group runs go on the daily **leaderboard**, which resets at midnight Singapore time.
 
 ---
 

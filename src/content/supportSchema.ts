@@ -49,6 +49,7 @@ export const supportCopySchema = z.object({
     servers: card.extend({ none: words(10) }),
     balancer: card,
     autoscaler: card,
+    replay: card.extend({ uptime: txt, pods: txt, rollback: words(3), none: words(10) }),
     routing: card.extend({ allHands: words(10), confirm: words(3), waiting: words(10), sent: words(6) }),
   }),
   /** Main phone, group mode: the info that now lives on a support phone. */
@@ -58,6 +59,8 @@ export const supportCopySchema = z.object({
     askScout: words(15),
     askServers: words(15),
     askIncidents: words(15),
+    askConfig: words(15),
+    askServersTutorial: words(15),
   }),
   /** Finale "all hands" incidents (§8.2: every member taps within 5 s). */
   /** Main phone during an all-hands call. */

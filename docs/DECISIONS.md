@@ -108,6 +108,8 @@
 | 2026-10-07 | Group UI copy | `src/content/groupCopy.json` (functional UI text, sentence case, British English) written by `realtime-engineer`; support-phone strings ≤ 15 words (schema-checked). Review with `content-writer`. | No |
 | 2026-10-07 | Support cards per stage (§3.5.2) | Main phone in a group with ≥ 1 support ("co-op") hands these over; solo and a lone main phone keep everything on screen. S1: Rulebook / Duplicates ("kept so far") / Fix kit (the fix for the card on screen). S2: Reveal (the button + charges move off the main phone) / Field guide / Auditor (the confidence % leaves the main phone). S3: Scout (next run's flooded and dry roads) / Manifest (house needs; the map hides them) / Debugger (the last failed run, step by step). S4: Servers (Boost/Restart per server, dealt across phones; the main phone loses those buttons) / Balancer + Autoscaler (live config and cost vs budget during Phase B; supports can change settings too). Finale: Routing. Texts in `src/content/supportCopy.json`. Implements the M4 proposal for booth groups (Debugger and Manifest are live in L1–L3 too). | Yes |
 | 2026-10-07 | Finale in a group (§8.2) | The main phone shows the feed, timer and families; routing buttons appear only on the support phone holding that specialisation, and the support's tap is the routing (no second "confirm" tap on the main phone: an 8 s timer has no room for it). A late tap carries the incident id, so it can't route the next one. Two "all hands" calls (`finale.json` `allHandsCount` 2, `allHandsSeconds` 5) are added to the 8 incidents, spread out and never first; every present member (the main phone too) taps Ready within 5 s for +15, else −12. Solo: unchanged. | Yes |
+| 2026-10-07 | Support cards: QA/a11y fixes | Co-op needs a *present* support (a drop hands the controls straight back to the main phone; cards re-deal after 30 s). Stage 4 Configure: the main phone shows values read-only; Balancer and Autoscaler are dealt to the supports. Stage 4 Replay: supports get a "Storm watch" card (uptime, pods, cost vs budget, Restart crashed pods, Roll back). Until a support player picks a tab, the first card with something live shows; hidden tabs get a "New" badge. Support news, incidents and all-hands calls are spoken through the shared announcer (incidents unthrottled). Ready buttons take focus during all-hands. Stage 3 co-op shows "ask your scouts" and its map description hides house needs. | No |
+| 2026-10-07 | Quiet support cards in booth levels | QA: some cards have little to do in some booth levels (Reveal has 2 charges per level; Auditor is only live in Audit; Manifest only in L5; Scout only in L3; Fix kit only in fix levels). The auto-tab and the rulebook/field guide keep a single support busy; with 3 supports one phone can still be quiet for a level. Re-dealing per level is a balancing job for M8 playtests (owner item 39). | Yes |
 
 ## Copy needing owner approval
 <!-- NEEDS OWNER APPROVAL --> Reality Check cards in `src/content/realityChecks.json` with `needsApproval: true` (career-facing, D14). Preview them at `/dev/components`.
@@ -118,7 +120,7 @@
 4. **Cloud, "This is a real job":** "Site reliability engineers (SREs) keep apps like this running for millions of people. They set up alerts so a human only gets woken up when automation can't fix it."
 
 ## Milestone status
-- [x] M0 · [x] M0.5 · [x] M1 · [x] M2 · [x] M3 · [x] M4 · [x] M5 · [x] M6 · [ ] M6.5 · [ ] M7 · [ ] M8
+- [x] M0 · [x] M0.5 · [x] M1 · [x] M2 · [x] M3 · [x] M4 · [x] M5 · [x] M6 · [x] M6.5 · [ ] M7 · [ ] M8
 
 ### M0 notes (2026-10-06)
 - Lint, typecheck, unit tests (Vitest) and e2e (Playwright, iPhone 12 + Pixel 5) green.
@@ -172,3 +174,11 @@
 - Acceptance: formula tests (§3.2 in `src/state/scoring.test.ts`, finale logic in `src/stages/finale/logic.test.ts`) ✅; screenshot card fits 360×740 (e2e; QA also checked 390×844 and 360×640) ✅.
 - Timing (QA): finale + debrief ≈ 2:10–2:40 against 3:00.
 - Carried: the Prologue (stage 0) is still a placeholder screen ("Finish level"); group mode (M6.5).
+
+### M6.5 notes (2026-10-07)
+- Group play end to end: create/join (QR, code), lobby with rotation, synced run with the main phone rotating per stage, support cards for every stage (§3.5.2), group finale (routing on support phones, 2 all-hands calls), drops/takeover, rejoin, one leaderboard row per group, `/host` live list, `?fakePeers`.
+- Tests: 501 unit tests; e2e with 3 real browser contexts over a local WebSocket relay (create, join by link and code, reorder, card dealing, finale routed from the support holding each specialisation, all-hands, shared rank, no nicknames stored or submitted), rejoin, takeover after 20 s.
+- Timing (QA): the 2 all-hands calls add ≈ 14 s; finale ≈ 125 s against 120 s (+4%).
+- a11y: support news spoken once via the shared announcer; WAI-ARIA tabs; pressed states visible; 48px steppers and toggles; notices spoken once instead of live countdowns; lobby joins spoken; focus kept in Create and lobby reordering.
+- Not verified here: Supabase Realtime itself (the sandbox can't open WebSockets). Needs a two-phone check on the live site (owner item 40).
+- Carried to M7: relaxed mode is per phone (a support's relaxed setting doesn't slow the main phone's timers); supports have no countdown during all-hands; lobby code `aria-label` on a `<p>`; up-next Ready sits at the top of the support screen; the main phone's Stage 1 intro still shows the new rule. Carried to M8: re-deal quiet cards per level (owner item 39); Stage 3 L3 scouting lets a group pass one flood before the "lucky run" flood (game-designer).

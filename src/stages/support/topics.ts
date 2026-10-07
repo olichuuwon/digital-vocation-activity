@@ -71,6 +71,19 @@ export type S4C = z.infer<typeof s4cSchema>;
 export const CONFIG = 'cfg';
 export const configPatchSchema = configSchema.partial();
 
+/** Stage 4 replay (Phase C): live numbers, crashed pods and a bad update, so supports can help. */
+export const S4R = 's4r';
+export const s4rSchema = z.object({
+  uptime: z.number().min(0).max(1),
+  pods: z.number().int().min(0).max(20),
+  cost: z.number().min(0).max(1000),
+  budget: z.number().min(0).max(1000),
+  crashed: z.array(z.number().int().min(0).max(20)).max(20),
+  badDeploy: z.boolean(),
+});
+export type S4R = z.infer<typeof s4rSchema>;
+export const ROLLBACK = 'rollback';
+
 /** Finale: the incident on screen, or an "all hands" call. */
 export const S5 = 's5';
 export const s5Schema = z.object({
@@ -92,5 +105,7 @@ export const ALL_HANDS_TAP = 'allHands:tap';
  */
 export function useCoop(): boolean {
   const g = useGroup();
-  return g.active && g.amMain && g.supportCount > 0;
+  // Present supports only: if the last one drops, its controls come back here at once (the 30 s
+  // "gone" mark is for re-dealing cards, too slow for an 8 s incident).
+  return g.active && g.amMain && g.supports.some((m) => m.present);
 }

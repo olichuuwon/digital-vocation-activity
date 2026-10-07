@@ -83,6 +83,14 @@
       "confirm": "Ready!",
       "waiting": "Waiting for the next incident. Watch the feed!",
       "sent": "Sent to {team}."
+    },
+    "replay": {
+      "title": "Storm watch",
+      "instruction": "Watch uptime and cost. Restart crashed pods and roll back bad updates fast.",
+      "uptime": "Uptime {pct}%",
+      "pods": "Pods: {n}",
+      "rollback": "Roll back",
+      "none": "All pods healthy. Keep watching!"
     }
   },
   "main": {
@@ -90,7 +98,9 @@
     "askGuide": "Not sure what something is? Your team has the field guide. Ask!",
     "askScout": "Your scouts know which roads flood next run and what houses need. Ask!",
     "askServers": "Your teammates control the server buttons. Call out which server needs help!",
-    "askIncidents": "Each incident goes to the teammate with that specialisation. Call it out, then confirm!"
+    "askIncidents": "Each incident goes to the teammate with that specialisation. Call it out, then confirm!",
+    "askConfig": "Your teammates hold the settings. Agree on a plan, then they tap.",
+    "askServersTutorial": "Call out the busiest server. Your teammates tap Boost and Restart."
   },
   "allHands": [
     {
