@@ -68,7 +68,16 @@ export function GroupCreate({ facilitatorMode, onBack }: { facilitatorMode: Mode
               >
                 {t.moreNames} <span aria-hidden="true">🔀</span>
               </button>
-              <button type="button" className={ui.btn} onClick={() => setCustom('')}>
+              <button
+                type="button"
+                className={ui.btn}
+                data-own-name
+                onClick={() => {
+                  setCustom('');
+                  // The button goes away: keep focus on the field that replaces it.
+                  requestAnimationFrame(() => document.getElementById('group-name')?.focus());
+                }}
+              >
                 {t.ownName} <span aria-hidden="true">✏️</span>
               </button>
             </div>
@@ -95,7 +104,14 @@ export function GroupCreate({ facilitatorMode, onBack }: { facilitatorMode: Mode
             <p id="group-name-error" className={s.error} role={tried && nameProblem ? 'alert' : undefined}>
               {tried && nameProblem ? nameError[nameProblem] : ''}
             </p>
-            <button type="button" className={ui.btn} onClick={() => setCustom(null)}>
+            <button
+              type="button"
+              className={ui.btn}
+              onClick={() => {
+                setCustom(null);
+                requestAnimationFrame(() => document.querySelector<HTMLElement>('[data-own-name]')?.focus());
+              }}
+            >
               {t.useGenerated}
             </button>
           </div>

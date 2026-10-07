@@ -33,12 +33,14 @@ export const supportCopySchema = z.object({
     newInfo: words(6),
     tabsLabel: txt,
     yourCard: txt,
+    /** Badge on a tab whose card got new info while another tab was open. */
+    newBadge: words(2),
   }),
   cards: z.object({
     rulebook: card,
     duplicates: card.extend({ seen: txt, none: words(8) }),
     fixKit: card.extend({ none: words(10), answer: txt }),
-    reveal: card.extend({ button: words(3), left: txt, none: words(8) }),
+    reveal: card.extend({ button: words(3), left: txt, none: words(8), revealed: words(6) }),
     fieldGuide: card,
     auditor: card.extend({ confidence: txt, none: words(10) }),
     scout: card.extend({ flooded: txt, dry: txt, none: words(10) }),
@@ -47,7 +49,7 @@ export const supportCopySchema = z.object({
     servers: card.extend({ none: words(10) }),
     balancer: card,
     autoscaler: card,
-    routing: card.extend({ allHands: words(10), confirm: words(3), waiting: words(10) }),
+    routing: card.extend({ allHands: words(10), confirm: words(3), waiting: words(10), sent: words(6) }),
   }),
   /** Main phone, group mode: the info that now lives on a support phone. */
   main: z.object({

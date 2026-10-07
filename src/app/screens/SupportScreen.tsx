@@ -5,7 +5,7 @@ import { HANDOFF_READY, HANDOFF_TOPIC, sendAction, useGroup, useTopic } from '..
 import { PROMOTE_AFTER_MS } from '../../net/group/protocol';
 import { z } from 'zod';
 import { supportViews } from '../../stages/supportRegistry';
-import { useScreenHeading } from '../screenFocus';
+import { useAnnouncer, useScreenHeading } from '../screenFocus';
 import ui from '../ui.module.css';
 import s from './Group.module.css';
 
@@ -52,6 +52,19 @@ export function SupportScreen() {
   const recent = useRecent(promoted?.at ?? null, 8_000);
   const showPromoted = !!promoted && promoted.stage === stage && recent && !g.paused;
   const promotedName = g.members.find((m) => m.id === promoted?.id)?.nick ?? '';
+  // Each notice is spoken once when it appears (the visible ones aren't live regions: the pause
+  // countdown would be re-read every second).
+  const announce = useAnnouncer((a) => a.announce);
+  const pausedName = g.paused?.name ?? null;
+  useEffect(() => {
+    if (pausedName !== null) announce(fill(t.paused, { name: pausedName, s: Math.ceil(PROMOTE_AFTER_MS / 1000) }));
+  }, [pausedName, announce]);
+  useEffect(() => {
+    if (showPromoted) announce(fill(t.promoted, { name: promotedName }));
+  }, [showPromoted]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => {
+    if (upNext) announce(`${t.upNext} ${t.ready}`);
+  }, [upNext, announce]);
 
   return (
     <main className={s.support} data-testid="support-screen" data-stage={stage} data-main={mainName}>
@@ -67,17 +80,17 @@ export function SupportScreen() {
       </div>
 
       {g.paused && (
-        <p className={s.notice} role="status" data-testid="paused">
+        <p className={s.notice} data-testid="paused">
           {fill(t.paused, { name: g.paused.name, s: Math.max(0, Math.ceil(PROMOTE_AFTER_MS / 1000) - pausedFor) })}
         </p>
       )}
       {showPromoted && (
-        <p className={s.notice} role="status">
+        <p className={s.notice}>
           {fill(t.promoted, { name: promotedName })}
         </p>
       )}
       {upNext && (
-        <div className={s.upNext} role="status" data-testid="up-next">
+        <div className={s.upNext} data-testid="up-next">
           <strong>{t.upNext}</strong>
           <span>{fill(t.upNextBody, { stage: stage < 4 ? (stageContent(stage + 1)?.specialisation ?? '') : t.finale })}</span>
           <button type="button" className={`${ui.btn} ${ui.primary}`} onClick={() => sendAction(HANDOFF_READY)}>

@@ -63,7 +63,9 @@
     "lengthLine": "{length}",
     "closesIn": "This lobby closes in {min} min.",
     "leave": "Leave group",
-    "close": "Close group"
+    "close": "Close group",
+    "joinedSay": "{name} joined.",
+    "awaySay": "{name} is reconnecting."
   },
   "support": {
     "supporting": "You're supporting {name}",

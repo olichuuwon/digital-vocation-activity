@@ -171,8 +171,9 @@
   font-size: 0.875rem;
 }
 
+/* Missing teammate: dashed border + "Reconnecting…" text (no fading: it must stay readable). */
 .away {
-  opacity: 0.6;
+  border-style: dashed;
 }
 
 .moveBtns {
@@ -190,7 +191,7 @@
   cursor: pointer;
 }
 
-.moveBtn:disabled {
+.moveBtn[aria-disabled='true'] {
   opacity: 0.35;
   cursor: not-allowed;
 }

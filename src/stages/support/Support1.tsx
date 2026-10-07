@@ -9,11 +9,12 @@ import s from './support.module.css';
 /** Stage 1 support cards: Rulebook, duplicate scanner, fix kit (§3.5.2). */
 export default function Support1() {
   const t = useTopic(S1, s1Schema);
-  useBuzzOnChange(t?.fix ?? null);
+  useBuzzOnChange(t?.fix ?? null, `${sc.common.newInfo} ${sc.cards.fixKit.title}`);
   const rules = rulebook.rules.filter((r) => (t?.rules ?? [1]).includes(r.id));
   return (
     <SupportCards
       stage={1}
+      news={{ duplicates: t?.kept, fixKit: t?.fix }}
       render={{
         rulebook: (
           <ol className={s.list} data-testid="support-rules">

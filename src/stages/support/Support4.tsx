@@ -1,3 +1,4 @@
+import { useAnnouncer } from '../../app/screenFocus';
 import { fill } from '../../content';
 import { dealCards, sendAction, useGroup, useTopic } from '../../net/group';
 import { c as cloudCopy } from '../cloud/content';
@@ -19,10 +20,12 @@ export default function Support4() {
   const manual = useTopic(S4M, s4mSchema);
   const cfg = useTopic(S4C, s4cSchema);
   const myServers = dealCards([0, 1, 2], g.supportCount, g.mySupportIndex);
-  useBuzzOnChange(manual?.pods.filter((p) => p.status === 'crashed').map((p) => p.id) ?? null);
+  const myCrashed = manual?.pods.filter((p) => p.status === 'crashed' && myServers.includes(p.id)).map((p) => p.id) ?? [];
+  useBuzzOnChange(myCrashed.length ? myCrashed : null, fill(cloudCopy.manual.crashToast, { n: (myCrashed[0] ?? 0) + 1 }));
+  const announce = (m: string) => useAnnouncer.getState().announce(m);
 
   if (manual) {
-    const pods = manual.pods.filter((p) => myServers.includes(p.id));
+    const pods = manual.pods.filter((p) => myServers.includes(p.id)).sort((a, b) => a.id - b.id);
     return (
       <section className={s.cards} data-testid="support-servers">
         <article className={s.card}>
@@ -78,27 +81,50 @@ export default function Support4() {
               type="button"
               className={s.tab}
               aria-pressed={k[key] === v}
-              onClick={() => sendAction(CONFIG, { [key]: v })}
+              onClick={() => {
+                if (k[key] === v) return;
+                sendAction(CONFIG, { [key]: v });
+                announce(fill(cloudCopy.configure.changed, { setting: label, value: v ? cloudCopy.configure.on : cloudCopy.configure.off }));
+              }}
             >
+              {k[key] === v && <span aria-hidden="true">✓ </span>}
               {v ? cloudCopy.configure.on : cloudCopy.configure.off}
             </button>
           ))}
         </span>
       </div>
     );
+    /** −/+ pair: aria-disabled at its limits, and the new value is spoken. */
+    const steps = (label: string, value: number, lo: number, hi: number, step: number, set: (v: number) => void, show = (v: number) => String(v)) => (
+      <span style={{ display: 'flex', gap: 6 }}>
+        {([-1, 1] as const).map((dir) => {
+          const next = value + dir * step;
+          const off = next < lo || next > hi;
+          return (
+            <button
+              key={dir}
+              type="button"
+              className={`${s.tab} ${s.step}`}
+              aria-disabled={off || undefined}
+              aria-label={`${dir < 0 ? cloudCopy.configure.fewer : cloudCopy.configure.more}: ${label}`}
+              onClick={() => {
+                if (off) return;
+                set(next);
+                announce(fill(cloudCopy.configure.changed, { setting: label, value: show(next) }));
+              }}
+            >
+              {dir < 0 ? '−' : '+'}
+            </button>
+          );
+        })}
+      </span>
+    );
     const stepper = (key: 'minPods' | 'maxPods', label: string, lo: number, hi: number) => (
       <div className={s.row} key={key}>
         <span>
           {label}: <strong>{k[key]}</strong>
         </span>
-        <span style={{ display: 'flex', gap: 6 }}>
-          <button type="button" className={s.tab} aria-label={`${cloudCopy.configure.fewer}: ${label}`} onClick={() => k[key] > lo && sendAction(CONFIG, { [key]: k[key] - 1 })}>
-            −
-          </button>
-          <button type="button" className={s.tab} aria-label={`${cloudCopy.configure.more}: ${label}`} onClick={() => k[key] < hi && sendAction(CONFIG, { [key]: k[key] + 1 })}>
-            +
-          </button>
-        </span>
+        {steps(label, k[key], lo, hi, 1, (v) => sendAction(CONFIG, { [key]: v }))}
       </div>
     );
     const th = pct(k.scaleUpCpu);
@@ -126,14 +152,7 @@ export default function Support4() {
                   <span>
                     {cloudCopy.configure.thresholdLabel}: <strong>{th}%</strong>
                   </span>
-                  <span style={{ display: 'flex', gap: 6 }}>
-                    <button type="button" className={s.tab} aria-label={`${cloudCopy.configure.fewer}: ${cloudCopy.configure.thresholdLabel}`} onClick={() => th > 40 && sendAction(CONFIG, { scaleUpCpu: (th - 5) / 100 })}>
-                      −
-                    </button>
-                    <button type="button" className={s.tab} aria-label={`${cloudCopy.configure.more}: ${cloudCopy.configure.thresholdLabel}`} onClick={() => th < 90 && sendAction(CONFIG, { scaleUpCpu: (th + 5) / 100 })}>
-                      +
-                    </button>
-                  </span>
+                  {steps(cloudCopy.configure.thresholdLabel, th, 40, 90, 5, (v) => sendAction(CONFIG, { scaleUpCpu: v / 100 }), (v) => `${v}%`)}
                 </div>
               </>
             ),

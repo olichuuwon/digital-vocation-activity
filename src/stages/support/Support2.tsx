@@ -1,3 +1,4 @@
+import { useAnnouncer } from '../../app/screenFocus';
 import { fill } from '../../content';
 import { LABELS } from '../../content/stage2Schema';
 import { sendAction, useTopic } from '../../net/group';
@@ -11,11 +12,12 @@ import s from './support.module.css';
 /** Stage 2 support cards: Reveal power, Field guide, Auditor (§3.5.2). */
 export default function Support2() {
   const t = useTopic(S2, s2Schema);
-  useBuzzOnChange(t?.audit ?? null);
+  useBuzzOnChange(t?.audit ?? null, `${sc.common.newInfo} ${sc.cards.auditor.title}`);
   const canReveal = t?.level === 'covered' && (t.charges ?? 0) > 0;
   return (
     <SupportCards
       stage={2}
+      news={{ reveal: t?.level === 'covered', auditor: t?.audit }}
       render={{
         reveal:
           t?.level === 'covered' ? (
@@ -24,7 +26,11 @@ export default function Support2() {
                 type="button"
                 className={s.actionBtn}
                 aria-disabled={!canReveal || undefined}
-                onClick={() => canReveal && sendAction(REVEAL)}
+                onClick={() => {
+                  if (!canReveal) return;
+                  sendAction(REVEAL);
+                  useAnnouncer.getState().announce(fill(sc.cards.reveal.revealed, { n: Math.max(0, (t.charges ?? 1) - 1) }));
+                }}
                 data-testid="support-reveal"
               >
                 <span aria-hidden="true">👁️ </span>

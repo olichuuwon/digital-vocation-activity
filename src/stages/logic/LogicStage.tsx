@@ -25,6 +25,7 @@ import { blockCount, blocksChanged, flatten, getBlock } from './program';
 import { blockText, ICON } from './blocks';
 import { ProgramEditor } from './ProgramEditor';
 import { stage3For, useStage3Progress, type EndPhase } from './progress';
+import { sc } from '../support/content';
 import s from './logic.module.css';
 import { publish } from '../../net/group';
 import { S3, useCoop } from '../support/topics';
@@ -208,12 +209,13 @@ type Assist = 'none' | 'hint' | 'answer';
 const truckText = (tr: { x: number; y: number; dir: 'N' | 'E' | 'S' | 'W' }) =>
   fill(c.map.truck, { row: tr.y + 1, col: tr.x + 1, dir: c.map.facing[tr.dir] });
 
-function tileName(ch: string, flood: string | null): string {
+/** `coop`: house needs live on a support phone, so the map (and its description) hides them. */
+function tileName(ch: string, flood: string | null, coop = false): string {
   if (ch === '.') return c.map.grass;
   if (ch === '#') return c.map.road;
   if (ch === 'D') return c.map.depot;
   if (ch === 'H') return c.map.house;
-  if (ch === 'W' || ch === 'F' || ch === 'M') return `${c.map.house}, ${c.map.needs[ch]}`;
+  if (ch === 'W' || ch === 'F' || ch === 'M') return coop ? c.map.house : `${c.map.house}, ${c.map.needs[ch]}`;
   if (ch === '~') return c.map.flooded;
   return flood === ch ? c.map.flooded : c.map.maybeFlooded;
 }
@@ -424,7 +426,7 @@ function PlayLevel({
   })}`;
   const describeTile = (ch: string, x: number, y: number) => {
     const key = `${x},${y}`;
-    let name = tileName(ch, flood);
+    let name = tileName(ch, flood, coop);
     if (/[HWFM]/.test(ch) && delivered.has(key)) name = wrong.has(key) ? c.a11y.wrongSupply : c.map.delivered;
     if (truck.x === x && truck.y === y) name += ` (${fill(c.a11y.truckHere, { dir: c.map.facing[truck.dir] })})`;
     return name;
@@ -466,6 +468,12 @@ function PlayLevel({
       </ol>
       {!tutorialSeen && (
         <TutorialOverlay gesture="tap" text={c.editor.tutorialHint} onDismiss={() => setTutorialSeen(true)} />
+      )}
+      {coop && (
+        <p className={s.askTeam} data-testid="ask-scout">
+          <span aria-hidden="true">📣 </span>
+          {sc.main.askScout}
+        </p>
       )}
       <HintBox quiet level={assist} hint={c.levelHint[level.id]} answer={answerShown ? c.answer : c.answerReady} />
       <ProgramEditor

@@ -255,3 +255,9 @@
   font-weight: 700;
   min-height: 1.5em;
 }
+
+/* Group mode: where the info moved to (a support phone). */
+.askTeam {
+  margin: 0;
+  font-weight: 700;
+}

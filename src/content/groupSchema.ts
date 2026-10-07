@@ -25,7 +25,7 @@ export const groupCopySchema = z.object({
     'badCode', 'notFound', 'full', 'started', 'noNetwork',
   ]),
   lobby: section([
-    'codeLabel', 'scanHint', 'qrAlt', 'playersHeading', 'rotationNote', 'you', 'leaderTag', 'playerN', 'reconnecting',
+    'codeLabel', 'scanHint', 'qrAlt', 'playersHeading', 'rotationNote', 'you', 'leaderTag', 'playerN', 'reconnecting', 'joinedSay', 'awaySay',
     'leadsStages', 'leadsFinale', 'moveUp', 'moveDown', 'shuffle', 'start', 'needTwo', 'waiting',
     'lengthLine', 'closesIn', 'leave', 'close',
   ]),

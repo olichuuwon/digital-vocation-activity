@@ -243,6 +243,17 @@ function LiveOps({ run, base, onDone }: { run: GameState; base: number; onDone: 
   useEffect(() => {
     if (allHands && !feedback && allHandsDone(tapped, needed)) settle('right');
   });
+  // All-hands: the Ready button comes into view under focus (5 s is short), and each new tap
+  // short of everyone is spoken ("Everyone's in" covers the last one).
+  const readyRef = useRef<HTMLButtonElement>(null);
+  useEffect(() => {
+    if (!allHands) return;
+    readyRef.current?.scrollIntoView({ block: 'nearest' });
+    readyRef.current?.focus({ preventScroll: true });
+  }, [allHands, shown]);
+  useEffect(() => {
+    if (allHands && tapped.length > 0 && tapped.length < needed.length) announce(fill(sc.allHandsUi.ready, { n: tapped.length, total: needed.length }));
+  }, [tapped.length]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useActions((a) => {
     if (!incident || feedback) return;
@@ -333,6 +344,7 @@ function LiveOps({ run, base, onDone }: { run: GameState; base: number; onDone: 
             {fill(sc.allHandsUi.ready, { n: tapped.length, total: needed.length })}
           </p>
           <button
+            ref={readyRef}
             type="button"
             className={s.team}
             aria-disabled={tappedMe || !!feedback || undefined}

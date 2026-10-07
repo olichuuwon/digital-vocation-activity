@@ -9,10 +9,11 @@ import s from './support.module.css';
 /** Stage 3 support cards: Scout map, Manifest, Debugger (§3.5.2). */
 export default function Support3() {
   const t = useTopic(S3, s3Schema);
-  useBuzzOnChange(t ? [t.flooded, t.debug?.stoppedAt] : null);
+  useBuzzOnChange(t ? [t.flooded, t.debug?.stoppedAt] : null, sc.common.newInfo);
   return (
     <SupportCards
       stage={3}
+      news={{ scout: t?.flooded, manifest: t?.needs, debugger: t?.debug?.stoppedAt }}
       render={{
         scout: t && (t.flooded.length || t.dry.length) ? (
           <div data-testid="support-scout">

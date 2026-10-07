@@ -23,7 +23,8 @@
 }
 
 /* Selected tab: thick border + bold, not colour alone. */
-.tab[aria-selected='true'] {
+.tab[aria-selected='true'],
+.tab[aria-pressed='true'] {
   border: 3px solid var(--text);
   font-weight: 900;
 }
@@ -103,4 +104,23 @@
   gap: 8px;
   flex-wrap: wrap;
   font-weight: 700;
+}
+
+.step {
+  min-width: var(--tap);
+  font-size: 1.25rem;
+}
+
+.step[aria-disabled='true'] {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.badge {
+  margin-left: 4px;
+  padding: 0 6px;
+  border-radius: 999px;
+  border: 2px solid var(--text);
+  font-size: 0.8125rem;
+  font-weight: 900;
 }

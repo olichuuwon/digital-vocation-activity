@@ -1,11 +1,11 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { copy, fill } from '../../content';
 import { groupCopy } from '../../content/groupSchema';
 import { groupActions, stagesLedBy, useGroup, type Member } from '../../net/group';
 import { joinUrl } from '../../net/group/codes';
 import { LOBBY_TTL_MS } from '../../net/group/protocol';
 import { moveMember, shuffled } from '../../net/group/rotation';
-import { useScreenHeading } from '../screenFocus';
+import { useAnnouncer, useScreenHeading } from '../screenFocus';
 import ui from '../ui.module.css';
 import s from './Group.module.css';
 
@@ -53,6 +53,23 @@ export function GroupLobby() {
       live = false;
     };
   }, [url]);
+
+  // Teammates joining or dropping are spoken (the list itself updates silently).
+  const announce = useAnnouncer((a) => a.announce);
+  const roster = JSON.stringify(g.members.filter((m) => !m.isMe).map((m) => [m.id, m.present, m.nick]));
+  const prevRoster = useRef<string | null>(null);
+  useEffect(() => {
+    const prev = prevRoster.current;
+    prevRoster.current = roster;
+    if (prev === null) return;
+    const before = new Map((JSON.parse(prev) as [string, boolean, string][]).map(([id, present]) => [id, present]));
+    const said: string[] = [];
+    for (const [id, present, nick] of JSON.parse(roster) as [string, boolean, string][]) {
+      if (!before.has(id) && present) said.push(fill(t.joinedSay, { name: nick }));
+      else if (before.get(id) === true && !present) said.push(fill(t.awaySay, { name: nick }));
+    }
+    if (said.length) announce(said.join(' '));
+  }, [roster, announce]);
 
   if (!session) return null;
   const present = g.members.filter((m) => m.present).length;
@@ -105,15 +122,21 @@ export function GroupLobby() {
               </span>
               {leader && g.members.length > 1 && (
                 <span className={s.moveBtns}>
-                  <button type="button" className={s.moveBtn} disabled={i === 0} aria-label={fill(t.moveUp, { name: m.nick })} onClick={() => move(i, -1)}>
+                  <button
+                    type="button"
+                    className={s.moveBtn}
+                    aria-disabled={i === 0 || undefined}
+                    aria-label={fill(t.moveUp, { name: m.nick })}
+                    onClick={() => i > 0 && move(i, -1)}
+                  >
                     <span aria-hidden="true">↑</span>
                   </button>
                   <button
                     type="button"
                     className={s.moveBtn}
-                    disabled={i === g.members.length - 1}
+                    aria-disabled={i === g.members.length - 1 || undefined}
                     aria-label={fill(t.moveDown, { name: m.nick })}
-                    onClick={() => move(i, 1)}
+                    onClick={() => i < g.members.length - 1 && move(i, 1)}
                   >
                     <span aria-hidden="true">↓</span>
                   </button>
