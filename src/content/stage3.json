@@ -1,0 +1,172 @@
+{
+  "levels": [
+    {
+      "id": "logic-tutorial",
+      "grid": [
+        "......",
+        "....~.",
+        ".D#...",
+        "..H...",
+        "......",
+        "......"
+      ],
+      "startDir": "E",
+      "seconds": null,
+      "blockLimit": null,
+      "par": 4,
+      "palette": ["forward", "left", "right", "drop"],
+      "floodGroups": [],
+      "solution": [
+        { "op": "forward" },
+        { "op": "right" },
+        { "op": "forward" },
+        { "op": "drop" }
+      ]
+    },
+    {
+      "id": "logic-l1",
+      "grid": [
+        "......",
+        "..#HD.",
+        "..#~#.",
+        "..H##.",
+        "......",
+        "......"
+      ],
+      "startDir": "W",
+      "seconds": 60,
+      "blockLimit": 8,
+      "par": 7,
+      "palette": ["forward", "left", "right", "drop"],
+      "floodGroups": [],
+      "solution": [
+        { "op": "forward" },
+        { "op": "drop" },
+        { "op": "forward" },
+        { "op": "left" },
+        { "op": "forward" },
+        { "op": "forward" },
+        { "op": "drop" }
+      ]
+    },
+    {
+      "id": "logic-l2",
+      "grid": [
+        "......",
+        ".H#H..",
+        ".#~#..",
+        ".D.H..",
+        "......",
+        "......"
+      ],
+      "startDir": "N",
+      "seconds": 75,
+      "blockLimit": 5,
+      "par": 5,
+      "palette": ["forward", "left", "right", "drop", "repeat"],
+      "floodGroups": [],
+      "solution": [
+        {
+          "op": "repeat",
+          "n": 3,
+          "body": [{ "op": "forward" }, { "op": "forward" }, { "op": "drop" }, { "op": "right" }]
+        }
+      ]
+    },
+    {
+      "id": "logic-l3",
+      "grid": [
+        "...#..",
+        "...#..",
+        "..bD..",
+        "##Ha..",
+        "...~~.",
+        "......"
+      ],
+      "startDir": "S",
+      "seconds": 90,
+      "blockLimit": 9,
+      "par": 8,
+      "palette": ["forward", "left", "right", "drop", "repeat", "ifFlooded"],
+      "floodGroups": ["a", "b"],
+      "solution": [
+        {
+          "op": "ifFlooded",
+          "then": [{ "op": "right" }, { "op": "forward" }, { "op": "left" }],
+          "else": [{ "op": "forward" }, { "op": "right" }]
+        },
+        { "op": "forward" },
+        { "op": "drop" }
+      ]
+    },
+    {
+      "id": "logic-l4",
+      "grid": [
+        ".......",
+        ".D.....",
+        ".#.....",
+        "###H#H.",
+        "....~~.",
+        ".......",
+        "......."
+      ],
+      "startDir": "S",
+      "seconds": 75,
+      "blockLimit": null,
+      "par": 7,
+      "palette": ["forward", "left", "right", "drop", "repeat"],
+      "floodGroups": [],
+      "prebuilt": [
+        { "op": "repeat", "n": 2, "body": [{ "op": "forward" }] },
+        { "op": "right" },
+        { "op": "forward" },
+        { "op": "forward" },
+        { "op": "forward" },
+        { "op": "forward" },
+        { "op": "forward" },
+        { "op": "drop" }
+      ],
+      "maxEdits": 2,
+      "solution": [
+        { "op": "repeat", "n": 2, "body": [{ "op": "forward" }] },
+        { "op": "left" },
+        { "op": "forward" },
+        { "op": "forward" },
+        { "op": "drop" },
+        { "op": "forward" },
+        { "op": "forward" },
+        { "op": "drop" }
+      ]
+    },
+    {
+      "id": "logic-l5",
+      "grid": [
+        ".......",
+        "..~~...",
+        ".......",
+        ".M.....",
+        ".F#W#D.",
+        ".......",
+        "......."
+      ],
+      "startDir": "W",
+      "seconds": 75,
+      "blockLimit": 8,
+      "par": 7,
+      "palette": ["forward", "left", "right", "repeat", "askAi"],
+      "floodGroups": [],
+      "solution": [
+        {
+          "op": "repeat",
+          "n": 2,
+          "body": [{ "op": "forward" }, { "op": "forward" }, { "op": "askAi" }]
+        },
+        { "op": "right" },
+        { "op": "forward" },
+        { "op": "askAi" }
+      ]
+    }
+  ],
+  "testMaps": 100,
+  "stars": { "one": 0.3, "two": 0.62, "three": 0.87 }
+}
