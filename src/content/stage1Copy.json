@@ -1,0 +1,68 @@
+{
+  "levelIntro": {
+    "data-tutorial": "Swipe right to keep a record, left to trash it. Or tap the buttons. Follow the hand first.",
+    "data-l1": "Keep good records and trash broken ones. Not sure? Open the rulebook. Beat the clock!",
+    "data-l2": "New move: swipe up or tap Fix to correct small slips. Only trash what can't be saved.",
+    "data-l3": "Tap the bars that are errors. Unusual isn't wrong, so leave possible values alone."
+  },
+  "tutorialHint": {
+    "keep": "Every field filled? Swipe right to keep.",
+    "trash": "Something's missing. Swipe left to trash."
+  },
+  "actions": { "keep": "Keep", "fix": "Fix", "trash": "Trash" },
+  "fixPrompt": "Pick the right fix",
+  "fieldLabels": {
+    "household": "Household",
+    "sector": "Sector",
+    "people": "People",
+    "water": "Water",
+    "missing": "(blank)"
+  },
+  "ruleShort": {
+    "1": "missing field",
+    "2": "impossible number",
+    "3": "duplicate",
+    "4": "needs a fix",
+    "5": "unusual but possible"
+  },
+  "toast": {
+    "correct": "Nice sort!",
+    "wrongKeep": "Rule {rule}: {short}",
+    "wrongTrashValid": "That record was fine. Keep it!",
+    "wrongTrashFixable": "Rule 4: fix it, don't trash it.",
+    "wrongFix": "Wrong fix. Check rule 4's examples.",
+    "outlierKept": "Unusual but possible. Good keep!",
+    "streak": "{n} in a row!"
+  },
+  "hint": "Stuck? Check rule {rule}: {short}.",
+  "answer": "This one's a {action}. Rule {rule} decides it.",
+  "timeUp": "Time's up! Let's see how you did.",
+  "outlier": {
+    "instruction": "Tap only the bars that are impossible. Big but possible values are outliers, not errors. Then tap Done.",
+    "chartPeople": "People per household",
+    "chartWater": "Water per household (L)",
+    "done": "Done",
+    "missed": "You missed an error. Look for impossible values.",
+    "wrongTap": "Unusual, but possible. Rule 5: keep it."
+  },
+  "automate": {
+    "question": "Which rule would you turn into code first?",
+    "options": {
+      "dupes": "Trash any household ID that's already appeared",
+      "big-households": "Trash any household with over 12 people",
+      "typos": "Trash every record with a typo"
+    },
+    "right": "Spot on. A repeated ID is always an error, so code can trash it safely.",
+    "wrong": "Good thinking, but that bins good data. Unusual isn't wrong, and typos can be fixed. Duplicates are safest."
+  },
+  "result": {
+    "heading3": "Squeaky clean data!",
+    "heading2": "Nicely sorted!",
+    "heading1": "Data cleaned. Good start!",
+    "heading0": "Messy data is tricky. Have another go!",
+    "accuracy": "Accuracy {pct}%",
+    "fixed": "{n} records fixed",
+    "automated": "Automation bonus earned"
+  },
+  "learned": "You cleaned {count} records by hand. Write a rule once as code, and a pipeline (an automatic chain of steps) cleans millions."
+}

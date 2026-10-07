@@ -1,0 +1,809 @@
+{
+  "records": [
+    {
+      "id": "r01",
+      "household": "H-1042",
+      "sector": "B",
+      "people": 4,
+      "water": {
+        "value": 60,
+        "unit": "L"
+      },
+      "status": "valid",
+      "rule": null,
+      "tutorial": true
+    },
+    {
+      "id": "r02",
+      "household": "H-1107",
+      "sector": "A",
+      "people": 3,
+      "water": {
+        "value": 45,
+        "unit": "L"
+      },
+      "status": "valid",
+      "rule": null,
+      "tutorial": true
+    },
+    {
+      "id": "r03",
+      "household": "H-1215",
+      "sector": "D",
+      "people": 5,
+      "water": {
+        "value": 80,
+        "unit": "L"
+      },
+      "status": "valid",
+      "rule": null,
+      "tutorial": true
+    },
+    {
+      "id": "r04",
+      "household": "H-1388",
+      "sector": "C",
+      "people": 2,
+      "water": {
+        "value": 30,
+        "unit": "L"
+      },
+      "status": "valid",
+      "rule": null,
+      "tutorial": true
+    },
+    {
+      "id": "r05",
+      "household": "H-1460",
+      "sector": "E",
+      "people": 6,
+      "water": {
+        "value": 95,
+        "unit": "L"
+      },
+      "status": "valid",
+      "rule": null
+    },
+    {
+      "id": "r06",
+      "household": "H-1523",
+      "sector": "F",
+      "people": 1,
+      "water": {
+        "value": 15,
+        "unit": "L"
+      },
+      "status": "valid",
+      "rule": null
+    },
+    {
+      "id": "r07",
+      "household": "H-1579",
+      "sector": "A",
+      "people": 4,
+      "water": {
+        "value": 70,
+        "unit": "L"
+      },
+      "status": "valid",
+      "rule": null
+    },
+    {
+      "id": "r08",
+      "household": "H-1634",
+      "sector": "C",
+      "people": 7,
+      "water": {
+        "value": 110,
+        "unit": "L"
+      },
+      "status": "valid",
+      "rule": null
+    },
+    {
+      "id": "r09",
+      "household": "H-1702",
+      "sector": "B",
+      "people": 3,
+      "water": {
+        "value": 50,
+        "unit": "L"
+      },
+      "status": "valid",
+      "rule": null
+    },
+    {
+      "id": "r10",
+      "household": "H-1766",
+      "sector": "D",
+      "people": 2,
+      "water": {
+        "value": 25,
+        "unit": "L"
+      },
+      "status": "valid",
+      "rule": null
+    },
+    {
+      "id": "r11",
+      "household": "H-1841",
+      "sector": "E",
+      "people": 5,
+      "water": {
+        "value": 85,
+        "unit": "L"
+      },
+      "status": "valid",
+      "rule": null
+    },
+    {
+      "id": "r12",
+      "household": "H-1905",
+      "sector": "F",
+      "people": 8,
+      "water": {
+        "value": 120,
+        "unit": "L"
+      },
+      "status": "valid",
+      "rule": null
+    },
+    {
+      "id": "r13",
+      "household": "H-1958",
+      "sector": "A",
+      "people": 6,
+      "water": {
+        "value": 100,
+        "unit": "L"
+      },
+      "status": "valid",
+      "rule": null
+    },
+    {
+      "id": "r14",
+      "household": "H-2013",
+      "sector": "C",
+      "people": 4,
+      "water": {
+        "value": 65,
+        "unit": "L"
+      },
+      "status": "valid",
+      "rule": null
+    },
+    {
+      "id": "r15",
+      "household": "H-2087",
+      "sector": "B",
+      "people": 9,
+      "water": {
+        "value": 140,
+        "unit": "L"
+      },
+      "status": "valid",
+      "rule": null
+    },
+    {
+      "id": "r16",
+      "household": "H-2144",
+      "sector": "D",
+      "people": 3,
+      "water": {
+        "value": 40,
+        "unit": "L"
+      },
+      "status": "valid",
+      "rule": null
+    },
+    {
+      "id": "r17",
+      "household": "H-2219",
+      "sector": "E",
+      "people": 2,
+      "water": {
+        "value": 35,
+        "unit": "L"
+      },
+      "status": "valid",
+      "rule": null
+    },
+    {
+      "id": "r18",
+      "household": "H-2290",
+      "sector": "F",
+      "people": 5,
+      "water": {
+        "value": 75,
+        "unit": "L"
+      },
+      "status": "valid",
+      "rule": null
+    },
+    {
+      "id": "r19",
+      "household": "H-2351",
+      "sector": null,
+      "people": 4,
+      "water": {
+        "value": 60,
+        "unit": "L"
+      },
+      "status": "invalid",
+      "rule": 1,
+      "tutorial": true
+    },
+    {
+      "id": "r20",
+      "household": "H-2408",
+      "sector": "C",
+      "people": null,
+      "water": {
+        "value": 50,
+        "unit": "L"
+      },
+      "status": "invalid",
+      "rule": 1,
+      "tutorial": true
+    },
+    {
+      "id": "r21",
+      "household": "H-2467",
+      "sector": null,
+      "people": 3,
+      "water": {
+        "value": 45,
+        "unit": "L"
+      },
+      "status": "invalid",
+      "rule": 1,
+      "tutorial": true
+    },
+    {
+      "id": "r22",
+      "household": "H-2533",
+      "sector": "A",
+      "people": null,
+      "water": {
+        "value": 90,
+        "unit": "L"
+      },
+      "status": "invalid",
+      "rule": 1,
+      "tutorial": true
+    },
+    {
+      "id": "r23",
+      "household": "H-2596",
+      "sector": null,
+      "people": 6,
+      "water": {
+        "value": 110,
+        "unit": "L"
+      },
+      "status": "invalid",
+      "rule": 1
+    },
+    {
+      "id": "r24",
+      "household": "H-2652",
+      "sector": "F",
+      "people": null,
+      "water": {
+        "value": 30,
+        "unit": "L"
+      },
+      "status": "invalid",
+      "rule": 1
+    },
+    {
+      "id": "r25",
+      "household": "H-2719",
+      "sector": "B",
+      "people": 5,
+      "water": null,
+      "status": "invalid",
+      "rule": 1
+    },
+    {
+      "id": "r26",
+      "household": "H-2784",
+      "sector": "D",
+      "people": 2,
+      "water": null,
+      "status": "invalid",
+      "rule": 1
+    },
+    {
+      "id": "r27",
+      "household": "H-2840",
+      "sector": "A",
+      "people": 0,
+      "water": {
+        "value": 40,
+        "unit": "L"
+      },
+      "status": "invalid",
+      "rule": 2
+    },
+    {
+      "id": "r28",
+      "household": "H-2903",
+      "sector": "E",
+      "people": 40,
+      "water": {
+        "value": 90,
+        "unit": "L"
+      },
+      "status": "invalid",
+      "rule": 2
+    },
+    {
+      "id": "r29",
+      "household": "H-2967",
+      "sector": "C",
+      "people": 18,
+      "water": {
+        "value": 130,
+        "unit": "L"
+      },
+      "status": "invalid",
+      "rule": 2
+    },
+    {
+      "id": "r30",
+      "household": "H-3021",
+      "sector": "B",
+      "people": 22,
+      "water": {
+        "value": 150,
+        "unit": "L"
+      },
+      "status": "invalid",
+      "rule": 2
+    },
+    {
+      "id": "r31",
+      "household": "H-3088",
+      "sector": "D",
+      "people": 3,
+      "water": {
+        "value": 2,
+        "unit": "L"
+      },
+      "status": "invalid",
+      "rule": 2
+    },
+    {
+      "id": "r32",
+      "household": "H-3145",
+      "sector": "F",
+      "people": 4,
+      "water": {
+        "value": 900,
+        "unit": "L"
+      },
+      "status": "invalid",
+      "rule": 2
+    },
+    {
+      "id": "r33",
+      "household": "H-3202",
+      "sector": "A",
+      "people": 5,
+      "water": {
+        "value": 250,
+        "unit": "L"
+      },
+      "status": "invalid",
+      "rule": 2
+    },
+    {
+      "id": "r34",
+      "household": "H-3266",
+      "sector": "E",
+      "people": 2,
+      "water": {
+        "value": 0,
+        "unit": "L"
+      },
+      "status": "invalid",
+      "rule": 2
+    },
+    {
+      "id": "r35",
+      "household": "H-3331",
+      "sector": "B",
+      "people": 6,
+      "water": {
+        "value": 300000,
+        "unit": "ml"
+      },
+      "status": "invalid",
+      "rule": 2
+    },
+    {
+      "id": "r36",
+      "household": "H-3394",
+      "sector": "C",
+      "people": 3,
+      "water": {
+        "value": 2000,
+        "unit": "ml"
+      },
+      "status": "invalid",
+      "rule": 2
+    },
+    {
+      "id": "r37",
+      "household": "H-3457",
+      "sector": "D",
+      "people": 14,
+      "water": {
+        "value": 180,
+        "unit": "L"
+      },
+      "status": "valid",
+      "rule": 5
+    },
+    {
+      "id": "r38",
+      "household": "H-3512",
+      "sector": "A",
+      "people": 15,
+      "water": {
+        "value": 195,
+        "unit": "L"
+      },
+      "status": "valid",
+      "rule": 5
+    },
+    {
+      "id": "r39",
+      "household": "H-3578",
+      "sector": "F",
+      "people": 13,
+      "water": {
+        "value": 170,
+        "unit": "L"
+      },
+      "status": "valid",
+      "rule": 5
+    },
+    {
+      "id": "r40",
+      "household": "H-3639",
+      "sector": "B",
+      "people": 6,
+      "water": {
+        "value": 190,
+        "unit": "L"
+      },
+      "status": "valid",
+      "rule": 5
+    },
+    {
+      "id": "r41",
+      "household": "H-3701",
+      "sector": "C",
+      "people": 1,
+      "water": {
+        "value": 5,
+        "unit": "L"
+      },
+      "status": "valid",
+      "rule": 5
+    },
+    {
+      "id": "r42",
+      "household": "H-3765",
+      "sector": "E",
+      "people": 2,
+      "water": {
+        "value": 200,
+        "unit": "L"
+      },
+      "status": "valid",
+      "rule": 5
+    },
+    {
+      "id": "r43",
+      "household": "H-3826",
+      "sector": "Sectr B",
+      "people": 4,
+      "water": {
+        "value": 55,
+        "unit": "L"
+      },
+      "status": "fixable",
+      "rule": 4,
+      "fix": {
+        "field": "sector",
+        "options": [
+          "B",
+          "S",
+          "E"
+        ],
+        "correct": 0
+      }
+    },
+    {
+      "id": "r44",
+      "household": "H-3889",
+      "sector": "b",
+      "people": 3,
+      "water": {
+        "value": 40,
+        "unit": "L"
+      },
+      "status": "fixable",
+      "rule": 4,
+      "fix": {
+        "field": "sector",
+        "options": [
+          "D",
+          "B"
+        ],
+        "correct": 1
+      }
+    },
+    {
+      "id": "r45",
+      "household": "H-3947",
+      "sector": "Secter C",
+      "people": 5,
+      "water": {
+        "value": 80,
+        "unit": "L"
+      },
+      "status": "fixable",
+      "rule": 4,
+      "fix": {
+        "field": "sector",
+        "options": [
+          "S",
+          "E",
+          "C"
+        ],
+        "correct": 2
+      }
+    },
+    {
+      "id": "r46",
+      "household": "H-4012",
+      "sector": "e",
+      "people": 2,
+      "water": {
+        "value": 30,
+        "unit": "L"
+      },
+      "status": "fixable",
+      "rule": 4,
+      "fix": {
+        "field": "sector",
+        "options": [
+          "E",
+          "F",
+          "C"
+        ],
+        "correct": 0
+      }
+    },
+    {
+      "id": "r47",
+      "household": "H-4076",
+      "sector": "Sector a",
+      "people": 6,
+      "water": {
+        "value": 100,
+        "unit": "L"
+      },
+      "status": "fixable",
+      "rule": 4,
+      "fix": {
+        "field": "sector",
+        "options": [
+          "S",
+          "A"
+        ],
+        "correct": 1
+      }
+    },
+    {
+      "id": "r48",
+      "household": "H-4131",
+      "sector": "Setor F",
+      "people": 4,
+      "water": {
+        "value": 65,
+        "unit": "L"
+      },
+      "status": "fixable",
+      "rule": 4,
+      "fix": {
+        "field": "sector",
+        "options": [
+          "F",
+          "S",
+          "T"
+        ],
+        "correct": 0
+      }
+    },
+    {
+      "id": "r49",
+      "household": "H-4198",
+      "sector": "D",
+      "people": 5,
+      "water": {
+        "value": 40000,
+        "unit": "ml"
+      },
+      "status": "fixable",
+      "rule": 4,
+      "fix": {
+        "field": "water",
+        "options": [
+          "4 L",
+          "40 L",
+          "400 L"
+        ],
+        "correct": 1
+      }
+    },
+    {
+      "id": "r50",
+      "household": "H-4255",
+      "sector": "A",
+      "people": 2,
+      "water": {
+        "value": 25000,
+        "unit": "ml"
+      },
+      "status": "fixable",
+      "rule": 4,
+      "fix": {
+        "field": "water",
+        "options": [
+          "25 L",
+          "250 L",
+          "2.5 L"
+        ],
+        "correct": 0
+      }
+    },
+    {
+      "id": "r51",
+      "household": "H-4319",
+      "sector": "C",
+      "people": 7,
+      "water": {
+        "value": 120000,
+        "unit": "ml"
+      },
+      "status": "fixable",
+      "rule": 4,
+      "fix": {
+        "field": "water",
+        "options": [
+          "1200 L",
+          "12 L",
+          "120 L"
+        ],
+        "correct": 2
+      }
+    },
+    {
+      "id": "r52",
+      "household": "H-4382",
+      "sector": "F",
+      "people": 3,
+      "water": {
+        "value": 8000,
+        "unit": "ml"
+      },
+      "status": "fixable",
+      "rule": 4,
+      "fix": {
+        "field": "water",
+        "options": [
+          "8 L",
+          "80 L",
+          "800 L"
+        ],
+        "correct": 0
+      }
+    },
+    {
+      "id": "r53",
+      "household": "H-1042",
+      "sector": "B",
+      "people": 4,
+      "water": {
+        "value": 60,
+        "unit": "L"
+      },
+      "status": "invalid",
+      "rule": 3,
+      "duplicateOf": "r01"
+    },
+    {
+      "id": "r54",
+      "household": "H-1460",
+      "sector": "E",
+      "people": 6,
+      "water": {
+        "value": 95,
+        "unit": "L"
+      },
+      "status": "invalid",
+      "rule": 3,
+      "duplicateOf": "r05"
+    },
+    {
+      "id": "r55",
+      "household": "H-1579",
+      "sector": "A",
+      "people": 4,
+      "water": {
+        "value": 75,
+        "unit": "L"
+      },
+      "status": "invalid",
+      "rule": 3,
+      "duplicateOf": "r07"
+    },
+    {
+      "id": "r56",
+      "household": "H-1702",
+      "sector": "B",
+      "people": 3,
+      "water": {
+        "value": 50,
+        "unit": "L"
+      },
+      "status": "invalid",
+      "rule": 3,
+      "duplicateOf": "r09"
+    },
+    {
+      "id": "r57",
+      "household": "H-1905",
+      "sector": "F",
+      "people": 7,
+      "water": {
+        "value": 120,
+        "unit": "L"
+      },
+      "status": "invalid",
+      "rule": 3,
+      "duplicateOf": "r12"
+    },
+    {
+      "id": "r58",
+      "household": "H-2013",
+      "sector": "C",
+      "people": 4,
+      "water": {
+        "value": 65,
+        "unit": "L"
+      },
+      "status": "invalid",
+      "rule": 3,
+      "duplicateOf": "r14"
+    },
+    {
+      "id": "r59",
+      "household": "H-2144",
+      "sector": "D",
+      "people": 3,
+      "water": {
+        "value": 45,
+        "unit": "L"
+      },
+      "status": "invalid",
+      "rule": 3,
+      "duplicateOf": "r16"
+    }
+  ]
+}

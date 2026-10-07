@@ -4,7 +4,7 @@ import { levelsFor, stageContent } from '../content';
 import { nextPosition } from './progress';
 import { gameStateSchema, settingsSchema } from './schema';
 import { safeStorage } from './storage';
-import type { GameState, Mode, Settings, Stage } from './types';
+import type { Discipline, GameState, Mode, Scores, Settings, Stage, StarCount } from './types';
 
 export const STORAGE_KEY = 'ship-it';
 
@@ -54,6 +54,8 @@ interface Store {
   relaxedThisSession: boolean;
   startRun: (mode: Mode) => void;
   completeLevel: () => void;
+  /** Save a stage's normalised scores and stars (persisted with the run). */
+  recordStage: <D extends Discipline>(d: D, scores: Scores[D], stars: StarCount) => void;
   jumpToStage: (stage: Stage) => void;
   quitRun: () => void;
   updateSettings: (patch: Partial<Settings>) => void;
@@ -69,6 +71,10 @@ export const useGame = create<Store>()(
       startRun: (mode) => set((s) => ({ run: { ...newRun(mode), bestFamilies: s.bestFamilies } })),
       completeLevel: () =>
         set((s) => (s.run ? { run: { ...s.run, ...nextPosition(s.run, s.run.mode) } } : s)),
+      recordStage: (d, scores, stars) =>
+        set((s) =>
+          s.run ? { run: { ...s.run, scores: { ...s.run.scores, [d]: scores }, stars: { ...s.run.stars, [d]: stars } } } : s,
+        ),
       jumpToStage: (stage) => set((s) => (s.run ? { run: { ...s.run, stage, levelIndex: 0 } } : s)),
       quitRun: () => set({ run: null }),
       updateSettings: (patch) => set((s) => ({ settings: { ...s.settings, ...patch } })),

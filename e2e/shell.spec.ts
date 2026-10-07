@@ -14,31 +14,30 @@ test('home shows solo play and a primary action within reach', async ({ page }) 
   expect(box.height).toBeGreaterThanOrEqual(48);
 });
 
-test('a booth run reaches the finale and resume works after reload', async ({ page }) => {
+test('a booth run starts Stage 1, resumes after reload, and later stages reach the finale', async ({ page }) => {
   await page.getByRole('button', { name: 'Play solo' }).click();
   await page.getByRole('button', { name: /Booth run/ }).click();
   await expect(page.getByTestId('stage-heading')).toHaveText('Prologue');
-
-  const finish = page.getByRole('button', { name: 'Finish level' });
-  await finish.click(); // → Stage 1
-  await finish.click(); // → Stage 1 level 2
-  await expect(page.getByTestId('level-label')).toContainText('Level 2 of 3');
+  await page.getByRole('button', { name: 'Finish level' }).click(); // → Stage 1 briefing
+  await page.getByRole('button', { name: 'Start sorting' }).click();
+  await expect(page.getByRole('heading', { name: 'Tutorial', level: 1 })).toBeVisible();
 
   await page.reload();
   await page.getByRole('button', { name: 'Resume run' }).click();
-  await expect(page.getByTestId('level-label')).toContainText('Level 2 of 3');
   await expect(page.getByRole('listitem').filter({ hasText: 'in progress' })).toContainText('Data');
 
-  // Booth levels: S1 3, S2 4, S3 4, S4 3 → 13 more taps from S1 L2 reach the finale.
-  for (let i = 0; i < 13; i++) await finish.click();
+  // Stages 2–4 are still placeholders: booth S2 4 + S3 4 + S4 3 = 11 taps to the finale.
+  await page.goto('/?debug=1&stage=2');
+  const finish = page.getByRole('button', { name: 'Finish level' });
+  for (let i = 0; i < 11; i++) await finish.click();
   await expect(page.getByRole('heading', { name: 'Finale' })).toBeVisible();
 });
 
-test('full mode via facilitator param includes bonus levels', async ({ page }) => {
-  await page.goto('/?mode=full');
+test('full mode via facilitator param starts a full run', async ({ page }) => {
+  await page.goto('/?mode=full&debug=1');
   await page.getByRole('button', { name: 'Play solo' }).click();
-  await page.getByRole('button', { name: 'Finish level' }).click();
-  await expect(page.getByTestId('level-label')).toContainText('of 4');
+  await page.getByText('Debug').click();
+  await expect(page.locator('.debug-panel')).toContainText('mode full');
 });
 
 test('debug params jump straight to a stage', async ({ page }) => {
@@ -78,6 +77,6 @@ test('focus moves to the new heading after finishing a level', async ({ page }) 
   await page.getByRole('button', { name: 'Play solo' }).click();
   await page.getByRole('button', { name: /Booth run/ }).click();
   await page.getByRole('button', { name: 'Finish level' }).click();
-  await expect(page.getByTestId('stage-heading')).toBeFocused();
-  await expect(page).toHaveTitle(/Clean the Data, level 1 · Let's Ship It/);
+  await expect(page.getByRole('heading', { level: 1 })).toBeFocused();
+  await expect(page).toHaveTitle(/· Let's Ship It$/);
 });

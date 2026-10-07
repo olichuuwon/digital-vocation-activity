@@ -4,10 +4,16 @@
     {
       "id": 1,
       "title": "Every field must be filled",
-      "body": "If a record is missing its sector or people count, trash it. You can't guess what isn't there.",
+      "body": "If a record is missing its sector, people count or water amount, trash it. You can't guess what isn't there.",
       "examples": [
-        { "before": "Sector: (blank)", "after": "Trash" },
-        { "before": "People: (blank)", "after": "Trash" }
+        {
+          "before": "Sector: (blank)",
+          "after": "Trash"
+        },
+        {
+          "before": "People: (blank)",
+          "after": "Trash"
+        }
       ]
     },
     {
@@ -15,8 +21,14 @@
       "title": "Numbers must make sense",
       "body": "People per household: 1 to 15. Water per household: 5 to 200 litres (L). Anything outside that range is trash.",
       "examples": [
-        { "before": "People: 0", "after": "Trash" },
-        { "before": "Water: 900 L", "after": "Trash" }
+        {
+          "before": "People: 0",
+          "after": "Trash"
+        },
+        {
+          "before": "Water: 900 L",
+          "after": "Trash"
+        }
       ]
     },
     {
@@ -24,7 +36,10 @@
       "title": "No duplicates",
       "body": "An ID is a household's unique reference number. If the same ID shows up twice, trash the second one.",
       "examples": [
-        { "before": "ID 1042 (second time)", "after": "Trash" }
+        {
+          "before": "ID 1042 (second time)",
+          "after": "Trash"
+        }
       ]
     },
     {
@@ -32,9 +47,18 @@
       "title": "Fix what's fixable",
       "body": "Don't trash a record over a small slip. Correct typos, wrong units and lowercase letters instead.",
       "examples": [
-        { "before": "Sectr B", "after": "B" },
-        { "before": "40000 ml", "after": "40 L" },
-        { "before": "b", "after": "B" }
+        {
+          "before": "Sectr B",
+          "after": "B"
+        },
+        {
+          "before": "40000 ml",
+          "after": "40 L"
+        },
+        {
+          "before": "b",
+          "after": "B"
+        }
       ]
     },
     {
@@ -42,7 +66,10 @@
       "title": "Outliers aren't errors",
       "body": "An outlier is a value far from the rest. If it's still possible, like a household of 14, keep it.",
       "examples": [
-        { "before": "People: 14", "after": "Keep" }
+        {
+          "before": "People: 14",
+          "after": "Keep"
+        }
       ]
     }
   ]

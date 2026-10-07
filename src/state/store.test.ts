@@ -49,6 +49,18 @@ describe('game store', () => {
   });
 });
 
+describe('recordStage', () => {
+  it('saves scores and stars for one discipline and persists them', () => {
+    useGame.getState().startRun('booth');
+    useGame.getState().recordStage('data', { accuracy: 0.9, fixedCount: 3, ruleChosen: true }, 3);
+    const run = useGame.getState().run!;
+    expect(run.scores.data).toEqual({ accuracy: 0.9, fixedCount: 3, ruleChosen: true });
+    expect(run.stars.data).toBe(3);
+    expect(run.stars.ai).toBe(0);
+    expect(JSON.parse(localStorage.getItem(STORAGE_KEY)!).state.run.stars.data).toBe(3);
+  });
+});
+
 describe('sanitisePersisted', () => {
   const good = () => JSON.parse(JSON.stringify({ run: newRun('booth', 1), bestFamilies: 5, settings: DEFAULT_SETTINGS }));
 

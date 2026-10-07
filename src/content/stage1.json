@@ -1,0 +1,128 @@
+{
+  "levels": [
+    {
+      "id": "data-tutorial",
+      "count": 3,
+      "seconds": null,
+      "rules": [1],
+      "newRules": [1],
+      "allowFix": false,
+      "mix": { "valid": 1, "fixable": 0, "invalid": 1 }
+    },
+    {
+      "id": "data-l1",
+      "count": 10,
+      "seconds": 40,
+      "rules": [1, 2, 3],
+      "newRules": [2, 3],
+      "allowFix": false,
+      "mix": { "valid": 4, "fixable": 0, "invalid": 4 }
+    },
+    {
+      "id": "data-l2",
+      "count": 10,
+      "seconds": 60,
+      "rules": [1, 2, 3, 4, 5],
+      "newRules": [4, 5],
+      "allowFix": true,
+      "mix": { "valid": 3, "fixable": 3, "invalid": 2 }
+    }
+  ],
+  "outlier": {
+    "id": "data-l3",
+    "seconds": 45,
+    "rules": [2, 5],
+    "newRules": [],
+    "charts": [
+      {
+        "id": "chart-people-1",
+        "measure": "people",
+        "bars": [
+          { "household": "H-5001", "value": 4 },
+          { "household": "H-5002", "value": 3 },
+          { "household": "H-5003", "value": 5 },
+          { "household": "H-5004", "value": 2 },
+          { "household": "H-5005", "value": 40 },
+          { "household": "H-5006", "value": 6 },
+          { "household": "H-5007", "value": 4 },
+          { "household": "H-5008", "value": 3 },
+          { "household": "H-5009", "value": 14 },
+          { "household": "H-5010", "value": 5 },
+          { "household": "H-5011", "value": 2 },
+          { "household": "H-5012", "value": 7 },
+          { "household": "H-5013", "value": 0 },
+          { "household": "H-5014", "value": 4 },
+          { "household": "H-5015", "value": 3 },
+          { "household": "H-5016", "value": 5 },
+          { "household": "H-5017", "value": 6 },
+          { "household": "H-5018", "value": 1 },
+          { "household": "H-5019", "value": 4 },
+          { "household": "H-5020", "value": 3 }
+        ],
+        "errors": [4, 12]
+      },
+      {
+        "id": "chart-water-1",
+        "measure": "water",
+        "bars": [
+          { "household": "H-5101", "value": 60 },
+          { "household": "H-5102", "value": 45 },
+          { "household": "H-5103", "value": 80 },
+          { "household": "H-5104", "value": 900 },
+          { "household": "H-5105", "value": 55 },
+          { "household": "H-5106", "value": 70 },
+          { "household": "H-5107", "value": 35 },
+          { "household": "H-5108", "value": 195 },
+          { "household": "H-5109", "value": 90 },
+          { "household": "H-5110", "value": 50 },
+          { "household": "H-5111", "value": 2 },
+          { "household": "H-5112", "value": 65 },
+          { "household": "H-5113", "value": 75 },
+          { "household": "H-5114", "value": 40 },
+          { "household": "H-5115", "value": 100 },
+          { "household": "H-5116", "value": 6 },
+          { "household": "H-5117", "value": 85 },
+          { "household": "H-5118", "value": 60 },
+          { "household": "H-5119", "value": 120 },
+          { "household": "H-5120", "value": 50 }
+        ],
+        "errors": [3, 10]
+      },
+      {
+        "id": "chart-people-2",
+        "measure": "people",
+        "bars": [
+          { "household": "H-5201", "value": 5 },
+          { "household": "H-5202", "value": 3 },
+          { "household": "H-5203", "value": 15 },
+          { "household": "H-5204", "value": 4 },
+          { "household": "H-5205", "value": 6 },
+          { "household": "H-5206", "value": 140 },
+          { "household": "H-5207", "value": 2 },
+          { "household": "H-5208", "value": 4 },
+          { "household": "H-5209", "value": 7 },
+          { "household": "H-5210", "value": 3 },
+          { "household": "H-5211", "value": 18 },
+          { "household": "H-5212", "value": 5 },
+          { "household": "H-5213", "value": 13 },
+          { "household": "H-5214", "value": 4 },
+          { "household": "H-5215", "value": 2 },
+          { "household": "H-5216", "value": 0 },
+          { "household": "H-5217", "value": 6 },
+          { "household": "H-5218", "value": 3 },
+          { "household": "H-5219", "value": 5 },
+          { "household": "H-5220", "value": 4 }
+        ],
+        "errors": [5, 10, 15]
+      }
+    ]
+  },
+  "automate": {
+    "options": [
+      { "id": "big-households", "correct": false },
+      { "id": "dupes", "correct": true },
+      { "id": "typos", "correct": false }
+    ]
+  },
+  "stars": { "one": 0.3, "two": 0.65, "three": 0.88 }
+}

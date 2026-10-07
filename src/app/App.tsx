@@ -9,6 +9,7 @@ import { useAnnouncer } from './screenFocus';
 import { Home } from './screens/Home';
 import { Leaderboard } from './screens/Leaderboard';
 import { StagePlaceholder } from './screens/StagePlaceholder';
+import { DataStage } from '../stages/data/DataStage';
 import { SettingsDialog } from './SettingsDialog';
 import ui from './ui.module.css';
 import { useTheme } from './useTheme';
@@ -95,7 +96,9 @@ function GameApp() {
           <span aria-hidden="true">⚙️</span>
         </button>
       </header>
-      {inRun ? (
+      {inRun && run.stage === 1 ? (
+        <DataStage key={`${run.startedAt}-1-${run.levelIndex}`} run={run} debug={params.debug} />
+      ) : inRun ? (
         <StagePlaceholder
           key={`${run.stage}-${run.levelIndex}`}
           run={run}

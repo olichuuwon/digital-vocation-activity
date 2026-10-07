@@ -44,8 +44,21 @@ export function NewRuleCard({ ruleId }: { ruleId: number }) {
  * Pinned "📘 Rulebook" button + bottom sheet (§4.1). Native <dialog> gives focus trapping and Esc.
  * `rulesInPlay` limits the list to the rules unlocked so far.
  */
-export function RulebookButton({ rulesInPlay, newRuleId }: { rulesInPlay: number[]; newRuleId?: number }) {
-  const [open, setOpen] = useState(false);
+export function RulebookButton({
+  rulesInPlay,
+  newRuleId,
+  onOpenChange,
+}: {
+  rulesInPlay: number[];
+  newRuleId?: number;
+  /** Stages pause their timer while the sheet is open. */
+  onOpenChange?: (open: boolean) => void;
+}) {
+  const [open, setOpenState] = useState(false);
+  const setOpen = (v: boolean) => {
+    setOpenState(v);
+    onOpenChange?.(v);
+  };
   const ref = useRef<HTMLDialogElement>(null);
   useEffect(() => {
     const d = ref.current;

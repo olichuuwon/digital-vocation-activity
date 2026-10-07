@@ -36,6 +36,14 @@
 | 2026-10-07 | Timer + WCAG 2.2.1 | Relaxed ×1.5 alone doesn't meet 2.2.1, so from 20s left a "+30 seconds" button appears (up to 10 times). Stages decide in M2+ whether an extension costs points (`onExtend`). Stages must pass `running={false}` while the Rulebook or Settings is open. Relaxed ×1.5 rounds up. Pauses on `running=false` and while the tab is hidden; time while the phone is locked never counts. Screen readers hear 30s, 10s and time up only. | No |
 | 2026-10-07 | `/dev/components` | Reachable in production (no data, no backend calls). Not linked from the game. | No |
 | 2026-10-07 | Bundle | Framer Motion added ~45 KB gz to the entry (now ≈149 KB of 250). Switch to `LazyMotion` + `m` in M7. | No |
+| 2026-10-07 | Stage 1 records | 59 records by `game-designer` (18 valid, 8 rule 1, 10 rule 2, 7 rule 3, 6 rule 5, 10 rule 4). Sector letters A–F only; no place names (`[FILL]` optional local names not invented). | No |
+| 2026-10-07 | Rule 1 text | Rulebook rule 1 now says "sector, people count or water amount" (spec says "every field"; the draft text only named sector and people). | No |
+| 2026-10-07 | Stage 1 levels | Tutorial 3 cards untimed (rule 1); L1 10 cards / 40s (rules 1–3); L2 10 cards / 60s (rules 1–5, Fix); bonus L3 3 charts / 45s (full only). New-rule cards: L1 shows rules 2+3, L2 shows 4+5 (spec says "one new rule"; two levels introduce two). | Yes |
+| 2026-10-07 | Stage 1 scoring | Only L1+L2 count. Card points: right 1, wrong fix 0.5, right after a hint 0.75, right with the answer shown 0.5; unanswered at time-up 0. accuracy = points ÷ cards dealt. Stage score = min(1, 0.9·accuracy + 0.1·automate + 0.05·outlier[full]). Stars ≥0.30 / 0.65 / 0.88. "+30 seconds" is free. | Yes |
+| 2026-10-07 | Hint ladder (Stage 1) | Per level: after a wrong decision the next card shows a hint once 2 wrong, the answer once 3+ wrong. After a correct decision the next card has no help. | No |
+| 2026-10-07 | Automate question (§4.3) | Spec doesn't define the 3 options. "Which rule would you turn into code first?": trash repeated household IDs (correct, mechanical), trash households over 12 (breaks rule 5), trash every typo (breaks rule 4). | Yes |
+| 2026-10-07 | Rule-5 thresholds | Unusual-but-legal = people 13–15, water ≤5 L or ≥190 L. | No |
+| 2026-10-07 | Stage 1 resume | Level outcomes persist (`ship-it-stage1`), so a reload between levels keeps earlier results; a reload mid-level restarts that level from its intro. | No |
 
 ## Copy needing owner approval
 <!-- NEEDS OWNER APPROVAL --> Reality Check cards in `src/content/realityChecks.json` with `needsApproval: true` (career-facing, D14). Preview them at `/dev/components`.
