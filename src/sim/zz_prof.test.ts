@@ -8,7 +8,7 @@ it('prof', () => {
   for (const mb of [8, 9, 10, 11, 12, 13, 14]) {
     const t = Date.now();
     const r = solve(fork, { maxBlocks: mb, maxNodes: 2e7 });
-    console.log(mb, r?.blocks, r?.nodes, Date.now() - t);
+    process.stderr.write(JSON.stringify([mb, r?.blocks, r?.nodes, Date.now() - t]) + "\n");
     if (r) break;
   }
 }, 300000);

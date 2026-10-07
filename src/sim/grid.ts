@@ -435,6 +435,7 @@ export function solve(level: LogicLevel, opts: SolveOptions = {}): SolveResult |
   const ctxs: Ctx[] = scen.map((flood) => ({ map, flood, acc: 1, rng: undefined, maxSteps: DEFAULT_MAX_STEPS, trace: null, deliveredOrder: null, wrongOrder: null }));
   const full = allMask(map);
   let nodes = 0;
+  const key = (j: readonly St[]): string => j.map((s) => `${s.x},${s.y},${s.d},${s.delivered},${s.wrong}`).join('|');
 
   /** Run a block list on a subset of scenarios (idx) from states; null if any fails. */
   const runOn = (list: Program, idx: readonly number[], states: readonly St[]): St[] | null => {
@@ -464,6 +465,27 @@ export function solve(level: LogicLevel, opts: SolveOptions = {}): SolveResult |
       genBlock(idx, cur, budget - cost, depth, blocks, (b, out, c) => rec([...blocks, b], out, cost + c));
     };
     rec([], states, 0);
+  };
+
+  /**
+   * Cheapest block sequence (cost ≤ budget) per distinct outcome, by uniform-cost search with a
+   * transposition table. Used where a list runs exactly once (top-level If branches).
+   */
+  const genSeqBest = (idx: readonly number[], states: St[], budget: number, depth: number): Seq[] => {
+    const best = new Map<string, Seq>();
+    const buckets: Seq[][] = Array.from({ length: budget + 1 }, () => []);
+    (buckets[0] as Seq[]).push({ blocks: [], out: states, cost: 0 });
+    for (let c = 0; c <= budget; c++)
+      for (const q of buckets[c] as Seq[]) {
+        const k = key(q.out);
+        if (best.has(k)) continue;
+        best.set(k, q);
+        if (c < budget)
+          genBlock(idx, q.out, budget - c, depth, q.blocks, (b, out, bc) => {
+            if (!best.has(key(out))) (buckets[c + bc] as Seq[]).push({ blocks: [...q.blocks, b], out, cost: c + bc });
+          });
+      }
+    return [...best.values()];
   };
 
   /** Every single block of cost ≤ budget, given what precedes it in its list (for turn pruning). */
@@ -516,9 +538,18 @@ export function solve(level: LogicLevel, opts: SolveOptions = {}): SolveResult |
         }
       });
       if (depth === 0 && (fIdx.length === 0 || dIdx.length === 0)) return;
-      const elses: Seq[] = [];
-      genSeq(dIdx, dSt, budget - 1, depth + 1, (q) => elses.push(q));
-      genSeq(fIdx, fSt, budget - 1, depth + 1, (t) => {
+      // A top-level If runs once, so only each branch's outcome matters: keep the cheapest
+      // branch per distinct outcome. Nested Ifs may run again from other states: keep all.
+      const branches = (bi: number[], bs: St[]): Seq[] => {
+        if (depth > 0) {
+          const all: Seq[] = [];
+          genSeq(bi, bs, budget - 1, depth + 1, (q) => all.push(q));
+          return all;
+        }
+        return genSeqBest(bi, bs, budget - 1, depth + 1);
+      };
+      const elses = branches(dIdx, dSt);
+      for (const t of branches(fIdx, fSt)) {
         for (const e of elses) {
           if (t.cost + e.cost > budget - 1) continue;
           if (t.cost + e.cost === 0) continue;
@@ -533,11 +564,9 @@ export function solve(level: LogicLevel, opts: SolveOptions = {}): SolveResult |
           }
           cb({ op: 'ifFlooded', then: t.blocks, else: e.blocks }, out, 1 + t.cost + e.cost);
         }
-      });
+      }
     }
   };
-
-  const key = (j: Joint): string => j.map((s) => `${s.x},${s.y},${s.d},${s.delivered},${s.wrong}`).join('|');
   const allIdx = scen.map((_, k) => k);
   const done = (j: Joint) => j.every((s) => ((s.delivered | s.wrong) & full) === full);
 
