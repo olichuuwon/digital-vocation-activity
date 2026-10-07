@@ -8,8 +8,11 @@ export function FixPicker({
   record,
   onPick,
   onCancel,
+  suggest,
 }: {
   record: DataRecord;
+  /** Answer level of the hint ladder: mark the right option. */
+  suggest?: number;
   onPick: (option: number) => void;
   onCancel: () => void;
 }) {
@@ -29,6 +32,7 @@ export function FixPicker({
       {options.map((o, i) => (
         <button key={o} type="button" className={s.option} onClick={() => onPick(i)}>
           {o}
+          {suggest === i && <strong> ✓ {c.suggested}</strong>}
         </button>
       ))}
       <button type="button" className={s.action} onClick={onCancel}>

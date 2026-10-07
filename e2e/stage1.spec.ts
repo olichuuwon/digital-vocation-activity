@@ -67,3 +67,18 @@ test('Stage 1 full mode includes the Spot the Outlier bonus', async ({ page }) =
   for (let i = 0; i < 3; i++) await page.getByRole('button', { name: 'Done' }).click();
   await expect(page.getByRole('heading', { name: 'Clean once, apply everywhere' })).toBeVisible();
 });
+
+test('Stage 1: reloading after the last level resumes at the same step, not a replay', async ({ page }) => {
+  await page.goto('/?debug=1&stage=1');
+  await page.getByRole('button', { name: 'Start sorting' }).click();
+  for (let i = 0; i < 3; i++) {
+    await page.getByRole('button', { name: 'Start', exact: true }).click();
+    await playCards(page);
+  }
+  await page.getByRole('button', { name: 'Continue' }).click(); // Reality Check → automate
+  await expect(page.getByRole('heading', { name: /turn into code/i })).toBeVisible();
+  // Reload without debug params, as a player would, then Resume from Home.
+  await page.goto('/');
+  await page.getByRole('button', { name: 'Resume run' }).click();
+  await expect(page.getByRole('heading', { name: /turn into code/i })).toBeVisible();
+});

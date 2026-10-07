@@ -76,5 +76,7 @@
   "learned": "You cleaned {count} records by hand. Write a rule once as code, and a pipeline (an automatic chain of steps) cleans millions.",
   "hintKeep": "Stuck? Every field filled and sensible? Then keep it.",
   "answerKeep": "Nothing's broken here. Keep it.",
-  "nextCard": "Next: household {id}, {n} of {total}."
+  "nextCard": "Next: household {id}, {n} of {total}.",
+  "answerFix": "This one's a fix: pick {option}.",
+  "suggested": "suggested"
 }

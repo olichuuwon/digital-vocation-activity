@@ -57,9 +57,17 @@ export function DataStage({ run, debug }: { run: GameState; debug: boolean }) {
   const levels = levelsFor(stage, run.mode);
   const levelId = levels[run.levelIndex]?.id ?? 'data-tutorial';
   const isLast = run.levelIndex === levels.length - 1;
-  const [phase, setPhase] = useState<Phase>(run.levelIndex === 0 ? 'briefing' : 'intro');
-  const [ruleChosen, setRuleChosen] = useState(false);
+  const saved = stage1For(run.startedAt);
+  const [phase, setPhaseState] = useState<Phase>(() =>
+    isLast && saved.endPhase ? saved.endPhase : run.levelIndex === 0 ? 'briefing' : 'intro',
+  );
+  const [ruleChosen, setRuleChosen] = useState(saved.ruleChosen);
   const completeLevel = useGame((g) => g.completeLevel);
+  const setPhase = (p: Phase, chosen?: boolean) => {
+    if (p === 'reality' || p === 'automate' || p === 'result' || p === 'handoff')
+      useStage1Progress.getState().setEnd(run.startedAt, p, chosen);
+    setPhaseState(p);
+  };
 
   const finishLevel = () => (isLast ? setPhase('reality') : completeLevel());
 
@@ -96,8 +104,9 @@ export function DataStage({ run, debug }: { run: GameState; debug: boolean }) {
       <Automate
         options={stage1.automate.options}
         onDone={(pickedId) => {
-          setRuleChosen(isRuleChosen(stage1.automate.options, pickedId));
-          setPhase('result');
+          const chosen = isRuleChosen(stage1.automate.options, pickedId);
+          setRuleChosen(chosen);
+          setPhase('result', chosen);
         }}
       />
     );
@@ -126,7 +135,16 @@ export function DataStage({ run, debug }: { run: GameState; debug: boolean }) {
     );
   }
 
-  return <HandOff stage={stageContent(2)!} onReady={completeLevel} />;
+  return (
+    <HandOff
+      stage={stageContent(2)!}
+      onReady={() => {
+        // Stage done: a later replay (chapter select, M6) starts fresh, not at this hand-off.
+        useStage1Progress.getState().setEnd(run.startedAt, null);
+        completeLevel();
+      }}
+    />
+  );
 }
 
 function LevelIntro({ level, onStart }: { level: CardLevel | { id: 'data-l3'; newRules: number[] }; onStart: () => void }) {
@@ -163,6 +181,8 @@ function toastFor(result: CardResult, streak: number, next: string) {
     case 'keepUnfixed':
       return toast(fill(c.toast.wrongKeep, { rule: 4, short: ruleShort(4) }), 'error', next);
     case 'wrongTrashValid':
+      if (result.rule === 5) return toast(fill(c.toast.wrongKeep, { rule: 5, short: ruleShort(5) }), 'error', next);
+      return toast(c.toast.wrongTrashValid, 'error', next);
     case 'fixInsteadOfKeep':
       return toast(c.toast.wrongTrashValid, 'error', next);
     case 'wrongTrashFixable':
@@ -173,9 +193,10 @@ function toastFor(result: CardResult, streak: number, next: string) {
 }
 
 function CardPlay({ run, level, debug, onDone }: { run: GameState; level: CardLevel; debug: boolean; onDone: () => void }) {
+  const [attemptSeed] = useState(() => Date.now());
   const deck = useMemo(
-    () => buildDeck(records, level, mulberry32(run.startedAt + run.levelIndex * 7919)),
-    [level, run.startedAt, run.levelIndex],
+    () => buildDeck(records, level, mulberry32(attemptSeed + run.levelIndex * 7919)),
+    [level, attemptSeed, run.levelIndex],
   );
   const [state, dispatch] = useReducer(levelReducer, undefined, () => createLevelState(level, deck));
   const [fixing, setFixing] = useState(false);
@@ -229,10 +250,13 @@ function CardPlay({ run, level, debug, onDone }: { run: GameState; level: CardLe
   // Plain valid cards break no rule, so they get "keep it" help instead of a rule number.
   const hintText =
     answer?.rule == null ? c.hintKeep : fill(c.hint, { rule: answer.rule, short: ruleShort(answer.rule) });
+  const fixOption = answer?.fixIndex !== undefined ? record.fix?.options[answer.fixIndex] : undefined;
   const answerText =
     answer?.rule == null
       ? c.answerKeep
-      : fill(c.answer, { action: c.actions[answer.expected].toLowerCase(), rule: answer.rule });
+      : fixOption
+        ? fill(c.answerFix, { option: fixOption })
+        : fill(c.answer, { action: c.actions[answer.expected].toLowerCase(), rule: answer.rule });
 
   return (
     <section className={s.level}>
@@ -263,7 +287,12 @@ function CardPlay({ run, level, debug, onDone }: { run: GameState; level: CardLe
         />
       )}
       {fixing ? (
-        <FixPicker record={record} onPick={(i) => decide({ fix: i })} onCancel={() => setFixing(false)} />
+        <FixPicker
+          record={record}
+          suggest={state.hint === 'answer' ? answer?.fixIndex : undefined}
+          onPick={(i) => decide({ fix: i })}
+          onCancel={() => setFixing(false)}
+        />
       ) : (
         <>
           <div className={s.deck}>
@@ -326,7 +355,7 @@ function OutlierPlay({ run, intro, onStart, onDone }: { run: GameState; intro: b
           if (j.unusualTapped.length) toast(c.outlier.wrongTap, 'error');
           else if (j.misses.length) toast(c.outlier.missed, 'error');
           else toast(c.toast.correct, 'success');
-          setWrongTaps((w) => w + j.falsePositives.length + j.misses.length);
+          setWrongTaps((w) => w + Math.min(2, j.falsePositives.length + j.misses.length));
           const next = [...judgements, j];
           setJudgements(next);
           if (i + 1 < o.charts.length) setI(i + 1);

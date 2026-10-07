@@ -44,6 +44,9 @@
 | 2026-10-07 | Automate question (§4.3) | Spec doesn't define the 3 options. "Which rule would you turn into code first?": trash repeated household IDs (correct, mechanical), trash households over 12 (breaks rule 5), trash every typo (breaks rule 4). | Yes |
 | 2026-10-07 | Rule-5 thresholds | Unusual-but-legal = people 13–15, water ≤5 L or ≥190 L. | No |
 | 2026-10-07 | Stage 1 resume | Level outcomes persist (`ship-it-stage1`), so a reload between levels keeps earlier results; a reload mid-level restarts that level from its intro. | No |
+| 2026-10-07 | "+30 seconds" in Stage 1 | Free (no score cost). | No |
+| 2026-10-07 | Stage 1 reload after the last level | The end step (Reality Check, automate, result, hand-off) is saved, so a reload resumes there; stars can't be re-rolled. A replayed level deals a fresh deck. | No |
+| 2026-10-07 | Full-mode Stage 1 length | Measured ≈2.6 min against the §2 full budget of 5–6 min (booth ≈2 min against 3). Revisit with `game-designer` in M8 playtests (more outlier charts or a longer L2). | Yes |
 
 ## Copy needing owner approval
 <!-- NEEDS OWNER APPROVAL --> Reality Check cards in `src/content/realityChecks.json` with `needsApproval: true` (career-facing, D14). Preview them at `/dev/components`.
@@ -53,7 +56,7 @@
 4. **Cloud, "This is a real job":** "Site reliability engineers (SREs) keep apps like this running for millions of people. They set up alerts so a human only gets woken up when automation can't fix it."
 
 ## Milestone status
-- [x] M0 · [x] M0.5 · [x] M1 · [ ] M2 · [ ] M3 · [ ] M4 · [ ] M5 · [ ] M6 · [ ] M6.5 · [ ] M7 · [ ] M8
+- [x] M0 · [x] M0.5 · [x] M1 · [x] M2 · [ ] M3 · [ ] M4 · [ ] M5 · [ ] M6 · [ ] M6.5 · [ ] M7 · [ ] M8
 
 ### M0 notes (2026-10-06)
 - Lint, typecheck, unit tests (Vitest) and e2e (Playwright, iPhone 12 + Pixel 5) green.
@@ -73,3 +76,10 @@
 - 143 unit tests and 50 e2e tests green. Initial JS ≈ 149 KB gzipped (Framer Motion; trim in M7). Gallery at `/dev/components`.
 - QA fixes: Timer ignores time while the phone is locked or the tab is hidden; 0s timer safe; data card uses the real record count; rolling-update card trimmed; every Reality Check placeholder has a default.
 - a11y fixes (axe-clean on the gallery): Reality Check cards announced from one persistent live region; "+30 seconds" timer extension; ✓/✗ tiles use new `--tile-*` tokens (≥4.5:1 both themes) and rem sizes; one announcement per result (announcer clears first, so repeats are read); toasts last longer for long text and in relaxed mode, read with "Correct:/Wrong:" via the shared announcer; filled stars use `--logic-ink`; tutorial doesn't steal focus; rolling update shows v1/v2 text; gallery demos inside `<main>`; Rulebook has a bottom Close.
+
+### M2 notes (2026-10-07)
+- Stage 1 "Clean the Data" playable end to end. 256 unit tests (incl. all 59 records checked against the rules, deck rules over 500 seeds) and 58 e2e tests green.
+- Timing (QA, paced 2.5s/card): booth ≈ 116s (acceptance ≤ 3.5 min ✅); full ≈ 153s.
+- Initial JS ≈ 167 KB gz (budget 250). Lazy-load Stages 2–4 as they land; `LazyMotion` in M7.
+- QA fixes: end step persisted across reloads; fix answers name the option (and the picker marks it); outlier help arrives as hint then answer; fresh deck on replay; rule-5 trash names rule 5.
+- a11y fixes: focus after fix picker and new charts; outlier timer pauses with Rulebook; card values never break mid-ID; sticky actions; valid-card help; next card announced; amber borders ≥3:1; outlier units spoken.

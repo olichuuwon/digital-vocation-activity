@@ -136,6 +136,8 @@ export const stage1CopySchema = z.object({
   answer: words(15),
   hintKeep: words(15),
   answerKeep: words(15),
+  answerFix: words(15),
+  suggested: txt,
   nextCard: words(10),
   timeUp: words(8),
   outlier: z.object({
