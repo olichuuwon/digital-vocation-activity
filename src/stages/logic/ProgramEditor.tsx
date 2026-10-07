@@ -81,7 +81,7 @@ export function ProgramEditor({
   activeAddr?: BlockAddr | null;
   failedAddr?: BlockAddr | null;
   /** Debug It: swaps left; undefined in normal levels. */
-  swap?: { left: number; onSwap: () => void };
+  swap?: { maxEdits: number; changed: (p: Program) => number };
 }) {
   const [cursor, setCursor] = useState<Cursor>({ list: [], index: program.length });
   const [selected, setSelected] = useState<BlockAddr | null>(null);
@@ -124,13 +124,13 @@ export function ProgramEditor({
   const add = (op: BlockOp) => {
     if (locked) return;
     if (swap) {
-      if (!selected || !selBlock) return toast(c.editor.swapPrompt, 'info');
+      if (!selected || !selBlock) return toast(c.editor.pickBlockFirst, 'info');
       if (selBlock.op === op) return;
-      if (swap.left <= 0) return toast(fill(c.editor.editsLeft, { n: 0 }), 'error');
-      swap.onSwap();
       const next = swapOp(program, selected, op);
+      const left = swap.maxEdits - swap.changed(next);
+      if (left < 0) return toast(fill(c.editor.editsLeft, { n: 0 }), 'error');
       commit(next, selected);
-      announce(fill(c.a11y.swapped, { block: blockText(getBlock(next, selected)!), n: swap.left - 1 }));
+      announce(fill(c.a11y.swapped, { block: blockText(getBlock(next, selected)!), n: left }));
       return;
     }
     if (full) return toast(c.editor.overLimit, 'error');
@@ -171,11 +171,9 @@ export function ProgramEditor({
     if (!selected || selBlock?.op !== 'repeat' || locked) return;
     const n = selBlock.n + d;
     if (n < REPEAT_MIN || n > REPEAT_MAX) return;
-    if (swap) {
-      if (swap.left <= 0) return toast(fill(c.editor.editsLeft, { n: 0 }), 'error');
-      swap.onSwap();
-    }
-    commit(setRepeat(program, selected, n), selected);
+    const next = setRepeat(program, selected, n);
+    if (swap && swap.changed(next) > swap.maxEdits) return toast(fill(c.editor.editsLeft, { n: 0 }), 'error');
+    commit(next, selected);
     announce(fill(c.a11y.repeatSet, { n }));
   };
 

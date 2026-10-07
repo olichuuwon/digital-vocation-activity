@@ -21,7 +21,7 @@ import { mulberry32 } from '../data/logic';
 import { c, stage3, t } from './content';
 import { GridMap } from './GridMap';
 import { logicStars, nextAssist, SCORED_LEVEL_IDS, stageScore, toLogicScores, type LevelOutcome } from './logic';
-import { blockCount, flatten, getBlock } from './program';
+import { blockCount, blocksChanged, flatten, getBlock } from './program';
 import { blockText, ICON } from './blocks';
 import { ProgramEditor } from './ProgramEditor';
 import { stage3For, useStage3Progress, type EndPhase } from './progress';
@@ -79,8 +79,7 @@ export default function LogicStage({ run, debug }: { run: GameState; debug: bool
   if (phase === 'reality') {
     const shown: Program =
       programs['logic-l3'] ?? programs['logic-l2'] ?? programs['logic-l1'] ?? programs['logic-tutorial'] ?? levelById('logic-l3').solution;
-    const l3 = levelById('logic-l3');
-    const tests = robustness(l3, programs['logic-l3'] ?? l3.solution, stage3.testMaps, mulberry32(run.startedAt), 1);
+    const tests = testMaps(programs, run);
     return (
       <RealityCheck
         check={realityCheck('logic')}
@@ -95,8 +94,7 @@ export default function LogicStage({ run, debug }: { run: GameState; debug: bool
     const scores = toLogicScores(all);
     const stars = logicStars(stageScore(all, dealt), stage3.stars);
     const heading = [c.result.heading0, c.result.heading1, c.result.heading2, c.result.heading3][stars]!;
-    const l3 = levelById('logic-l3');
-    const tests = robustness(l3, programs['logic-l3'] ?? l3.solution, stage3.testMaps, mulberry32(run.startedAt), 1);
+    const tests = testMaps(programs, run);
     const lines = [
       fill(c.result.solved, { n: scores.puzzlesSolved, total: dealt }),
       fill(c.result.hints, { n: scores.hintsUsed }),
@@ -126,6 +124,22 @@ export default function LogicStage({ run, debug }: { run: GameState; debug: bool
       }}
     />
   );
+}
+
+/**
+ * Reality Check test maps (§6.4): the player's L3 program on random floods. In a full run with a
+ * solved Ask the AI level, half the maps run that program with the Stage 2 model, so a weaker
+ * model shows up as failing maps (§3.2 "the AI misread the request").
+ */
+function testMaps(programs: Record<string, Program>, run: GameState): { passed: number; failed: number } {
+  const rng = mulberry32(run.startedAt);
+  const l3 = levelById('logic-l3');
+  const l5Program = run.mode === 'full' ? programs['logic-l5'] : undefined;
+  if (!l5Program) return robustness(l3, programs['logic-l3'] ?? l3.solution, stage3.testMaps, rng, 1);
+  const half = Math.floor(stage3.testMaps / 2);
+  const a = robustness(l3, programs['logic-l3'] ?? l3.solution, half, rng, 1);
+  const b = robustness(levelById('logic-l5'), l5Program, stage3.testMaps - half, rng, Math.max(0.5, run.scores.ai.modelAccuracy));
+  return { passed: a.passed + b.passed, failed: a.failed + b.failed };
 }
 
 function LevelIntro({ levelId, onStart }: { levelId: LogicLevelId; onStart: () => void }) {
@@ -218,7 +232,10 @@ function PlayLevel({
   const map = useMemo(() => parseMap(level), [level]);
   const [seed] = useState(() => Date.now());
   const [program, setProgramState] = useState<Program>(() => level.prebuilt ?? []);
-  const [edits, setEdits] = useState(0);
+  /** After a "lucky" L3 run, the next run uses a flood the program fails on, so the player sees it. */
+  const [forcedFlood, setForcedFlood] = useState<RunResult['flood']>(null);
+  /** Debug It: the last block a run stopped at. A new stop is progress (bug found), not a fail. */
+  const lastFailKey = useRef<string | null>(null);
   const [attempts, setAttempts] = useState(0);
   const [failedRuns, setFailedRuns] = useState(0);
   const [answerShown, setAnswerShown] = useState(false);
@@ -264,7 +281,9 @@ function PlayLevel({
     if (solved) return;
     if (level.blockLimit !== null && used > level.blockLimit) return toast(c.run.overLimit, 'error');
     const rng = mulberry32(seed + attempts * 131);
-    const flood = level.floodGroups.length ? level.floodGroups[Math.floor(rng() * level.floodGroups.length)]! : null;
+    const flood =
+      forcedFlood ?? (level.floodGroups.length ? level.floodGroups[Math.floor(rng() * level.floodGroups.length)]! : null);
+    setForcedFlood(null);
     const result = runProgram(level, program, { flood, modelAccuracy, rng });
     setAttempts((a) => a + 1);
     setRunning({ result, i: result.trace.length ? 0 : -1, auto, judged: false });
@@ -275,6 +294,7 @@ function PlayLevel({
     setRunning((r) => (r && r.result === result ? { ...r, judged: true } : r));
     if (result.ok && level.floodGroups.length > 0 && !succeedsAll(level, program)) {
       setFailedRuns((f) => f + 1);
+      setForcedFlood(level.floodGroups.find((g) => !runProgram(level, program, { flood: g }).ok) ?? null);
       return toast(c.run.lucky, 'error');
     }
     if (result.ok) {
@@ -282,12 +302,17 @@ function PlayLevel({
       const msg = result.aiWrongDrops > 0 ? `${c.run.success} ${fill(c.run.aiWrong, { n: result.aiWrongDrops })}` : c.run.success;
       return toast(msg, result.aiWrongDrops > 0 ? 'info' : 'success');
     }
-    setFailedRuns((f) => f + 1);
+    const atFail = result.failAt !== undefined ? result.trace[result.failAt] : undefined;
+    const failKey = atFail ? `${atFail.addr.list.join('.')}:${atFail.addr.index}` : result.reason;
+    // Debug It has 2 bugs: finding the next one (a new stop) is progress, so it doesn't count as a fail.
+    const counts = !isDebug || failKey === lastFailKey.current;
+    lastFailKey.current = failKey;
+    if (counts) setFailedRuns((f) => f + 1);
     const why = result.reason === 'tooLong' ? 'unfinished' : (result.reason as Exclude<RunResult['reason'], 'success' | 'tooLong'>);
     // New help is spoken with the failure (HintBox is quiet), so one live region speaks at a time.
-    const help = nextAssist(failedRuns + 1);
+    const help = nextAssist(failedRuns + (counts ? 1 : 0));
     const spoken = help !== nextAssist(failedRuns) ? (help === 'hint' ? fill(c.hint, { text: c.levelHint[level.id] }) : c.answer) : '';
-    const at = result.failAt !== undefined ? result.trace[result.failAt] : undefined;
+    const at = atFail;
     const atBlock = at ? getBlock(program, at.addr) : undefined;
     const where = at && atBlock ? fill(c.a11y.stoppedAt, { block: blockText(atBlock), truck: `${truckText(at.truck)}.` }) : '';
     toast(c.run[why], 'error', [where, spoken].filter(Boolean).join(' '));
@@ -389,7 +414,7 @@ function PlayLevel({
       {!tutorialSeen && (
         <TutorialOverlay gesture="tap" text={c.editor.tutorialHint} onDismiss={() => setTutorialSeen(true)} />
       )}
-      <HintBox quiet level={assist} hint={c.levelHint[level.id]} answer={c.answer} />
+      <HintBox quiet level={assist} hint={c.levelHint[level.id]} answer={answerShown ? c.answer : c.answerReady} />
       <ProgramEditor
         program={program}
         onChange={setProgram}
@@ -398,9 +423,9 @@ function PlayLevel({
         locked={isRunning || !!solved}
         activeAddr={shownStep?.addr ?? null}
         failedAddr={failStep?.addr ?? null}
-        swap={isDebug ? { left: (level.maxEdits ?? 2) - edits, onSwap: () => setEdits((e) => e + 1) } : undefined}
+        swap={isDebug ? { maxEdits: level.maxEdits ?? 2, changed: (p) => blocksChanged(level.prebuilt ?? [], p) } : undefined}
       />
-      {isDebug && <p className={ui.muted}>{fill(c.editor.editsLeft, { n: (level.maxEdits ?? 2) - edits })}</p>}
+      {isDebug && <p className={ui.muted}>{fill(c.editor.editsLeft, { n: Math.max(0, (level.maxEdits ?? 2) - blocksChanged(level.prebuilt ?? [], program)) })}</p>}
       <div className={s.runBar}>
         {solved ? (
           <button
@@ -438,7 +463,6 @@ function PlayLevel({
                 className={s.runBtn}
                 onClick={() => {
                   setAnswerShown(true);
-                  setEdits(0);
                   setProgram(level.solution);
                   toast(c.answer, 'info');
                   // The button swaps for Reset: put focus on Run instead, so a second tap can't undo the answer.
@@ -454,10 +478,9 @@ function PlayLevel({
                 aria-disabled={isRunning || undefined}
                 onClick={() => {
                   if (isRunning) return;
-                  if (isDebug && running === null) {
-                    setEdits(0);
-                    setProgram(level.prebuilt ?? []);
-                  } else setRunning(null);
+                  // Debug It: one tap puts the original program back (swaps reset too).
+                  if (isDebug) setProgram(level.prebuilt ?? []);
+                  else setRunning(null);
                 }}
               >
                 {c.run.reset}

@@ -26,10 +26,8 @@ test('a booth run starts Stage 1, resumes after reload, and later stages reach t
   await page.getByRole('button', { name: 'Resume run' }).click();
   await expect(page.getByRole('listitem').filter({ hasText: 'in progress' })).toContainText('Data');
 
-  // Stage 4 is still a placeholder: 3 taps to the finale.
-  await page.goto('/?debug=1&stage=4');
-  const finish = page.getByRole('button', { name: 'Finish level' });
-  for (let i = 0; i < 3; i++) await finish.click();
+  // Every stage is playable now; the finale placeholder is reachable via debug.
+  await page.goto('/?debug=1&stage=5');
   await expect(page.getByRole('heading', { name: 'Finale' })).toBeVisible();
 });
 
@@ -42,7 +40,7 @@ test('full mode via facilitator param starts a full run', async ({ page }) => {
 
 test('debug params jump straight to a stage', async ({ page }) => {
   await page.goto('/?debug=1&stage=4');
-  await expect(page.getByTestId('stage-heading')).toContainText('Keep It Alive');
+  await expect(page.getByRole('heading', { name: 'Keep it alive' })).toBeVisible();
   await page.getByText('Debug').click();
   await page.getByRole('button', { name: '3', exact: true }).click();
   await expect(page.getByRole('heading', { name: 'Build the logic' })).toBeVisible();

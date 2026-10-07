@@ -54,7 +54,7 @@ Try it: https://digital-vocation-activity.vercel.app/?debug=1&stage=3 (add `&mod
 - [ ] **25. Choose the Road block limit:** the spec says 7. The solver proved no 7-block answer a 12-year-old would write exists, so the limit is 9 (the best answer uses 8). *Default: 9.*
 - [ ] **26. Stars and scoring:** all puzzles solved with no help gives 3★ at any block count within the limit, and each hint costs about a star. Stars at 20% / 60% / 90%. *Default: keep.*
 - [ ] **27. "AI misread" link (§3.2):** the spec puts it in "Level 3". It's built into the full-mode bonus Ask the AI, where a weaker Stage 2 model makes wrong drops. Booth players don't play that level. Should booth players see it too, for example as a note in the Stage 3 Reality Check? *Default: full mode only.*
-- [ ] **28. Stage 3 length:** the designer estimates about 3.5 min for booth (budget 3) and about 4.9 min for full (budget 5–6). Stages 1–3 together still fit the 16-min booth run. *Default: tune in M8.*
+- [ ] **28. Stage 3 length:** at a first-timer's pace QA measured about 4 min for booth (budget 3) and 5.8 min for full (budget 5–6). An expert takes about 1 min. *Default: tune in M8 (e.g. shorter intros, or fold the tutorial into Level 1).*
 
 ## H. Setup notes (no answer needed)
 - Supabase keys: Claude keeps them in `.env.local` (git-ignored) and never commits them. The live site reads them from Vercel → Project → Settings → Environment Variables (`VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`).

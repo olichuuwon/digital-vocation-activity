@@ -21,7 +21,8 @@ export interface BlockAddr {
 
 export const ROOT_CURSOR = (program: Program): Cursor => ({ list: [], index: program.length });
 
-export function newBlock(op: BlockOp, repeatN = 3): Block {
+/** New blocks. Repeat starts at ×2 (the smallest useful count), so the player picks the number. */
+export function newBlock(op: BlockOp, repeatN = 2): Block {
   if (op === 'repeat') return { op, n: repeatN, body: [] };
   if (op === 'ifFlooded') return { op, then: [], else: [] };
   return { op };
@@ -159,3 +160,19 @@ export function flatten(program: Program, list: ListPath = [], depth = 0, out: F
 
 /** Every block counts 1, containers included (contract in stage3Schema.ts). */
 export { countBlocks as blockCount } from '../../sim/grid';
+
+/**
+ * Debug It: how many blocks differ from the original program, position by position (a Repeat's
+ * count counts as its block). Undoing a swap gives it back, unlike counting taps.
+ */
+export function blocksChanged(original: Program, now: Program): number {
+  const sig = (p: Program) =>
+    flatten(p)
+      .filter((r) => r.kind === 'block')
+      .map((r) => (r.block!.op === 'repeat' ? `repeat${r.block!.n}` : r.block!.op));
+  const a = sig(original);
+  const b = sig(now);
+  let n = Math.abs(a.length - b.length);
+  for (let i = 0; i < Math.min(a.length, b.length); i++) if (a[i] !== b[i]) n++;
+  return n;
+}

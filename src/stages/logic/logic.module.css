@@ -57,7 +57,8 @@
   border-radius: 12px;
   background: var(--surface);
   padding: 6px;
-  max-height: 26vh;
+  /* Grows with large text (rem), so at 200% more than a row or two stays visible. */
+  max-height: max(26vh, 12rem);
   min-height: 7rem;
   overflow-y: auto;
 }

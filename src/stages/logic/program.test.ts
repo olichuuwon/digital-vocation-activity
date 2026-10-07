@@ -1,5 +1,6 @@
 import type { Program } from '../../content/stage3Schema';
 import {
+  blocksChanged,
   childList,
   flatten,
   getBlock,
@@ -24,7 +25,7 @@ describe('program edits', () => {
     const p1 = insertAt(p0, ROOT_CURSOR(p0), newBlock('repeat'));
     expect(p0).toEqual([]);
     const p2 = insertAt(p1, { list: childList({ list: [], index: 0 }, 'body'), index: 0 }, F);
-    expect(p2).toEqual([{ op: 'repeat', n: 3, body: [F] }]);
+    expect(p2).toEqual([{ op: 'repeat', n: 2, body: [F] }]);
     const p3 = insertAt(p2, ROOT_CURSOR(p2), newBlock('ifFlooded'));
     const p4 = insertAt(p3, { list: [1, 'else'], index: 0 }, L);
     expect(p4[1]).toEqual({ op: 'ifFlooded', then: [], else: [L] });
@@ -71,5 +72,16 @@ describe('program edits', () => {
     expect(sameAddr({ list: [0, 'body'], index: 1 }, { list: [0, 'then'], index: 1 })).toBe(false);
     expect(isInside([0, 'body'], { list: [], index: 0 })).toBe(true);
     expect(isInside([1, 'body'], { list: [], index: 0 })).toBe(false);
+  });
+});
+
+describe('blocksChanged (Debug It swaps)', () => {
+  it('counts differing blocks, and undoing a swap gives it back', () => {
+    const p: Program = [F, { op: 'repeat', n: 2, body: [F] }, L];
+    expect(blocksChanged(p, p)).toBe(0);
+    const one = swapOp(p, { list: [], index: 2 }, 'right');
+    expect(blocksChanged(p, one)).toBe(1);
+    expect(blocksChanged(p, swapOp(one, { list: [], index: 2 }, 'left'))).toBe(0);
+    expect(blocksChanged(p, setRepeat(p, { list: [], index: 1 }, 3))).toBe(1);
   });
 });

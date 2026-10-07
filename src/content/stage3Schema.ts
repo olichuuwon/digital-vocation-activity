@@ -156,6 +156,7 @@ export const stage3CopySchema = z.object({
     swapPrompt: words(12),
     editsLeft: txt,
     tutorialHint: words(12),
+    pickBlockFirst: words(12),
   }),
   run: z.object({
     run: words(2),
@@ -190,6 +191,8 @@ export const stage3CopySchema = z.object({
   }),
   hint: txt,
   answer: words(20),
+  /** Shown in the help box after 3 failed runs, before Show me is tapped. */
+  answerReady: words(15),
   timeUp: words(15),
   result: z.object({
     heading3: txt,

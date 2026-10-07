@@ -13,7 +13,7 @@
     "logic-l2": "Spot the part that repeats. Put it inside Repeat and set how many times.",
     "logic-l3": "If the road ahead floods, take the side road. Blocks after the If run on both roads.",
     "logic-l4": "Tap Step to go one block at a time. Watch for the first move that doesn't match the road.",
-    "logic-l5": "Use “Ask the AI, then drop” at every house instead of Drop supplies. It guesses what each house needs."
+    "logic-l5": "Use “Ask the AI, then drop” at every house. It works out what each house needs."
   },
   "blocks": {
     "forward": "Move forward",
@@ -46,7 +46,8 @@
     "selected": "{block} selected",
     "swapPrompt": "Now pick a block to swap in.",
     "editsLeft": "Swaps left: {n}",
-    "tutorialHint": "Tap a block to add it, then tap Run."
+    "tutorialHint": "Tap a block to add it, then tap Run.",
+    "pickBlockFirst": "First tap the block in your program you want to change."
   },
   "run": {
     "run": "Run",
@@ -89,7 +90,7 @@
   },
   "hint": "Hint: {text}",
   "answer": "Here's a working program, loaded and ready. Tap Run to watch it. Using it costs some points.",
-  "timeUp": "Time's up! Let's see how your truck did.",
+  "timeUp": "Time's up! On to the next puzzle.",
   "result": {
     "heading3": "Master route planner!",
     "heading2": "Smooth driving!",
@@ -121,5 +122,6 @@
     "wrongSupply": "House, wrong supply",
     "housesDone": "{done} of {total} houses have supplies.",
     "python": "Your program in Python:"
-  }
+  },
+  "answerReady": "Stuck? Tap Show me to load a working program."
 }

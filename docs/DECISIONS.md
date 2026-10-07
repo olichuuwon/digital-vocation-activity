@@ -76,6 +76,12 @@
 | 2026-10-07 | Stage 3 Reality Check | Shows the player's own program (L3, else the latest solved) next to the same program in Python, and runs their L3 program on 100 seeded test maps (`robustness`); unsolved fixed routes show failing maps. | No |
 | 2026-10-07 | Solver proofs (§11) | `src/sim/grid.content.test.ts`: every solution works on every flood, solver minimum = par, L2 needs Repeat, L3 needs If, L4 needs exactly 2 swaps, L5 needs Ask the AI. Exhaustive search to nesting depth 2. | No |
 | 2026-10-07 | Group support cards for Stage 3 | Game designer notes that Manifest (L5) and Debugger (L4) are full-mode only, so in booth groups those phones could idle. Proposal for M6.5: Debugger replays every failed run; Manifest becomes a "route card" in L1–L3; Scout keeps the flood view (L3) and the unfogged map (L1–L2). | Yes |
+| 2026-10-07 | Stage 3 QA fixes | Answer box says "tap Show me" until the program is loaded; after a lucky L3 run the next run floods the other road; Debug It counts swaps as blocks changed from the original (undo gives a swap back), Reset restores it in one tap, and a run stopping at a *new* block isn't counted as a fail (2 bugs shouldn't cost a star); Repeat starts at ×2; toasts clear when a Reality Check starts; full runs' test maps include the Ask the AI program run with the Stage 2 model, so a weaker model shows failing maps. | No |
+| 2026-10-07 | Stage 3 timing | QA human pace: booth ≈ 241 s (budget 180), full ≈ 348 s (5–6 min OK), expert booth 68 s. L3 is the long one. Tune in M8 (owner item 28). | Yes |
+| 2026-10-07 | Stage 4 sim (§7.5) | `src/sim/cluster.ts`: 100 ms ticks, 75 s storms, same seed for A and C, 100 req/s pods, crash after > 1.5 s overloaded, self-healing 3 s (off: 15 s or a Restart tap), HPA every 2 s with 4 s cold start, bad update at 32 s (50% errors; rolling update catches it on one pod in 2 s). Boost +150 req/s for 4 s then 4 s cooldown. Cost 10 credits/min per pod vs budget 60 × app-quality scale. Uptime = share of requests served OK. Measured: idle manual 24%, scripted human 69%, sensible auto 99.7% under budget. | Yes |
+| 2026-10-07 | Stage 4 app quality (§3.2) | Storm size = 0.85–1.15× from the mean of data accuracy, label accuracy and Stage 3 puzzles solved; budget scales with it so 3★ stays reachable. | No |
+| 2026-10-07 | Stage 4 flow | Manual (A) → Kubernetes cards → Configure (B, 60 s, live cost meter from a dry run) → Replay (C, same storm, Restart/Roll back still available) → one teachable diagnosis line + by-hand vs Kubernetes → up to 2 "Tweak settings" round trips (hint after 1, suggested settings after 2) → "This is a real job" → stars. Stars: 3★ = ≥ 99% uptime and under budget; score falls to 0 at 80% uptime; over budget ×0.8 × budget/cost. | Yes |
+| 2026-10-07 | `?simSpeed=N` | Debug-only (needs `?debug=1`): runs Stage 4 storms N× faster for tests and demos. | No |
 
 ## Copy needing owner approval
 <!-- NEEDS OWNER APPROVAL --> Reality Check cards in `src/content/realityChecks.json` with `needsApproval: true` (career-facing, D14). Preview them at `/dev/components`.
@@ -85,7 +91,7 @@
 4. **Cloud, "This is a real job":** "Site reliability engineers (SREs) keep apps like this running for millions of people. They set up alerts so a human only gets woken up when automation can't fix it."
 
 ## Milestone status
-- [x] M0 · [x] M0.5 · [x] M1 · [x] M2 · [x] M3 · [ ] M4 · [ ] M5 · [ ] M6 · [ ] M6.5 · [ ] M7 · [ ] M8
+- [x] M0 · [x] M0.5 · [x] M1 · [x] M2 · [x] M3 · [x] M4 · [ ] M5 · [ ] M6 · [ ] M6.5 · [ ] M7 · [ ] M8
 
 ### M0 notes (2026-10-06)
 - Lint, typecheck, unit tests (Vitest) and e2e (Playwright, iPhone 12 + Pixel 5) green.
@@ -120,3 +126,10 @@
 - QA fixes: Settings pauses timers; the answer step reduces audit and box credit; real labelled count in the Reality Check; level instructions shown; Stage 2 reload + pause e2e.
 - a11y fixes (axe clean): focus stays on option buttons (slot keys, `aria-disabled`); the next picture's clue and any new help spoken in one announcement (HintBox `quiet`); night and position alt text; spoken box readout; relaxed mode slows the tiles; nudge buttons reflow at 200%; frame leaves room for buttons; touch capture only in Draw the Box; answer outline ≥3:1; larger handles; ruled-out/suggested options named for screen readers.
 - Carried to M7: toasts sit over the top row (streak / Field guide) while playing fast; arrow-key nudging in Draw the Box.
+
+### M4 notes (2026-10-07)
+- Stage 3 "Build the Logic" playable end to end: tutorial, Order the Steps, Say It Shorter, Choose the Road, Debug It (full), Ask the AI (full), Reality Check (your blocks as Python + 100 test maps), stars, hand-off.
+- Acceptance: every puzzle proven solvable within its block limit by an exhaustive solver (`src/sim/grid.content.test.ts`), plus proofs that L2 needs Repeat, L3 needs If, L4 needs 2 swaps and L5 needs Ask the AI ✅.
+- Timing (QA): booth ≈ 241 s, full ≈ 348 s, expert 68 s. Initial JS ≈ 170 KB gz; Stage 3 lazy (≈14 KB gz).
+- a11y fixes: nesting spoken, Step announces block + truck, failure says where it stopped, focus kept after Remove/Show me, every edit announced, aria-disabled throughout, 48px slots with stable names, road contrast ≥ 3:1, map rows described, Python readable, timer paused while driving, relaxed slows the truck.
+- Carried to M6.5: Stage 3 support cards for booth groups (see "Group support cards for Stage 3"). Carried to M7: pipeline header breaks words at 200% text; moving blocks into/out of Repeat/If needs remove + re-add.

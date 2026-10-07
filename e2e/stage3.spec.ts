@@ -12,7 +12,8 @@ async function runAndWait(page: Page) {
 async function solveWithAnswer(page: Page) {
   if (!(await page.getByTestId('program').getByRole('button').filter({ hasText: /Move|Turn|Drop|Repeat|If|Ask/ }).count()))
     await block(page, 'Turn left').click();
-  for (let i = 0; i < 3; i++) {
+  // Debug It doesn't count a stop at a new block as a fail, so allow a couple more runs.
+  for (let i = 0; i < 6; i++) {
     if (await page.getByRole('button', { name: 'Show me' }).count()) break;
     await runAndWait(page);
     if (await page.getByRole('button', { name: 'Show me' }).count()) break;
@@ -49,6 +50,10 @@ test('Stage 3 booth: build the tutorial by taps, finish the rest, reach Stage 4'
   await block(page, 'Repeat').click();
   for (const b of ['Move forward', 'Move forward', 'Drop supplies', 'Turn right']) await block(page, b).click();
   await expect(page.getByTestId('block-count')).toContainText('5 of 5');
+  // Repeat starts at ×2; the route needs ×3.
+  await page.getByTestId('program').locator('[data-op="repeat"]').click();
+  await page.getByRole('button', { name: 'More times' }).click();
+  await expect(page.getByTestId('program')).toContainText('Repeat ×3');
   await runAndWait(page);
   await page.getByRole('button', { name: 'Continue' }).click();
 
@@ -64,7 +69,7 @@ test('Stage 3 booth: build the tutorial by taps, finish the rest, reach Stage 4'
   await expect(page.getByText(/of 3 stars/)).toBeAttached();
   await page.getByRole('button', { name: 'Continue' }).click();
   await page.getByRole('button', { name: 'Ready' }).click();
-  await expect(page.getByTestId('stage-heading')).toContainText('Keep It Alive');
+  await expect(page.getByRole('heading', { name: 'Keep it alive' })).toBeVisible();
   await page.getByText('Debug').click();
   await expect(page.locator('.debug-panel')).toContainText('"puzzlesSolved": 3');
 });

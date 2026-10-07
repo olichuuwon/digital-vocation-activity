@@ -1,10 +1,11 @@
 import { AnimatePresence, motion } from 'framer-motion';
-import { useState, type ReactNode } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
 import { useScreenHeading } from '../app/screenFocus';
 import { copy, fill } from '../content';
 import { REALITY_DEFAULTS, type RealityCheckContent, type RealityVars, type RealityVisual } from '../content/schemas';
 import { RealityVisualView } from './RealityVisuals';
 import s from './components.module.css';
+import { useToast } from './toastStore';
 
 const t = copy.components;
 
@@ -26,6 +27,8 @@ export function RealityCheck({
 }) {
   const vars: RealityVars = { ...REALITY_DEFAULTS, ...given };
   const [i, setI] = useState(0);
+  // A toast from the last level would cover the heading: start the reveal clean.
+  useEffect(() => useToast.getState().clear(), []);
   const headingRef = useScreenHeading<HTMLHeadingElement>(check.heading);
   const card = check.cards[i]!;
   const last = i === check.cards.length - 1;
