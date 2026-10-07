@@ -51,12 +51,14 @@ export function RealityCheck({
             <RealityVisualView visual={card.visual} vars={vars} />
           </div>
           {card.title && <h2>{fill(card.title, vars)}</h2>}
-          <p className={s.body} aria-live="polite">
-            <span className="visually-hidden">{fill(t.cardOf, { n: i + 1, total: check.cards.length })}. </span>
-            {fill(card.body, vars)}
-          </p>
+          <p className={s.body}>{fill(card.body, vars)}</p>
         </motion.div>
       </AnimatePresence>
+      {/* Persistent region outside AnimatePresence: a region that mounts already filled isn't read. */}
+      <p aria-live="polite" className="visually-hidden">
+        {i > 0 &&
+          `${fill(t.cardOf, { n: i + 1, total: check.cards.length })}. ${card.title ? `${fill(card.title, vars)}. ` : ''}${fill(card.body, vars)}`}
+      </p>
       {check.cards.length > 1 && (
         <div className={s.dots} aria-hidden="true">
           {check.cards.map((_, n) => (

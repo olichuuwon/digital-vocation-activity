@@ -1,5 +1,5 @@
 import { motion, useReducedMotion } from 'framer-motion';
-import { useEffect, useRef, type ReactNode } from 'react';
+import { useId, type ReactNode } from 'react';
 import { copy } from '../content';
 import s from './components.module.css';
 
@@ -31,8 +31,7 @@ export function TutorialOverlay({
   children?: ReactNode;
 }) {
   const reduce = useReducedMotion();
-  const btnRef = useRef<HTMLButtonElement>(null);
-  useEffect(() => btnRef.current?.focus(), []);
+  const textId = useId();
   const p = PATH[gesture];
   return (
     <section className={s.tutorial} aria-label={t.tutorialLabel}>
@@ -45,8 +44,10 @@ export function TutorialOverlay({
       >
         👆
       </motion.span>
-      <p className={s.body}>{text}</p>
-      <button ref={btnRef} type="button" className={`${s.btn} ${s.primary}`} onClick={onDismiss}>
+      <p className={s.body} id={textId}>
+        {text}
+      </p>
+      <button type="button" className={`${s.btn} ${s.primary}`} onClick={onDismiss} aria-describedby={textId}>
         {t.gotIt}
       </button>
     </section>

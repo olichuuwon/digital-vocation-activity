@@ -18,3 +18,15 @@ export function formatClock(seconds: number): string {
 
 /** Screen-reader checkpoints: announce these once each, not every second. */
 export const ANNOUNCE_AT = [30, 10, 0] as const;
+
+/**
+ * WCAG 2.2.1 "extend": from 20s left the player can add time with one tap, up to 10 times.
+ * Stages decide whether an extension costs points.
+ */
+export const EXTEND_WHEN_LEFT = 20;
+export const EXTEND_BY_SECONDS = 30;
+export const MAX_EXTENSIONS = 10;
+
+export function canExtend(left: number, extensions: number): boolean {
+  return left > 0 && left <= EXTEND_WHEN_LEFT && extensions < MAX_EXTENSIONS;
+}

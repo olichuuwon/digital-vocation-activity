@@ -124,6 +124,21 @@
   background-image: repeating-linear-gradient(45deg, transparent 0 4px, rgb(255 255 255 / 0.4) 4px 8px);
 }
 
+/* Shown only from 20s left; wraps under the bar at 200% text. */
+.timer {
+  flex-wrap: wrap;
+}
+
+.extendBtn {
+  min-height: var(--tap);
+  padding: 8px 14px;
+  border-radius: 999px;
+  border: 2px solid var(--primary);
+  background: var(--surface);
+  font-weight: 700;
+  cursor: pointer;
+}
+
 /* --- Stars ---------------------------------------------------------------------- */
 .stars {
   display: flex;
@@ -134,7 +149,7 @@
 }
 
 .starOn {
-  color: var(--logic);
+  color: var(--logic-ink);
 }
 
 .starOff {

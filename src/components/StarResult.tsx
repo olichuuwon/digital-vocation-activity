@@ -22,7 +22,7 @@ export function StarResult({
   const headingRef = useScreenHeading<HTMLHeadingElement>(heading);
   const announce = useAnnouncer((a) => a.announce);
   const label = fill(t.starsLabel, { n: stars });
-  useEffect(() => announce(`${heading}. ${label}`), [announce, heading, label]);
+  useEffect(() => announce(label), [announce, label]);
 
   return (
     <section className={s.screen}>

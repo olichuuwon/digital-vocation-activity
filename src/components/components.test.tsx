@@ -7,6 +7,8 @@ import { RealityCheck } from './RealityCheck';
 import { NewRuleCard, RulebookButton } from './Rulebook';
 import { StarResult } from './StarResult';
 import { Timer } from './Timer';
+import { toastMs } from './toastStore';
+import { useAnnouncer } from '../app/screenFocus';
 
 beforeEach(() => {
   useGame.setState({ relaxedThisSession: false, settings: { theme: 'system', sound: false, relaxed: false } });
@@ -49,6 +51,16 @@ describe('Timer', () => {
     act(() => void vi.advanceTimersByTime(400));
     expect(onExpire).toHaveBeenCalledTimes(1);
     expect(screen.getByTestId('timer').innerHTML).not.toContain('NaN');
+  });
+
+  it('offers +30 seconds from 20s left (WCAG 2.2.1) and reports each extension', () => {
+    const onExtend = vi.fn();
+    render(<Timer seconds={25} onExtend={onExtend} />);
+    expect(screen.queryByRole('button', { name: '+30 seconds' })).toBeNull();
+    act(() => void vi.advanceTimersByTime(6000));
+    fireEvent.click(screen.getByRole('button', { name: '+30 seconds' }));
+    expect(onExtend).toHaveBeenCalledWith(1);
+    expect(screen.getByRole('timer')).toHaveTextContent('0:49');
   });
 
   it('does not count while paused', () => {
@@ -117,5 +129,26 @@ describe('HandOff', () => {
     expect(screen.getByText(/Sam, you're the main player for Software Development/)).toBeInTheDocument();
     rerender(<HandOff stage={stage} onReady={() => {}} />);
     expect(screen.getByText(/Next team: Software Development/)).toBeInTheDocument();
+  });
+});
+
+describe('announcer and toast timing', () => {
+  it('re-announces the same message by clearing first', () => {
+    vi.useFakeTimers();
+    const { announce } = useAnnouncer.getState();
+    announce('Correct');
+    vi.advanceTimersByTime(100);
+    expect(useAnnouncer.getState().message).toBe('Correct');
+    announce('Correct');
+    expect(useAnnouncer.getState().message).toBe('');
+    vi.advanceTimersByTime(100);
+    expect(useAnnouncer.getState().message).toBe('Correct');
+    vi.useRealTimers();
+  });
+
+  it('keeps long toasts up longer, and ×1.5 in relaxed mode', () => {
+    expect(toastMs('Correct!', false)).toBe(2500);
+    expect(toastMs('x'.repeat(60), false)).toBe(4200);
+    expect(toastMs('Correct!', true)).toBe(3750);
   });
 });

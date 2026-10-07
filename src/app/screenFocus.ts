@@ -2,10 +2,19 @@ import { useEffect, useRef } from 'react';
 import { create } from 'zustand';
 import { copy } from '../content';
 
-/** Shared polite live region (§10). Stages push result text with `announce()`. */
+let pending: ReturnType<typeof setTimeout> | undefined;
+
+/**
+ * Shared polite live region (§10). Stages push result text with `announce()`.
+ * Clears first, then sets on the next tick, so the same text twice is still read out.
+ */
 export const useAnnouncer = create<{ message: string; announce: (m: string) => void }>()((set) => ({
   message: '',
-  announce: (message) => set({ message }),
+  announce: (message) => {
+    clearTimeout(pending);
+    set({ message: '' });
+    pending = setTimeout(() => set({ message }), 60);
+  },
 }));
 
 let firstScreen = true;

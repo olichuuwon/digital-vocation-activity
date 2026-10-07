@@ -73,6 +73,14 @@ export function RulebookButton({ rulesInPlay, newRuleId }: { rulesInPlay: number
             <RuleItem key={r.id} rule={r} isNew={r.id === newRuleId} />
           ))}
         </ul>
+        <button
+          type="button"
+          className={`${s.btn} ${s.primary}`}
+          style={{ width: '100%', marginTop: 16 }}
+          onClick={() => setOpen(false)}
+        >
+          {t.close}
+        </button>
       </dialog>
     </>
   );

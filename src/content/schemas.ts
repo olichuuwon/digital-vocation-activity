@@ -59,7 +59,8 @@ export const copySchema = z.object({
     next: text, skip: text, done: text, cardOf: text, gotIt: text, tutorialLabel: text,
     handoffHeading: text, handoffSoloHeading: text, handoffBody: text, handoffSoloBody: text,
     ready: text, rulebook: text, newRule: text, rulesInPlay: text, close: text, hint: text,
-    answer: text, devHeading: text,
+    answer: text, devHeading: text, extend: text, extendLabel: text, extended: text,
+    toastSuccess: text, toastError: text, tutorialHint: text,
   }),
 });
 

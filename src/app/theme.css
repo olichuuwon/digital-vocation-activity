@@ -20,6 +20,13 @@
   --logic-ink: #8a5300;
   --cloud-ink: #145ea8;
 
+  /* Reality Check tiles: text on these fills is ≥4.5:1. */
+  --tile-ok: #0a6b61;
+  --on-tile-ok: #ffffff;
+  --tile-bad: #b42318;
+  --on-tile-bad: #ffffff;
+  --tile-new: #145ea8;
+
   --radius: 14px;
   --gutter: 16px;
   --tap: 48px;
@@ -44,6 +51,11 @@
     --ai-ink: #b49cff;
     --logic-ink: #ffbe55;
     --cloud-ink: #7cbcff;
+    --tile-ok: #3fd4c3;
+    --on-tile-ok: #0e1116;
+    --tile-bad: #ff8a80;
+    --on-tile-bad: #0e1116;
+    --tile-new: #7cbcff;
     color-scheme: dark;
   }
 }
@@ -63,6 +75,11 @@
   --ai-ink: #b49cff;
   --logic-ink: #ffbe55;
   --cloud-ink: #7cbcff;
+  --tile-ok: #3fd4c3;
+  --on-tile-ok: #0e1116;
+  --tile-bad: #ff8a80;
+  --on-tile-bad: #0e1116;
+  --tile-new: #7cbcff;
   color-scheme: dark;
 }
 

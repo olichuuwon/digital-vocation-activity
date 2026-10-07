@@ -30,7 +30,16 @@ type Demo =
 export default function DevComponents() {
   const [demo, setDemo] = useState<Demo | null>(null);
   const back = () => setDemo(null);
-  if (demo) return <DemoView demo={demo} onBack={back} />;
+  if (demo) {
+    const shelled = ['tutorial', 'timer', 'rulebook', 'hints'].includes(demo.kind);
+    return shelled ? (
+      <DemoView demo={demo} onBack={back} />
+    ) : (
+      <main style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+        <DemoView demo={demo} onBack={back} />
+      </main>
+    );
+  }
   return <Gallery onPick={setDemo} />;
 }
 

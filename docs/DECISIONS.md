@@ -33,7 +33,7 @@
 | 2026-10-07 | M1 content | `content-writer` drafted `briefings.json`, `rulebook.json`, `realityChecks.json`. Word limits are enforced by zod (briefing body ≤25, Reality card ≤40, Kubernetes card ≤20). | No |
 | 2026-10-07 | Rulebook examples | Spec examples used as given. Rules 2 and 3 have extra examples not in the spec ("People: 0", "Water: 900 L", "ID 1042 (second time)") to show the existing rules. | Yes |
 | 2026-10-07 | Stage 1 Reality Check | The "choose a rule to automate" tap (§4.3) is gameplay, built in M2 after the cards. | No |
-| 2026-10-07 | Timer | Relaxed ×1.5 rounds up. Pauses on `running=false` and while the tab is hidden; time while the phone is locked never counts. Screen readers hear 30s, 10s and time up only. | No |
+| 2026-10-07 | Timer + WCAG 2.2.1 | Relaxed ×1.5 alone doesn't meet 2.2.1, so from 20s left a "+30 seconds" button appears (up to 10 times). Stages decide in M2+ whether an extension costs points (`onExtend`). Stages must pass `running={false}` while the Rulebook or Settings is open. Relaxed ×1.5 rounds up. Pauses on `running=false` and while the tab is hidden; time while the phone is locked never counts. Screen readers hear 30s, 10s and time up only. | No |
 | 2026-10-07 | `/dev/components` | Reachable in production (no data, no backend calls). Not linked from the game. | No |
 | 2026-10-07 | Bundle | Framer Motion added ~45 KB gz to the entry (now ≈149 KB of 250). Switch to `LazyMotion` + `m` in M7. | No |
 
@@ -45,7 +45,7 @@
 4. **Cloud, "This is a real job":** "Site reliability engineers (SREs) keep apps like this running for millions of people. They set up alerts so a human only gets woken up when automation can't fix it."
 
 ## Milestone status
-- [x] M0 · [x] M0.5 · [ ] M1 · [ ] M2 · [ ] M3 · [ ] M4 · [ ] M5 · [ ] M6 · [ ] M6.5 · [ ] M7 · [ ] M8
+- [x] M0 · [x] M0.5 · [x] M1 · [ ] M2 · [ ] M3 · [ ] M4 · [ ] M5 · [ ] M6 · [ ] M6.5 · [ ] M7 · [ ] M8
 
 ### M0 notes (2026-10-06)
 - Lint, typecheck, unit tests (Vitest) and e2e (Playwright, iPhone 12 + Pixel 5) green.
@@ -60,3 +60,8 @@
 - QA fixes: debug submit dev-only; 6+ digit PIN and higher lockout threshold; zero-width/bidi names rejected; extra test for private functions; e2e builds into `dist-e2e` and never reuses a real-env server.
 - a11y fixes: focus kept after retry, unlock, lock and hide; one status region announces loading/results/empty; `role="list"` for iOS VoiceOver; PIN errors tied to the input; hide/unhide announced; stale `/host` board says "Reconnecting"; long headings wrap at 200%.
 - Live check 2026-10-07 against the real project: migration applied, PIN set. Read today ✅, submit ✅ (row id 1 "QA Test", 0 families), retry returns the same row ✅, direct insert / secret column / private function all refused ✅, 1201 families rejected ✅. Deployed bundle includes the Supabase config ✅.
+
+### M1 notes (2026-10-07)
+- 143 unit tests and 50 e2e tests green. Initial JS ≈ 149 KB gzipped (Framer Motion; trim in M7). Gallery at `/dev/components`.
+- QA fixes: Timer ignores time while the phone is locked or the tab is hidden; 0s timer safe; data card uses the real record count; rolling-update card trimmed; every Reality Check placeholder has a default.
+- a11y fixes (axe-clean on the gallery): Reality Check cards announced from one persistent live region; "+30 seconds" timer extension; ✓/✗ tiles use new `--tile-*` tokens (≥4.5:1 both themes) and rem sizes; one announcement per result (announcer clears first, so repeats are read); toasts last longer for long text and in relaxed mode, read with "Correct:/Wrong:" via the shared announcer; filled stars use `--logic-ink`; tutorial doesn't steal focus; rolling update shows v1/v2 text; gallery demos inside `<main>`; Rulebook has a bottom Close.

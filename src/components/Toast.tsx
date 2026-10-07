@@ -1,21 +1,22 @@
 import { AnimatePresence, motion } from 'framer-motion';
 import { useEffect } from 'react';
-import { useToast, type Kind } from './toastStore';
+import { useRelaxed } from '../state/store';
+import { toastMs, useToast, type Kind } from './toastStore';
 import s from './components.module.css';
 
 const ICON: Record<Kind, string> = { success: '✓', error: '✗', info: 'ℹ︎' };
-const SHOW_MS = 2500;
 
 export function ToastHost() {
   const { id, message, kind, clear } = useToast();
+  const relaxed = useRelaxed();
   useEffect(() => {
     if (!message) return;
-    const timer = window.setTimeout(clear, SHOW_MS);
+    const timer = window.setTimeout(clear, toastMs(message, relaxed));
     return () => window.clearTimeout(timer);
-  }, [id, message, clear]);
+  }, [id, message, clear, relaxed]);
 
   return (
-    <div className={s.toastHost} role="status" aria-live="polite">
+    <div className={s.toastHost} aria-hidden="true">
       <AnimatePresence>
         {message && (
           <motion.p

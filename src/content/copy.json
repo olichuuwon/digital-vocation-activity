@@ -116,6 +116,12 @@
     "close": "Close",
     "hint": "Hint",
     "answer": "Here's the answer",
-    "devHeading": "Component gallery"
+    "devHeading": "Component gallery",
+    "extend": "+30 seconds",
+    "extendLabel": "Add 30 seconds",
+    "extended": "30 seconds added.",
+    "toastSuccess": "Correct:",
+    "toastError": "Wrong:",
+    "tutorialHint": "Try it, or tap Got it."
   }
 }
