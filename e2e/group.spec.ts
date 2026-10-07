@@ -101,6 +101,26 @@ async function playLiveOps(main: Page, supports: Page[]) {
   return allHands;
 }
 
+/** Stage 1 cards played right via the debug-only data attributes (as in stage1.spec.ts). */
+async function playCards(page: Page) {
+  for (let guard = 0; guard < 20; guard++) {
+    const card = page.getByTestId('record-card');
+    if (!(await card.count())) return;
+    const gotIt = page.getByRole('button', { name: 'Got it' });
+    if (await gotIt.count()) await gotIt.click();
+    const status = await card.getAttribute('data-status');
+    const id = await card.getAttribute('data-id');
+    if (status === 'fixable') {
+      const fix = Number(await card.getAttribute('data-fix'));
+      await page.getByRole('button', { name: 'Fix', exact: true }).click();
+      await page.locator('section[aria-labelledby="fix-heading"] button').nth(fix).click();
+    } else {
+      await page.getByRole('button', { name: status === 'valid' ? 'Keep' : 'Trash', exact: true }).click();
+    }
+    await expect(page.locator(`[data-testid="record-card"][data-id="${id}"]`)).toHaveCount(0);
+  }
+}
+
 const uniqueName = (prefix: string) => `${prefix} ${Math.floor(1000 + Math.random() * 9000)}`;
 
 test('3 phones: create, join by QR link and by code, reorder, play a group run, rank on Today’s board', async ({ browser }, info) => {
@@ -298,3 +318,35 @@ test('?fakePeers=2: bots join the lobby, this phone plays main and can preview a
   await page.getByRole('button', { name: 'Go online' }).click();
   await expect(page.getByTestId('reconnecting')).toHaveCount(0);
 });
+
+test('hand-off: the next main player is named and taps Ready on their own phone', async ({ browser }, info) => {
+  test.setTimeout(150_000);
+  const board = { submitted: null as string | null };
+  const ann = await phone(browser, info);
+  const ben = await phone(browser, info);
+  await mockBoard(ann, board);
+  await mockBoard(ben, board);
+  const code = await createGroup(ann, uniqueName('Hand'), 'Ann');
+  await joinByLink(ben, code, 'Ben');
+  await ann.getByRole('button', { name: 'Start' }).click();
+  await ann.getByRole('button', { name: 'Start the mission' }).click();
+  await ann.getByRole('button', { name: 'Start sorting' }).click();
+  for (const level of ['Tutorial', 'Keep or Trash', 'Keep, Fix or Trash']) {
+    await expect(ann.getByRole('heading', { name: level, level: 1 })).toBeVisible();
+    await ann.getByRole('button', { name: 'Start', exact: true }).click();
+    await playCards(ann);
+  }
+  await ann.getByRole('button', { name: 'Continue' }).click();
+  await ann.getByRole('button', { name: /already/i }).click();
+  await ann.getByRole('button', { name: 'Continue' }).click();
+  await ann.getByRole('button', { name: 'Continue' }).click();
+  // Ann's hand-off card names Ben; Ben's phone offers Ready.
+  await expect(ann.getByText(/Ben/).first()).toBeVisible();
+  await expect(ben.getByTestId('up-next')).toBeVisible();
+  await ben.getByTestId('up-next').getByRole('button').click();
+  // Ben now holds the main phone for stage 2; Ann supports.
+  await expect(ben.getByTestId('support-screen')).toHaveCount(0);
+  await expect(ann.getByTestId('support-screen')).toHaveAttribute('data-stage', '2');
+  for (const p of [ann, ben]) await p.context().close();
+});
+

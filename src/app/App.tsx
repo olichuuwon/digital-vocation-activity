@@ -58,10 +58,6 @@ export function App() {
 function DevApp() {
   const theme = useGame((s) => s.settings.theme);
   const announcement = useAnnouncer((s) => s.message);
-  useEffect(() => {
-    const idle = window.requestIdleCallback ?? ((fn: () => void) => window.setTimeout(fn, 1500));
-    idle(() => void loadDataStage().catch(() => {}));
-  }, []);
   useTheme(theme);
   return (
     <div className={ui.shell}>
@@ -92,6 +88,10 @@ function GameApp() {
   const theme = useGame((s) => s.settings.theme);
   const announcement = useAnnouncer((s) => s.message);
   useTeamRelaxedSync();
+  useEffect(() => {
+    const idle = window.requestIdleCallback ?? ((fn: () => void) => window.setTimeout(fn, 1500));
+    idle(() => void loadDataStage().catch(() => {}));
+  }, []);
   // Reopening with a saved run lands on Home so the player can choose Resume (§3.1).
   // A ?join=CODE link (the lobby QR) opens Join with the code filled in.
   const [onHome, setOnHome] = useState(() => !(params.debug && params.stage !== null) && !params.join);

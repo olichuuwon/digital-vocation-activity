@@ -15,9 +15,11 @@ export function useTeamRelaxedSync() {
   const g = useGroup();
   const mine = useGame((s) => s.settings.relaxed || s.relaxedThisSession);
   const support = g.active && !g.amMain;
+  // Re-sent when the main phone changes or comes back (a reloaded main phone forgets it).
+  const mainHere = !!g.main?.present;
   useEffect(() => {
-    if (support && g.connected) sendAction(RELAXED, { on: mine });
-  }, [support, mine, g.mainId, g.connected]);
+    if (support && g.connected && mainHere) sendAction(RELAXED, { on: mine });
+  }, [support, mine, g.mainId, g.connected, mainHere]);
 
   const peers = useRef(new Map<string, boolean>());
   const present = g.members.filter((m) => m.present).map((m) => m.id).join(',');

@@ -20,6 +20,8 @@ async function axe(page: Page, screen: string) {
 
 test.beforeEach(async ({ page }) => {
   test.setTimeout(120_000);
+  // Before any page loads: entrance animations would otherwise be mid-fade during the scan.
+  await page.emulateMedia({ reducedMotion: 'reduce' });
   await mockSupabase(page, { leaderboard_today: () => ({ body: [boardRow(1, 1, 'Swift Kingfisher', 1100)] }), run_rank: () => ({ body: [] }) });
 });
 

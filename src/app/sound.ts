@@ -16,8 +16,9 @@ function context(): AudioContext | null {
   try {
     const AC = window.AudioContext ?? (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
     if (!AC) return null;
-    ctx ??= new AC();
-    if (ctx.state === 'suspended') void ctx.resume().catch(() => {});
+    // iOS can close or interrupt the context (calls, other apps): start a fresh one if closed.
+    if (!ctx || ctx.state === 'closed') ctx = new AC();
+    if (ctx.state !== 'running') void ctx.resume().catch(() => {});
     return ctx;
   } catch {
     return null;
