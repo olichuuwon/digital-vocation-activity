@@ -106,7 +106,10 @@ body {
 
 body {
   min-height: 100dvh;
-  overflow-x: hidden;
+  /* clip, not hidden: on iOS Safari overflow-x:hidden on body can make it a second scroll
+     container, so swipes get "stuck" and sticky bars misbehave. clip hides sideways overflow
+     without creating a scroll area. */
+  overflow-x: clip;
 }
 
 h1,
