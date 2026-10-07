@@ -213,6 +213,7 @@ export const stage2CopySchema = z.object({
     resize: words(3),
     /** Keyboard help on the focusable picture (M7). */
     keys: words(12),
+    keysVisible: words(14),
     left: txt,
     right: txt,
     up: txt,
@@ -261,6 +262,8 @@ export const stage2CopySchema = z.object({
     where: txt,
     places: z.object({ top: txt, middle: txt, bottom: txt, left: txt, centre: txt, right: txt }),
     boxReadout: txt,
+    /** After 3 misses: the right box in words (the dashed outline is visual only). */
+    truthReadout: txt,
   }),
 });
 export type Stage2Copy = z.infer<typeof stage2CopySchema>;

@@ -1,4 +1,4 @@
-import { useRef, type PointerEvent as ReactPointerEvent } from 'react';
+import { useId, useRef, useState, type PointerEvent as ReactPointerEvent } from 'react';
 import type { AiImage, Box } from '../../content/stage2Schema';
 import { dragCorner, moveBox, resizeBox } from '../../sim/iou';
 import { SceneArt } from './Art';
@@ -7,6 +7,9 @@ import { c } from './content';
 import s from './ai.module.css';
 
 const STEP = 6;
+
+const readout = ([x, y, w, h]: Box) =>
+  fill(c.a11y.boxReadout, { x: Math.round(x), y: Math.round(y), w: Math.round(w), h: Math.round(h) });
 
 type Corner = 'tl' | 'tr' | 'bl' | 'br';
 type Drag = { kind: 'move'; lastX: number; lastY: number } | { kind: Corner };
@@ -32,6 +35,8 @@ export function BoxDrawer({
   const frame = useRef<HTMLDivElement>(null);
   const drag = useRef<Drag | null>(null);
   const [x, y, w, h] = box;
+  const readoutId = useId();
+  const [said, setSaid] = useState(() => readout(box));
 
   const toCanvas = (e: ReactPointerEvent) => {
     const r = frame.current!.getBoundingClientRect();
@@ -58,7 +63,13 @@ export function BoxDrawer({
     }
   };
   const end = () => {
+    if (drag.current) setSaid(readout(box));
     drag.current = null;
+  };
+  /** A discrete change (key or button): apply it and speak the new box. */
+  const change = (b: Box) => {
+    onChange(b);
+    setSaid(readout(b));
   };
 
   const corners: [Corner, number, number][] = [
@@ -89,14 +100,17 @@ export function BoxDrawer({
         onPointerCancel={end}
         data-testid="box-frame"
         // Keyboard twin of dragging (§10): arrows move, Shift + arrows resize.
+        // role="application": screen readers pass arrow keys through (in browse mode a "group"
+        // would swallow them). One small control; the nudge buttons are a full alternative.
         tabIndex={0}
-        role="group"
+        role="application"
         aria-label={c.box.keys}
+        aria-describedby={readoutId}
         onKeyDown={(e) => {
           const d = { ArrowLeft: [-1, 0], ArrowRight: [1, 0], ArrowUp: [0, -1], ArrowDown: [0, 1] }[e.key];
-          if (!d) return;
+          if (!d || e.altKey || e.ctrlKey || e.metaKey) return;
           e.preventDefault();
-          onChange(e.shiftKey ? resizeBox(box, d[0]! * STEP, d[1]! * STEP) : moveBox(box, d[0]! * STEP, d[1]! * STEP));
+          change(e.shiftKey ? resizeBox(box, d[0]! * STEP, d[1]! * STEP) : moveBox(box, d[0]! * STEP, d[1]! * STEP));
         }}
         data-box={box.map((n) => Math.round(n)).join(',')}
       >
@@ -128,12 +142,15 @@ export function BoxDrawer({
           ))}
         </SceneArt>
       </div>
-      <p className="visually-hidden" aria-live="polite">
-        {fill(c.a11y.boxReadout, { x: Math.round(x), y: Math.round(y), w: Math.round(w), h: Math.round(h) })}
+      {/* Spoken after a key, a nudge or the end of a drag (not on every pointer move). */}
+      <p className="visually-hidden" aria-live="polite" id={readoutId}>
+        {said}
+        {truth && ` ${fill(c.a11y.truthReadout, { x: Math.round(truth[0]), y: Math.round(truth[1]), w: Math.round(truth[2]), h: Math.round(truth[3]) })}`}
       </p>
+      <p className={s.keysHint}>{c.box.keysVisible}</p>
       <div className={s.nudge} role="group" aria-label={`${c.box.move} / ${c.box.resize}`}>
         {nudge.map(([label, f]) => (
-          <button key={label} type="button" onClick={() => onChange(f())}>
+          <button key={label} type="button" onClick={() => change(f())}>
             {label}
           </button>
         ))}

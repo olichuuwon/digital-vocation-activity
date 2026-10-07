@@ -242,3 +242,16 @@
   border-width: 4px;
   border-style: double;
 }
+
+/* Keyboard help for Draw the Box, visible to sighted keyboard users too. */
+.keysHint {
+  margin: 0;
+  font-size: 0.875rem;
+  color: var(--text-muted);
+}
+
+@media (pointer: coarse) and (hover: none) {
+  .keysHint {
+    display: none;
+  }
+}

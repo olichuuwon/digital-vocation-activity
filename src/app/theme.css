@@ -90,7 +90,13 @@
 }
 
 html {
-  scroll-padding-bottom: 96px;
+  /* Room for sticky bottom bars, which grow with text size (≈192px at 200%) (WCAG 2.4.11). */
+  scroll-padding-bottom: calc(96px + (1rem - 16px) * 7);
+}
+
+/* While "You're up next" sits at the bottom of a support screen, focus must clear it too. */
+html:has([data-testid='up-next']) {
+  scroll-padding-bottom: calc(96px + (1rem - 16px) * 7 + 12rem);
 }
 
 html,
@@ -190,6 +196,7 @@ dialog.settings::backdrop {
 }
 
 .settings-row input {
+  flex: none;
   width: 24px;
   height: 24px;
   margin: 0;
@@ -232,4 +239,10 @@ dialog.settings::backdrop {
 .debug-row button[aria-pressed='true'] {
   background: var(--primary);
   color: var(--on-primary);
+}
+
+.settings-note {
+  margin: 0;
+  font-size: 0.875rem;
+  color: var(--text-muted);
 }

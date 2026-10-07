@@ -32,8 +32,9 @@ export function useTeamRelaxedSync() {
     if (p.success) peers.current.set(a.from, p.data.on);
     update();
   });
+  // Every render: membership and role changes are cheap to re-check. Messages are kept even
+  // before this phone sees itself as main (`on` already requires amMain).
   useEffect(() => {
-    if (!g.amMain) peers.current.clear();
     update();
-  }); // every render: membership and role changes are cheap to re-check
+  });
 }

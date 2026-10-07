@@ -86,7 +86,7 @@ export function GroupLobby() {
           {session.name}
         </h1>
         {qr ? (
-          <img className={s.qr} src={qr} alt={fill(t.qrAlt, { name: session.name, code })} width={240} height={240} />
+          <img className={s.qr} src={qr} alt={fill(t.qrAlt, { name: session.name, code: code.split('').join(' ') })} width={240} height={240} />
         ) : (
           <div className={s.qr} aria-hidden="true" />
         )}

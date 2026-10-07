@@ -63,8 +63,8 @@ export function SupportScreen() {
     if (showPromoted) announce(fill(t.promoted, { name: promotedName }));
   }, [showPromoted]); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => {
-    if (upNext) announce(`${t.upNext} ${t.ready}`);
-  }, [upNext, announce]);
+    if (upNext) announce(`${t.upNext} ${fill(t.upNextBody, { stage: stage < 4 ? (stageContent(stage + 1)?.specialisation ?? '') : t.finale })}`);
+  }, [upNext]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <main className={s.support} data-testid="support-screen" data-stage={stage} data-main={mainName}>

@@ -11,6 +11,7 @@ import { GroupRank } from '../../app/screens/GroupRank';
 import { publish, registerBotBehaviour, useActions, useGroup } from '../../net/group';
 import { formatBoardDate, sgtDate } from '../../net/sgtTime';
 import { useGame, useRelaxed } from '../../state/store';
+import { levelSeconds } from '../../state/timer';
 import type { GameState, Stage } from '../../state/types';
 import { c as aiCopy } from '../ai/content';
 import { stage2For } from '../ai/progress';
@@ -128,13 +129,14 @@ function Reveal({ p, logicPlayed, onGo }: { p: ReturnType<typeof pipeline>; logi
 }
 
 function LiveIntro({ onStart }: { onStart: () => void }) {
+  const relaxed = useRelaxed();
   const headingRef = useScreenHeading<HTMLHeadingElement>(c.liveOps.heading);
   return (
     <section className={ui.screen}>
       <h1 ref={headingRef} tabIndex={-1}>
         {c.liveOps.heading}
       </h1>
-      <p className={ui.body}>{fill(c.liveOps.intro, { s: finale.liveOps.secondsEach })}</p>
+      <p className={ui.body}>{fill(c.liveOps.intro, { s: levelSeconds(finale.liveOps.secondsEach, relaxed) })}</p>
       <div className={ui.actions}>
         <button type="button" className={`${ui.btn} ${ui.primary}`} onClick={onStart}>
           {c.liveOps.start}
@@ -185,7 +187,7 @@ function LiveOps({ run, base, onDone }: { run: GameState; base: number; onDone: 
   const incidentLabel = (n: number) => {
     const it = dealt[n]!;
     const head = `${fill(c.liveOps.incidentOf, { n: n + 1, total: dealt.length })}: ${itemText(it)}`;
-    return it.team === null ? `${head} ${fill(sc.allHandsUi.call, { s: finale.liveOps.allHandsSeconds })}` : head;
+    return it.team === null ? `${head} ${fill(sc.allHandsUi.call, { s: levelSeconds(finale.liveOps.allHandsSeconds, relaxed) })}` : head;
   };
   const meId = g.me?.id ?? 'me';
   // Everyone still in the group must tap (the main phone too); solo, just this phone.
@@ -334,7 +336,7 @@ function LiveOps({ run, base, onDone }: { run: GameState; base: number; onDone: 
           {feedback.why && <span>{feedback.why}</span>}
         </div>
       ) : allHands ? (
-        <p className={s.question}>{fill(sc.allHandsUi.call, { s: finale.liveOps.allHandsSeconds })}</p>
+        <p className={s.question}>{fill(sc.allHandsUi.call, { s: levelSeconds(finale.liveOps.allHandsSeconds, relaxed) })}</p>
       ) : (
         <p className={s.question}>{coop ? sc.main.askIncidents : c.liveOps.route}</p>
       )}

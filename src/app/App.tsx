@@ -8,6 +8,7 @@ import { DebugPanel } from './DebugPanel';
 import { isDevComponentsPath, isHostPath, parseParams } from './params';
 import { PipelineStrip } from './PipelineStrip';
 import { useAnnouncer } from './screenFocus';
+import { ScreenBoundary } from './ScreenBoundary';
 import { GroupDebugBar } from './screens/GroupDebugBar';
 import { GroupEnded } from './screens/GroupEnded';
 import { GroupPill } from './screens/GroupPill';
@@ -158,7 +159,7 @@ function GameApp() {
           <span aria-hidden="true">⚙️</span>
         </button>
       </header>
-      <Suspense fallback={null}>
+      <ScreenBoundary>
       {group.snap.ended && group.snap.ended !== 'left' ? (
         <GroupEnded
           reason={group.snap.ended}
@@ -193,35 +194,27 @@ function GameApp() {
         </main>
       ) : inRun && run.stage === 2 ? (
         <main style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
-          <Suspense fallback={null}>
-            <AiStage key={`${run.startedAt}-2-${run.levelIndex}`} run={run} debug={params.debug} />
-          </Suspense>
+          <AiStage key={`${run.startedAt}-2-${run.levelIndex}`} run={run} debug={params.debug} />
         </main>
       ) : inRun && run.stage === 3 ? (
         <main style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
-          <Suspense fallback={null}>
-            <LogicStage key={`${run.startedAt}-3-${run.levelIndex}`} run={run} debug={params.debug} />
-          </Suspense>
+          <LogicStage key={`${run.startedAt}-3-${run.levelIndex}`} run={run} debug={params.debug} />
         </main>
       ) : inRun && run.stage === 4 ? (
         <main style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
-          <Suspense fallback={null}>
-            <CloudStage key={`${run.startedAt}-4-${run.levelIndex}`} run={run} debug={params.debug} />
-          </Suspense>
+          <CloudStage key={`${run.startedAt}-4-${run.levelIndex}`} run={run} debug={params.debug} />
         </main>
       ) : inRun && run.stage === 5 ? (
         <main style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
-          <Suspense fallback={null}>
-            <FinaleStage
-              key={`${run.startedAt}-5`}
-              run={run}
-              onHome={leaveFinishedGroup}
-              onLeaderboard={() => {
-                setOnHome(true);
-                setBoardOpen(true);
-              }}
-            />
-          </Suspense>
+          <FinaleStage
+            key={`${run.startedAt}-5`}
+            run={run}
+            onHome={leaveFinishedGroup}
+            onLeaderboard={() => {
+              setOnHome(true);
+              setBoardOpen(true);
+            }}
+          />
         </main>
       ) : inRun ? (
         <StagePlaceholder
@@ -246,7 +239,7 @@ function GameApp() {
           }}
         />
       )}
-      </Suspense>
+      </ScreenBoundary>
       <SettingsDialog open={settingsOpen} onClose={() => setSettingsOpen(false)} />
       <p role="status" aria-live="polite" className="visually-hidden">
         {announcement}

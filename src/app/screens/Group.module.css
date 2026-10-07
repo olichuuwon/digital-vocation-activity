@@ -237,10 +237,16 @@
   display: flex;
   flex-direction: column;
   gap: 10px;
-  position: sticky;
-  bottom: calc(8px + env(safe-area-inset-bottom));
-  z-index: 2;
-  box-shadow: 0 -4px 16px rgb(0 0 0 / 0.15);
+}
+
+/* Sticky only while it's small next to the screen; at large text it stays in the flow. */
+@media (min-height: 40em) {
+  .upNext {
+    position: sticky;
+    bottom: calc(8px + env(safe-area-inset-bottom));
+    z-index: 2;
+    box-shadow: 0 -4px 16px rgb(0 0 0 / 0.15);
+  }
 }
 
 /* Reconnecting pill (§3.5.6): small, top centre, never blocks play. */

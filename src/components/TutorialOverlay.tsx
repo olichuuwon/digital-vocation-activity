@@ -47,7 +47,19 @@ export function TutorialOverlay({
       <p className={s.body} id={textId}>
         {text}
       </p>
-      <button type="button" className={`${s.btn} ${s.primary}`} onClick={onDismiss} aria-describedby={textId}>
+      <button
+        type="button"
+        className={`${s.btn} ${s.primary}`}
+        aria-describedby={textId}
+        onClick={() => {
+          onDismiss();
+          // The overlay (and this button) goes away: put focus on the level heading, not <body>.
+          requestAnimationFrame(() => {
+            if (document.activeElement && document.activeElement !== document.body) return;
+            document.querySelector<HTMLElement>('main h1[tabindex="-1"], h1[tabindex="-1"]')?.focus();
+          });
+        }}
+      >
         {t.gotIt}
       </button>
     </section>

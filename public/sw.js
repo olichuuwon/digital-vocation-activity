@@ -9,7 +9,14 @@ self.addEventListener('install', (e) => {
   e.waitUntil(
     fetch(BASE + 'precache.json', { cache: 'no-store' })
       .then((r) => (r.ok ? r.json() : []))
-      .then((files) => caches.open(CACHE).then((c) => Promise.all(files.map((f) => c.add(f).catch(() => {}))))
+      .then((files) =>
+        caches.open(CACHE).then(async (c) => {
+          await Promise.all(files.map((f) => c.add(f).catch(() => {})));
+          // Drop build files from older deploys (hashed names), so the cache doesn't grow forever.
+          const keep = new Set(files.map((f) => new URL(f, self.location).href));
+          for (const req of await c.keys()) if (req.url.includes('/assets/') && !keep.has(req.url)) await c.delete(req);
+        }),
+      )
       .catch(() => {}),
   );
 });

@@ -72,7 +72,8 @@
     "miss": "That box missed: {pct}% overlap. Hug the edges.",
     "hint": "Tighter! Each side of your box should touch the item's edge.",
     "answer": "The dashed outline shows the right box. Match it, then lock it in.",
-    "credit": "These are stand-in drawings. Real AI teams train on huge collections of photos, each labelled with boxes just like yours."
+    "credit": "These are stand-in drawings. Real AI teams train on huge collections of photos, each labelled with boxes just like yours.",
+    "keysVisible": "On a keyboard: arrow keys move the box, Shift + arrows resize it."
   },
   "audit": {
     "instruction": "Check each label your model gave. Looks right? Say so. Wrong? Flag it. Trust the picture, not the %.",
@@ -112,6 +113,7 @@
       "centre": "centre",
       "right": "right"
     },
-    "boxReadout": "Your box: {x}% from the left, {y}% from the top, {w}% wide, {h}% tall."
+    "boxReadout": "Your box: {x}% from the left, {y}% from the top, {w}% wide, {h}% tall.",
+    "truthReadout": "Right box: {x}% from the left, {y}% from the top, {w}% wide, {h}% tall."
   }
 }

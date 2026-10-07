@@ -29,10 +29,11 @@
     "themeSystem": "Match my phone",
     "themeLight": "Light",
     "themeDark": "Dark",
-    "sound": "Sound",
-    "relaxed": "Relaxed timers (×1.5 time)",
+    "sound": "Sound effects (short beeps for right and wrong)",
+    "relaxed": "Relaxed timers: 50% more time on every clock. In a group, this slows the main phone's timers too.",
     "quit": "Quit run",
-    "close": "Close"
+    "close": "Close",
+    "teamRelaxed": "A teammate has relaxed timers on, so your timers are relaxed too."
   },
   "placeholder": {
     "note": "This stage is still being built.",
@@ -149,5 +150,10 @@
       }
     ],
     "go": "Start the mission"
+  },
+  "app": {
+    "loading": "Loading…",
+    "loadError": "That screen didn't load. Check the connection, then tap Reload.",
+    "reload": "Reload"
   }
 }

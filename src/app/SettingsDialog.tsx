@@ -13,6 +13,7 @@ export function SettingsDialog({ open, onClose }: { open: boolean; onClose: () =
   const updateSettings = useGame((s) => s.updateSettings);
   const hasRun = useGame((s) => s.run !== null);
   const quitRun = useGame((s) => s.quitRun);
+  const teamRelaxed = useGame((s) => s.teamRelaxed);
 
   useEffect(() => {
     const d = ref.current;
@@ -69,6 +70,7 @@ export function SettingsDialog({ open, onClose }: { open: boolean; onClose: () =
           />
           {t.relaxed}
         </label>
+        {teamRelaxed && !settings.relaxed && <p className="settings-note">{t.teamRelaxed}</p>}
         <div className={ui.actions}>
           {hasRun && (
             <button

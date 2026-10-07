@@ -40,8 +40,10 @@ export const copySchema = z.object({
   }),
   settings: z.object({
     heading: text, theme: text, themeSystem: text, themeLight: text, themeDark: text,
-    sound: text, relaxed: text, quit: text, close: text,
+    sound: text, relaxed: text, quit: text, close: text, teamRelaxed: text,
   }),
+  /** Lazy screens: loading state and a failed load (weak booth Wi-Fi, or a redeploy). */
+  app: z.object({ loading: text, loadError: text, reload: text }),
   placeholder: z.object({ note: text, finishLevel: text, finale: text, finaleNote: text, backHome: text }),
   /** Stage 0 (§2 prologue): mission briefing + a 10-second "how to play". */
   prologue: z.object({

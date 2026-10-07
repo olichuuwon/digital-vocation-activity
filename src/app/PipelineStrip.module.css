@@ -5,7 +5,7 @@
   flex: 1;
   display: grid;
   /* 4 across at normal text; 2 per row at large text (200%), so words never split. */
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 3rem), 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 3.8rem), 1fr));
   min-width: 0;
   gap: 4px;
 }
