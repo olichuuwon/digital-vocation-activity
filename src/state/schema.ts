@@ -12,7 +12,8 @@ export const gameStateSchema = z.object({
   scores: z.object({
     data: z.object({ accuracy: unit, fixedCount: count, ruleChosen: z.boolean() }),
     ai: z.object({ labelAccuracy: unit, earlyGuessBonus: unit, auditCatch: unit, modelAccuracy: unit }),
-    logic: z.object({ puzzlesSolved: count, hintsUsed: count, efficiency: unit }),
+    // extraBlocks arrived in M4; older saves default to 0.
+    logic: z.object({ puzzlesSolved: count, hintsUsed: count, efficiency: unit, extraBlocks: count.default(0) }),
     cloud: z.object({ manualUptime: unit, autoUptime: unit, costEfficiency: unit }),
     finale: z.object({ familiesReached: count, incidentsRouted: count }),
   }),

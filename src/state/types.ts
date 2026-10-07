@@ -7,7 +7,8 @@ export type StarCount = 0 | 1 | 2 | 3;
 export interface Scores {
   data: { accuracy: number; fixedCount: number; ruleChosen: boolean };
   ai: { labelAccuracy: number; earlyGuessBonus: number; auditCatch: number; modelAccuracy: number };
-  logic: { puzzlesSolved: number; hintsUsed: number; efficiency: number };
+  /** hintsUsed and extraBlocks feed logicScore (§3.2); extraBlocks = blocks over par, summed. */
+  logic: { puzzlesSolved: number; hintsUsed: number; efficiency: number; extraBlocks: number };
   cloud: { manualUptime: number; autoUptime: number; costEfficiency: number };
   finale: { familiesReached: number; incidentsRouted: number };
 }

@@ -1,8 +1,8 @@
 import { AnimatePresence, motion } from 'framer-motion';
-import { useState } from 'react';
+import { useState, type ReactNode } from 'react';
 import { useScreenHeading } from '../app/screenFocus';
 import { copy, fill } from '../content';
-import { REALITY_DEFAULTS, type RealityCheckContent, type RealityVars } from '../content/schemas';
+import { REALITY_DEFAULTS, type RealityCheckContent, type RealityVars, type RealityVisual } from '../content/schemas';
 import { RealityVisualView } from './RealityVisuals';
 import s from './components.module.css';
 
@@ -11,15 +11,18 @@ const t = copy.components;
 /**
  * "Aha" reveal (§1 goal 3, §2): a few cards, tap anywhere on the card or Next to advance,
  * Skip to leave. `vars` fills `{name}` placeholders and feeds the visuals (e.g. handCleaned).
+ * `visuals` swaps in a stage's own animation for a card (e.g. the player's blocks as Python).
  */
 export function RealityCheck({
   check,
   onDone,
   vars: given = {},
+  visuals,
 }: {
   check: RealityCheckContent;
   onDone: () => void;
   vars?: Partial<RealityVars>;
+  visuals?: Partial<Record<RealityVisual, ReactNode>>;
 }) {
   const vars: RealityVars = { ...REALITY_DEFAULTS, ...given };
   const [i, setI] = useState(0);
@@ -48,7 +51,7 @@ export function RealityCheck({
           data-testid="reality-card"
         >
           <div className={s.visual} aria-hidden="true">
-            <RealityVisualView visual={card.visual} vars={vars} />
+            {visuals?.[card.visual] ?? <RealityVisualView visual={card.visual} vars={vars} />}
           </div>
           {card.title && <h2>{fill(card.title, vars)}</h2>}
           <p className={s.body}>{fill(card.body, vars)}</p>

@@ -35,7 +35,7 @@ export function newRun(mode: Mode, now = Date.now()): GameState {
     scores: {
       data: { accuracy: 0, fixedCount: 0, ruleChosen: false },
       ai: { labelAccuracy: 0, earlyGuessBonus: 0, auditCatch: 0, modelAccuracy: 0 },
-      logic: { puzzlesSolved: 0, hintsUsed: 0, efficiency: 0 },
+      logic: { puzzlesSolved: 0, hintsUsed: 0, efficiency: 0, extraBlocks: 0 },
       cloud: { manualUptime: 0, autoUptime: 0, costEfficiency: 0 },
       finale: { familiesReached: 0, incidentsRouted: 0 },
     },

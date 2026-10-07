@@ -1,0 +1,104 @@
+{
+  "levelIntro": {
+    "logic-tutorial": "A program is a list of steps. Tap blocks to build one: drive to the house, then drop supplies. Tap Run to go!",
+    "logic-l1": "Two houses need supplies, and order matters. Plan which one to visit first so your program fits the block limit.",
+    "logic-l2": "Same kind of trip, fewer blocks allowed. The Repeat block does the steps inside it several times. Use it to say it shorter.",
+    "logic-l3": "One of two roads floods, and which one changes every run. Use “If road ahead is flooded” and “Otherwise” to pick the dry road.",
+    "logic-l4": "Bonus! This program has a bug (a mistake in the steps). Run it, watch where the truck goes wrong, then swap the bad block.",
+    "logic-l5": "Bonus! Each house needs water, food or a medical kit. “Ask the AI” uses the model you trained earlier to pick the right one."
+  },
+  "levelHint": {
+    "logic-tutorial": "Count the squares to each corner. Turn where the road turns, then Drop supplies at the house.",
+    "logic-l1": "Trace both orders with your finger. Pick the one with fewer moves and turns, since each costs a block.",
+    "logic-l2": "Spot the part that repeats. Put it inside Repeat and set how many times.",
+    "logic-l3": "Drive to where the roads split. If the road ahead is flooded, take the other one. Otherwise, go straight on.",
+    "logic-l4": "Tap Step to go one block at a time. Watch for the first move that doesn't match the road.",
+    "logic-l5": "Use “Ask the AI, then drop” at every house instead of Drop supplies. It guesses what each house needs."
+  },
+  "blocks": {
+    "forward": "Move forward",
+    "left": "Turn left",
+    "right": "Turn right",
+    "drop": "Drop supplies",
+    "repeat": "Repeat",
+    "ifFlooded": "If road ahead is flooded",
+    "otherwise": "Otherwise",
+    "askAi": "Ask the AI, then drop"
+  },
+  "editor": {
+    "program": "Your program",
+    "palette": "Blocks",
+    "empty": "No blocks yet. Tap a block to add it.",
+    "blocksUsed": "{n} of {max} blocks",
+    "noLimit": "Blocks used: {n}",
+    "overLimit": "Block limit reached. Remove one to add another.",
+    "addHere": "Add blocks here",
+    "insideRepeat": "Adding inside Repeat",
+    "insideThen": "Adding inside If flooded",
+    "insideElse": "Adding inside Otherwise",
+    "remove": "Remove",
+    "moveUp": "Move up",
+    "moveDown": "Move down",
+    "times": "×{n}",
+    "more": "More times",
+    "fewer": "Fewer times",
+    "clear": "Clear all",
+    "selected": "{block} selected",
+    "swapPrompt": "Now pick a block to swap in.",
+    "editsLeft": "Swaps left: {n}",
+    "tutorialHint": "Tap a block to add it, then tap Run."
+  },
+  "run": {
+    "run": "Run",
+    "step": "Step",
+    "reset": "Reset",
+    "running": "Running…",
+    "showAnswer": "Show me",
+    "success": "Delivered! Every house got its supplies.",
+    "crash": "Oops, the truck drove off the road. Check your turns and moves.",
+    "stuck": "The truck drove into flood water. Find a dry road.",
+    "noHouse": "No house here! Drop supplies only when the truck reaches a house.",
+    "wrongSupply": "This house needs something specific. Use “Ask the AI, then drop” here.",
+    "unfinished": "The program ended, but some houses still need supplies.",
+    "aiWrong": "Wrong drops: {n}. Your AI guessed wrong. Better Stage 2 training means fewer mistakes.",
+    "overLimit": "Too many blocks for this puzzle. Look for a shorter way and remove some.",
+    "nextTry": "Every bug you find gets you closer. Tweak and run again!",
+    "lucky": "Lucky! It worked this time, but the other road could flood. Make it work both ways."
+  },
+  "map": {
+    "label": "Map, {size} by {size}",
+    "truck": "Truck at row {row}, column {col}, facing {dir}",
+    "depot": "Depot",
+    "house": "House",
+    "delivered": "House, supplies delivered",
+    "flooded": "Flooded road",
+    "maybeFlooded": "Road that might flood",
+    "road": "Road",
+    "grass": "Grass",
+    "needs": {
+      "W": "needs water",
+      "F": "needs food",
+      "M": "needs a medical kit"
+    },
+    "facing": {
+      "N": "north",
+      "E": "east",
+      "S": "south",
+      "W": "west"
+    }
+  },
+  "hint": "Hint: {text}",
+  "answer": "Here's a working program, loaded and ready. Tap Run to watch it. Using it costs some points.",
+  "timeUp": "Time's up! Let's see how your truck did.",
+  "result": {
+    "heading3": "Master route planner!",
+    "heading2": "Smooth driving!",
+    "heading1": "Supplies on the move. Good start!",
+    "heading0": "Logic is tricky. Have another go!",
+    "solved": "{n} of {total} puzzles solved",
+    "hints": "Hints used: {n}",
+    "blocks": "Extra blocks: {n}",
+    "tests": "{passed} of {total} test maps passed"
+  },
+  "learned": "You solved {count} puzzles by breaking problems into steps, repeating, deciding and debugging (fixing mistakes). That's programming!"
+}
