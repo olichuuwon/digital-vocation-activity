@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from 'react';
+import { lazy, Suspense, useState, type ReactNode } from 'react';
 import { BriefingCard } from '../../components/BriefingCard';
 import { HandOff } from '../../components/HandOff';
 import { HintBox } from '../../components/HintBox';
@@ -16,6 +16,9 @@ import type { StarCount } from '../../state/types';
 import { useScreenHeading } from '../screenFocus';
 import ui from '../ui.module.css';
 
+// Stage 2 art and content load only when the gallery opens.
+const PictureGallery = lazy(() => import('../../stages/ai/PictureGallery'));
+
 type Demo =
   | { kind: 'briefing'; stage: number }
   | { kind: 'reality'; id: RealityCheckContent['id'] }
@@ -24,14 +27,15 @@ type Demo =
   | { kind: 'tutorial'; gesture: Gesture }
   | { kind: 'timer' }
   | { kind: 'rulebook' }
-  | { kind: 'hints' };
+  | { kind: 'hints' }
+  | { kind: 'pictures' };
 
 /** `/dev/components` (M1 acceptance): every shared stage component with live content. */
 export default function DevComponents() {
   const [demo, setDemo] = useState<Demo | null>(null);
   const back = () => setDemo(null);
   if (demo) {
-    const shelled = ['tutorial', 'timer', 'rulebook', 'hints'].includes(demo.kind);
+    const shelled = ['tutorial', 'timer', 'rulebook', 'hints', 'pictures'].includes(demo.kind);
     return shelled ? (
       <DemoView demo={demo} onBack={back} />
     ) : (
@@ -80,6 +84,7 @@ function Gallery({ onPick }: { onPick: (d: Demo) => void }) {
         item('Rulebook + new rule', { kind: 'rulebook' }),
         item('Hint ladder + toast', { kind: 'hints' }),
       ])}
+      {group('Stage content', [item('Stage 2 pictures (all)', { kind: 'pictures' })])}
     </main>
   );
 }
@@ -122,6 +127,14 @@ function DemoView({ demo, onBack }: { demo: Demo; onBack: () => void }) {
       );
     case 'hints':
       return <HintsDemo onBack={onBack} />;
+    case 'pictures':
+      return (
+        <DemoShell title="Stage 2 pictures" onBack={onBack}>
+          <Suspense fallback={null}>
+            <PictureGallery />
+          </Suspense>
+        </DemoShell>
+      );
   }
 }
 

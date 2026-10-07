@@ -118,7 +118,7 @@ export const realityVisual = z.enum([
 ]);
 
 /** Placeholders a Reality Check card may use, with defaults so `{name}` never shows raw. */
-export const REALITY_DEFAULTS = { handCleaned: 20, failing: 0 };
+export const REALITY_DEFAULTS = { handCleaned: 20, failing: 0, labelled: 20 };
 export type RealityVars = typeof REALITY_DEFAULTS;
 
 export const realityCheckSchema = z.object({

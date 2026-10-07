@@ -17,6 +17,8 @@ import { useTheme } from './useTheme';
 // Booth screen code (incl. the QR encoder) only loads on /host.
 const Host = lazy(() => import('./screens/Host'));
 const DevComponents = lazy(() => import('./screens/DevComponents'));
+// Stages after the first load on demand, keeping the first load small (§11 perf budget).
+const AiStage = lazy(() => import('../stages/ai/AiStage'));
 
 export function App() {
   const route = useMemo(() => {
@@ -99,6 +101,12 @@ function GameApp() {
       {inRun && run.stage === 1 ? (
         <main style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
           <DataStage key={`${run.startedAt}-1-${run.levelIndex}`} run={run} debug={params.debug} />
+        </main>
+      ) : inRun && run.stage === 2 ? (
+        <main style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+          <Suspense fallback={null}>
+            <AiStage key={`${run.startedAt}-2-${run.levelIndex}`} run={run} debug={params.debug} />
+          </Suspense>
         </main>
       ) : inRun ? (
         <StagePlaceholder

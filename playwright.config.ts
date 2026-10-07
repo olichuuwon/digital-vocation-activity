@@ -5,7 +5,12 @@ export default defineConfig({
   testDir: './e2e',
   fullyParallel: true,
   reporter: 'list',
-  use: { baseURL: 'http://localhost:4173', trace: 'retain-on-failure' },
+  use: {
+    baseURL: 'http://localhost:4173',
+    trace: 'retain-on-failure',
+    // Sandboxes with a pre-installed Chromium can point at it (PW_CHROMIUM_PATH=/opt/pw-browsers/chromium/...).
+    launchOptions: process.env.PW_CHROMIUM_PATH ? { executablePath: process.env.PW_CHROMIUM_PATH } : {},
+  },
   projects: [
     { name: 'iphone-12', use: { ...devices['iPhone 12'], browserName: 'chromium' } },
     { name: 'pixel-5', use: { ...devices['Pixel 5'] } },

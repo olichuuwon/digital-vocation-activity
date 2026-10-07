@@ -1,0 +1,102 @@
+{
+  "levelIntro": {
+    "ai-tutorial": "Tap the label that matches the picture. No timer, so take a good look first.",
+    "ai-l1": "Build the training set: labelled examples your model (the AI you're teaching) learns from. Pick the right label fast and chain a streak!",
+    "ai-l2": "Tiles hide each picture and lift one by one. Guess early for more points; wrong guesses cost a little. Tap Reveal (limited) for one tile.",
+    "ai-l3": "Bonus round! Drag a box that hugs the item tightly, or use the move and resize buttons. Then lock it in.",
+    "ai-l4": "Your model has labelled each picture and says how sure it is. Flag the wrong ones. Careful: being sure isn't being right."
+  },
+  "tutorialHint": "Tap the label button that matches the picture.",
+  "labels": {
+    "water": "Water",
+    "food": "Food",
+    "medical-kit": "Medical kit",
+    "blanket": "Blanket",
+    "tent": "Tent",
+    "generator": "Generator",
+    "flooded-road": "Flooded road",
+    "clear-road": "Clear road"
+  },
+  "fieldGuide": {
+    "button": "Field guide",
+    "heading": "What to look for",
+    "intro": "Every label has its own look. Match the shapes and colours you see.",
+    "entries": {
+      "water": "Blue bottles or a jerrycan with a screw cap",
+      "food": "Brown cardboard box or sack with a grain or tin icon",
+      "medical-kit": "White or red case with a red cross and a handle",
+      "blanket": "Stack of soft folded rectangles, striped or plain",
+      "tent": "Triangle shape with a door flap and pegs",
+      "generator": "Boxy machine on wheels with a dial and exhaust pipe",
+      "flooded-road": "Road with wavy blue water hiding the lane markings",
+      "clear-road": "Dry grey road with dashed white lane markings"
+    }
+  },
+  "question": "What's in the picture?",
+  "imageAlt": "Picture {n} of {total}. {clue}.",
+  "nextImage": "Next: picture {n} of {total}.",
+  "toast": {
+    "correct": "Nice label!",
+    "wrong": "Not quite. Right label: {label}.",
+    "streak": "{n} in a row!"
+  },
+  "hint": "Stuck? Look for this: {clue}.",
+  "answer": "The answer is {label}. Tap it to carry on.",
+  "timeUp": "Time's up! Let's see how you did.",
+  "covered": {
+    "instruction": "Guess as soon as you know. Earlier guesses score more points.",
+    "tilesLeft": "{n} tiles still covered",
+    "reveal": "Reveal a tile",
+    "revealLeft": "{n} left",
+    "early": "Early guess bonus!",
+    "wrongTile": "Not that one. A tile lifts to help you out.",
+    "allShown": "Every tile's gone. Take your best guess!"
+  },
+  "box": {
+    "instruction": "Drag a box that hugs the item's edges, or use the buttons. Then tap Lock it in.",
+    "findLabel": "Find and box: {label}",
+    "lock": "Lock it in",
+    "move": "Move",
+    "resize": "Resize",
+    "left": "Move left",
+    "right": "Move right",
+    "up": "Move up",
+    "down": "Move down",
+    "wider": "Wider",
+    "narrower": "Narrower",
+    "taller": "Taller",
+    "shorter": "Shorter",
+    "perfect": "Perfect fit! {pct}% overlap.",
+    "good": "Good box! {pct}% overlap.",
+    "miss": "That box missed: {pct}% overlap. Hug the edges.",
+    "hint": "Tighter! Each side of your box should touch the item's edge.",
+    "answer": "The dashed outline shows the right box. Match it, then lock it in.",
+    "overlap": "Overlap {pct}%",
+    "credit": "These are stand-in drawings. Real AI teams train on huge collections of photos, each labelled with boxes just like yours."
+  },
+  "audit": {
+    "instruction": "Check each label your model gave. Looks right? Say so. Wrong? Flag it. Trust the picture, not the %.",
+    "says": "Your model says: {label}",
+    "confidence": "{pct}% sure",
+    "right": "Looks right",
+    "flag": "Flag it",
+    "caught": "Good catch! Your model got that wrong.",
+    "missed": "Missed it. Real label: {label}. Your model said {predicted}.",
+    "falseFlag": "That label was right. Your model got this one.",
+    "trusted": "Correct. That label checks out.",
+    "hint": "High confidence can still be wrong. Check the picture, not the %.",
+    "answer": "Your model said {predicted}. The picture shows {label}."
+  },
+  "result": {
+    "heading3": "Sharp-eyed trainer!",
+    "heading2": "Nicely taught!",
+    "heading1": "Model trained. Good start!",
+    "heading0": "Teaching machines is tricky. Have another go!",
+    "labels": "Labels right {pct}%",
+    "early": "Early-guess bonus {pct}%",
+    "audit": "Mistakes caught {pct}%",
+    "model": "Your model: {pct}% accurate",
+    "box": "Box overlap {pct}%"
+  },
+  "learned": "You labelled {count} pictures. AI learns from labelled examples like yours, but it still makes mistakes, so humans must check it."
+}

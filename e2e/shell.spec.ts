@@ -26,10 +26,10 @@ test('a booth run starts Stage 1, resumes after reload, and later stages reach t
   await page.getByRole('button', { name: 'Resume run' }).click();
   await expect(page.getByRole('listitem').filter({ hasText: 'in progress' })).toContainText('Data');
 
-  // Stages 2–4 are still placeholders: booth S2 4 + S3 4 + S4 3 = 11 taps to the finale.
-  await page.goto('/?debug=1&stage=2');
+  // Stages 3–4 are still placeholders: booth S3 4 + S4 3 = 7 taps to the finale.
+  await page.goto('/?debug=1&stage=3');
   const finish = page.getByRole('button', { name: 'Finish level' });
-  for (let i = 0; i < 11; i++) await finish.click();
+  for (let i = 0; i < 7; i++) await finish.click();
   await expect(page.getByRole('heading', { name: 'Finale' })).toBeVisible();
 });
 

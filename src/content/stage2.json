@@ -1,0 +1,59 @@
+{
+  "tutorial": { "id": "ai-tutorial", "count": 2, "options": 3 },
+  "label": { "id": "ai-l1", "count": 12, "seconds": 30, "options": 4 },
+  "covered": {
+    "id": "ai-l2",
+    "count": 8,
+    "seconds": 60,
+    "options": 4,
+    "grid": 4,
+    "revealEveryMs": 600,
+    "startTiles": 2,
+    "wrongGuessTiles": 1,
+    "wrongGuessPenalty": 0.25,
+    "revealCharges": 2
+  },
+  "box": { "id": "ai-l3", "count": 5, "seconds": 45, "good": 0.5, "perfect": 0.75 },
+  "audit": {
+    "id": "ai-l4",
+    "count": 8,
+    "seconds": 40,
+    "wrongPerSet": 3,
+    "low": 0.6,
+    "high": 0.85,
+    "pool": [
+      { "id": "au01", "imageId": "ai58", "predicted": "clear-road", "confidence": 0.91 },
+      { "id": "au02", "imageId": "ai22", "predicted": "tent", "confidence": 0.88 },
+      { "id": "au03", "imageId": "ai03", "predicted": "food", "confidence": 0.86 },
+      { "id": "au04", "imageId": "ai37", "predicted": "food", "confidence": 0.89 },
+      { "id": "au05", "imageId": "ai18", "predicted": "food", "confidence": 0.87 },
+      { "id": "au06", "imageId": "ai32", "predicted": "blanket", "confidence": 0.72 },
+      { "id": "au07", "imageId": "ai10", "predicted": "medical-kit", "confidence": 0.68 },
+      { "id": "au08", "imageId": "ai53", "predicted": "flooded-road", "confidence": 0.64 },
+      { "id": "au09", "imageId": "ai59", "predicted": "clear-road", "confidence": 0.77 },
+      { "id": "au10", "imageId": "ai62", "predicted": "clear-road", "confidence": 0.52 },
+      { "id": "au11", "imageId": "ai25", "predicted": "blanket", "confidence": 0.55 },
+      { "id": "au12", "imageId": "ai41", "predicted": "generator", "confidence": 0.58 },
+      { "id": "au13", "imageId": "ai34", "predicted": "tent", "confidence": 0.47 },
+      { "id": "au14", "imageId": "ai47", "predicted": "flooded-road", "confidence": 0.56 },
+      { "id": "au15", "imageId": "ai05", "predicted": "water", "confidence": 0.78 },
+      { "id": "au16", "imageId": "ai13", "predicted": "food", "confidence": 0.71 },
+      { "id": "au17", "imageId": "ai20", "predicted": "medical-kit", "confidence": 0.82 },
+      { "id": "au18", "imageId": "ai55", "predicted": "clear-road", "confidence": 0.66 },
+      { "id": "au19", "imageId": "ai31", "predicted": "tent", "confidence": 0.95 },
+      { "id": "au20", "imageId": "ai07", "predicted": "water", "confidence": 0.97 },
+      { "id": "au21", "imageId": "ai44", "predicted": "flooded-road", "confidence": 0.9 },
+      { "id": "au22", "imageId": "ai12", "predicted": "food", "confidence": 0.93 },
+      { "id": "au23", "imageId": "ai39", "predicted": "generator", "confidence": 0.84 }
+    ]
+  },
+  "confusable": [
+    ["blanket", "tent"],
+    ["water", "food"],
+    ["flooded-road", "clear-road"],
+    ["medical-kit", "food"],
+    ["generator", "food"],
+    ["generator", "medical-kit"]
+  ],
+  "stars": { "one": 0.3, "two": 0.62, "three": 0.87 }
+}

@@ -316,11 +316,13 @@ dialog.sheet::backdrop {
   width: min(100% - 2 * var(--gutter), 448px);
   z-index: 40;
   pointer-events: none;
-  display: flex;
-  justify-content: center;
+  /* One grid cell: a fading toast and its replacement overlap instead of squeezing side by side. */
+  display: grid;
+  justify-items: center;
 }
 
 .toast {
+  grid-area: 1 / 1;
   max-width: 100%;
   overflow-wrap: anywhere;
   background: var(--primary);

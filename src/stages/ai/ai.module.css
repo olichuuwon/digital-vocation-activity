@@ -1,0 +1,238 @@
+/* Stage 2 "Teach the Machine to See". Violet = AI Engineering (§9). */
+
+.level {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding-top: 8px;
+}
+
+.topRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.progress {
+  font-weight: 700;
+  color: var(--text-muted);
+}
+
+.streak {
+  font-weight: 800;
+  color: var(--ai-ink);
+}
+
+/* Square picture, small enough that the 4 label buttons stay on screen at 360×640. */
+.frame {
+  position: relative;
+  width: min(100%, 44vh, 20rem);
+  aspect-ratio: 1;
+  align-self: center;
+  border-radius: 14px;
+  overflow: hidden;
+  border: 3px solid var(--ai);
+  background: var(--surface-2);
+  touch-action: none;
+}
+
+.question {
+  margin: 0;
+  font-weight: 800;
+  text-align: center;
+}
+
+.options {
+  margin-top: auto;
+  position: sticky;
+  bottom: 0;
+  z-index: 5;
+  background: var(--bg);
+  padding: 8px 0 calc(8px + env(safe-area-inset-bottom));
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+}
+
+.option {
+  min-height: 52px;
+  border-radius: var(--radius);
+  border: 2px solid var(--ai);
+  background: var(--surface);
+  font-weight: 800;
+  font-size: 1.0625rem;
+  cursor: pointer;
+  padding: 6px 10px;
+  overflow-wrap: anywhere;
+}
+
+/* The answer (after 3 misses) is marked with a ✓ and a thicker border, not colour alone. */
+.option[data-suggested='true'] {
+  border-width: 4px;
+  border-style: double;
+}
+
+.option:disabled {
+  opacity: 0.45;
+  text-decoration: line-through;
+  cursor: not-allowed;
+}
+
+.guideBtn {
+  min-height: var(--tap);
+  border-radius: 999px;
+  border: 2px solid var(--ai);
+  background: var(--surface);
+  padding: 8px 16px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.guide {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.guideItem {
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 10px 12px;
+  background: var(--surface);
+}
+
+.guideItem dt {
+  font-weight: 800;
+}
+
+.guideItem dd {
+  margin: 2px 0 0;
+  color: var(--text-muted);
+}
+
+/* Covered Up tiles */
+.tile {
+  transition: opacity 0.25s ease-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tile {
+    transition: none;
+  }
+}
+
+.revealRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.revealBtn {
+  min-height: var(--tap);
+  border-radius: 999px;
+  border: 2px solid var(--ai);
+  background: var(--surface);
+  padding: 8px 14px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.revealBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Draw the Box */
+.handle {
+  cursor: grab;
+}
+
+.nudge {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
+}
+
+.nudge button {
+  min-height: var(--tap);
+  min-width: 0;
+  border-radius: 10px;
+  border: 2px solid var(--border);
+  background: var(--surface);
+  font-weight: 700;
+  font-size: 0.9375rem;
+  cursor: pointer;
+  padding: 4px;
+}
+
+.nudgeLabel {
+  grid-column: 1 / -1;
+  margin: 2px 0 0;
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: var(--text-muted);
+}
+
+.credit {
+  font-size: 0.8125rem;
+  color: var(--text-muted);
+  margin: 0;
+}
+
+/* Audit */
+.prediction {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  font-weight: 800;
+  font-size: 1.125rem;
+}
+
+.conf {
+  border: 2px solid var(--ai);
+  border-radius: 999px;
+  padding: 0 10px;
+  font-variant-numeric: tabular-nums;
+}
+
+.verdicts {
+  margin-top: auto;
+  position: sticky;
+  bottom: 0;
+  z-index: 5;
+  background: var(--bg);
+  padding: 8px 0 calc(8px + env(safe-area-inset-bottom));
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.verdict {
+  min-height: 56px;
+  border-radius: var(--radius);
+  border: 2px solid var(--border);
+  background: var(--surface);
+  font-weight: 800;
+  font-size: 1.0625rem;
+  cursor: pointer;
+}
+
+.verdict[data-kind='right'] {
+  border-color: var(--ai);
+}
+
+.verdict[data-kind='flag'] {
+  border-color: var(--danger);
+}
+
+.verdict[data-suggested='true'] {
+  border-width: 4px;
+  border-style: double;
+}

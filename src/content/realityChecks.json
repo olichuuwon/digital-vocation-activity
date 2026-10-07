@@ -19,7 +19,7 @@
       "cards": [
         {
           "visual": "training-curve",
-          "title": "Your labels did this",
+          "title": "Your {labelled} labels did this",
           "body": "Every picture you labelled helped train your model, the program that learnt from your examples. More good labels, more accurate guesses."
         },
         {
