@@ -3,12 +3,15 @@ import {
   BAD_DEPLOY_S,
   CLOUD_STARS,
   COLD_START_S,
+  CRASH_TICKS,
   CREDITS_PER_POD_MIN,
+  FAULT_S,
   MANUAL_RECOVER_S,
   PHASE_TICKS,
   POD_CAPACITY,
   SELF_HEAL_S,
   TICK_MS,
+  WARMUP_S,
   cloudScores,
   cloudStageScore,
   cloudStars,
@@ -30,6 +33,7 @@ import {
 } from './cluster';
 
 const SEEDS = [1, 2, 3, 7, 42, 99, 123, 2024];
+const QUALITIES = [0, 0.25, 0.5, 0.75, 1];
 
 const SENSIBLE: ClusterConfig = {
   loadBalancer: true,
@@ -86,15 +90,15 @@ describe('Phase A (manual)', () => {
     }
   });
 
-  it('a reasonable human (1 s reactions, 0.6 s between taps) lands at 60–80% across app quality', () => {
+  it('a reasonable human (1 s reactions, 0.6 s between taps) lands at ~62–78% across app quality', () => {
     const results: number[] = [];
-    for (const q of [0, 0.5, 1]) {
+    for (const q of QUALITIES) {
       for (const seed of SEEDS) {
         const tr = createTraffic(seed, { intensity: q });
         const human = run(tr, null, humanPolicy());
         const idle = run(tr, null);
-        expect(human.uptime).toBeGreaterThanOrEqual(0.6);
-        expect(human.uptime).toBeLessThanOrEqual(0.8);
+        expect(human.uptime).toBeGreaterThanOrEqual(0.62);
+        expect(human.uptime).toBeLessThanOrEqual(0.78);
         expect(human.uptime - idle.uptime).toBeGreaterThan(0.3);
         results.push(human.uptime);
       }
@@ -108,6 +112,27 @@ describe('Phase A (manual)', () => {
     const s = stepManual(initManual(tr), 2000);
     const hot = s.pods.find((p) => p.id === tr.hot);
     for (const p of s.pods) if (p !== hot) expect(hot?.load).toBeGreaterThan(p.load * 1.9);
+  });
+
+  it('hardware fault: at FAULT_S the middle server dies whatever its load and stays down until Restart', () => {
+    const tr = createTraffic(6);
+    let s: SimState = initManual(tr);
+    while (s.tick < tr.faultTick) s = stepManual(s, TICK_MS);
+    expect(s.faultPod).toBe(-1);
+    // pods[] is in routing-rank order: the 2nd ready one (the middle-traffic server), else the last ready one.
+    const ready = s.pods.filter((p) => p.status === 'ready').map((p) => p.id);
+    s = stepManual(s, TICK_MS);
+    expect(tr.faultTick).toBe(FAULT_S * 10);
+    expect(s.faultPod).toBe(ready[1] ?? ready[ready.length - 1]);
+    expect(s.totals.faults).toBe(1);
+    expect(s.pods.find((p) => p.id === s.faultPod)?.status).toBe('crashed');
+    s = stepManual(s, 10_000);
+    expect(s.pods.find((p) => p.id === s.faultPod)?.status).toBe('crashed');
+    s = stepManual(s, TICK_MS, { type: 'restart', pod: s.faultPod });
+    s = stepManual(s, 1000);
+    expect(s.pods.find((p) => p.id === s.faultPod)?.status).toBe('ready');
+    // Same fault tick in Phase C (shared Traffic).
+    expect(simulatePhase(tr, SENSIBLE).totals.faults).toBe(1);
   });
 
   it('crash after > 1.5 s overloaded; Restart reboots in 1 s; Boost and Roll back work', () => {
@@ -161,14 +186,16 @@ describe('Phase A (manual)', () => {
 
 describe('Phase C (auto)', () => {
   it('a sensible config reaches ≥ 99% uptime AND stays under budget (3★) for any app quality', () => {
-    for (const q of [0, 0.5, 1]) {
+    for (const q of QUALITIES) {
       for (const seed of SEEDS) {
         const tr = createTraffic(seed, { intensity: q });
         for (const c of [SENSIBLE, SENSIBLE_ALT]) {
           const s = run(tr, c);
           expect(s.uptime).toBeGreaterThanOrEqual(0.99);
           expect(s.underBudget).toBe(true);
-          expect(s.crashes).toBe(0);
+          // The hardware fault is the only crash; self-healing absorbs it.
+          expect(s.faults).toBe(1);
+          expect(s.crashes).toBe(1);
           expect(cloudStars(cloudStageScore(cloudScores({ manualUptime: 0.7, autoUptime: s.uptime, cost: s.cost, budget: s.budget })))).toBe(3);
         }
       }
@@ -202,9 +229,10 @@ describe('Phase C (auto)', () => {
       const s = run(tr, { ...SENSIBLE, scaleUpCpu: 0.9 });
       expect(s.crashes).toBeGreaterThan(0);
       expect(s.uptime).toBeLessThan(0.97);
+      expect(s.uptime).toBeLessThan(run(tr, SENSIBLE).uptime - 0.02);
       ups.push(s.uptime);
     }
-    expect(mean(ups)).toBeLessThan(0.9);
+    expect(mean(ups)).toBeLessThan(0.92);
   });
 
   it('max pods too low crashes at peak', () => {
@@ -221,8 +249,9 @@ describe('Phase C (auto)', () => {
     for (const seed of SEEDS) {
       const tr = createTraffic(seed);
       const s = run(tr, { ...SENSIBLE, loadBalancer: false });
-      expect(s.crashes).toBeGreaterThan(0);
-      expect(s.uptime).toBeLessThan(0.75);
+      expect(s.crashes).toBeGreaterThan(s.faults);
+      expect(s.uptime).toBeLessThan(0.8);
+      expect(s.uptime).toBeLessThan(run(tr, SENSIBLE).uptime - 0.15);
     }
   });
 
@@ -235,6 +264,90 @@ describe('Phase C (auto)', () => {
         expect(off.uptime).toBeLessThan(on.uptime - 0.03);
       }
     }
+  });
+
+  it('hardware fault: self-healing ON keeps a sensible config ≥ 99%; OFF drops it below 99% (zombie pod)', () => {
+    for (const q of QUALITIES) {
+      for (const seed of SEEDS) {
+        const tr = createTraffic(seed, { intensity: q });
+        for (const c of [SENSIBLE, SENSIBLE_ALT]) {
+          const on = run(tr, c);
+          const off = run(tr, { ...c, selfHealing: false });
+          expect(on.uptime).toBeGreaterThanOrEqual(0.99);
+          expect(off.uptime).toBeLessThan(0.99);
+          expect(off.uptime).toBeLessThan(on.uptime - 0.02);
+          expect(off.faults).toBe(1);
+        }
+      }
+    }
+  });
+
+  it('self-healing OFF: the load balancer keeps feeding a crashed pod (no liveness probe); ON routes around it', () => {
+    const tr = createTraffic(2);
+    const at = (c: ClusterConfig) => {
+      let s = initCluster(c, tr);
+      while (s.tick <= tr.faultTick) s = stepCluster(s, TICK_MS, c);
+      return s;
+    };
+    const on = at(SENSIBLE);
+    expect(on.last.ok).toBeCloseTo(on.last.demand, 6);
+    const off = at({ ...SENSIBLE, selfHealing: false });
+    const n = off.pods.length;
+    expect(off.last.dropped).toBeCloseTo(off.last.demand / n, 6);
+  });
+
+  it('uptime never gets worse as the threshold goes down or max pods goes up (switches on)', () => {
+    const TOL = 0.005;
+    for (const q of [0, 0.5, 1]) {
+      for (const seed of SEEDS) {
+        const tr = createTraffic(seed, { intensity: q });
+        for (const minPods of [1, 2]) {
+          for (const maxPods of [10, 12]) {
+            let prev = 1;
+            for (let th = 40; th <= 90; th += 5) {
+              const u = run(tr, { ...SENSIBLE, minPods, maxPods, scaleUpCpu: th / 100 }).uptime;
+              expect(u, `q${q} seed${seed} min${minPods} max${maxPods} ${th}%`).toBeLessThanOrEqual(prev + TOL);
+              prev = u;
+            }
+          }
+          let prev = 0;
+          for (let maxPods = 3; maxPods <= 12; maxPods++) {
+            const u = run(tr, { ...SENSIBLE, minPods, maxPods, scaleUpCpu: 0.65 }).uptime;
+            expect(u, `q${q} seed${seed} min${minPods} max${maxPods} 65%`).toBeGreaterThanOrEqual(prev - TOL);
+            prev = u;
+          }
+        }
+      }
+    }
+  });
+
+  it('3★ band at min 2 / max 10: 60–70% always; 40–45% and "add pods early" over budget', () => {
+    for (const q of QUALITIES) {
+      for (const seed of SEEDS) {
+        const tr = createTraffic(seed, { intensity: q });
+        for (const th of [0.6, 0.65, 0.7]) {
+          const s = run(tr, { ...SENSIBLE, scaleUpCpu: th });
+          expect(s.uptime >= 0.99 && s.underBudget, `q${q} seed${seed} ${th}`).toBe(true);
+        }
+        for (const th of [0.4, 0.45]) expect(run(tr, { ...SENSIBLE, scaleUpCpu: th }).underBudget).toBe(false);
+        // "Add pods early" (min 1, max 12, 40%) is reliable but blows the budget.
+        expect(run(tr, { ...SENSIBLE, minPods: 1, maxPods: 12, scaleUpCpu: 0.4 }).underBudget).toBe(false);
+      }
+    }
+  });
+
+  it('warm-up: a pod that just came back survives overload for WARMUP_S + 1.5 s', () => {
+    const tr = createTraffic(1);
+    const cfg: ClusterConfig = { ...SENSIBLE, minPods: 1, maxPods: 1 };
+    let s = initCluster(cfg, tr);
+    while (!s.done && s.totals.crashes === 0) s = stepCluster(s, TICK_MS, cfg);
+    s = stepCluster(s, SELF_HEAL_S * 1000, cfg);
+    expect(s.pods[0]?.status).toBe('ready');
+    expect(s.pods[0]?.cpu).toBeGreaterThan(1);
+    s = stepCluster(s, WARMUP_S * 1000 + CRASH_TICKS * TICK_MS - TICK_MS, cfg);
+    expect(s.pods[0]?.status).toBe('ready');
+    s = stepCluster(s, 2 * TICK_MS, cfg);
+    expect(s.pods[0]?.status).toBe('crashed');
   });
 
   it('crash recovery timing: 3 s with self-healing, 15 s without, Restart tap overrides', () => {

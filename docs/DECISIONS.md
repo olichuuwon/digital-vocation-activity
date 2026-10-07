@@ -82,16 +82,23 @@
 | 2026-10-07 | Stage 4 app quality (§3.2) | Storm size = 0.85–1.15× from the mean of data accuracy, label accuracy and Stage 3 puzzles solved; budget scales with it so 3★ stays reachable. | No |
 | 2026-10-07 | Stage 4 flow | Manual (A) → Kubernetes cards → Configure (B, 60 s, live cost meter from a dry run) → Replay (C, same storm, Restart/Roll back still available) → one teachable diagnosis line + by-hand vs Kubernetes → up to 2 "Tweak settings" round trips (hint after 1, suggested settings after 2) → "This is a real job" → stars. Stars: 3★ = ≥ 99% uptime and under budget; score falls to 0 at 80% uptime; over budget ×0.8 × budget/cost. | Yes |
 | 2026-10-07 | `?simSpeed=N` | Debug-only (needs `?debug=1`): runs Stage 4 storms N× faster for tests and demos. | No |
+| 2026-10-07 | Owner: stage select | Owner asked to choose a starting stage in solo runs while in development. Feature flag `src/content/flags.json` `stageSelect` (on now). After the run length: From the beginning, any stage, or the finale. Skipped stages count as not played. Turn off before the event. | Yes |
+| 2026-10-07 | Stage 3 layout (owner playtest, iPhone 17) | The program box no longer scrolls inside the page (swipes got "stuck"); palette, selected-block tools and Run/Step/Reset share one sticky bottom dock; the palette hides while the truck runs; Run/Step bring the map into view; the timer doesn't say Paused during runs. Body uses `overflow-x: clip` (not hidden) to avoid iOS Safari scroll traps. | No |
+| 2026-10-07 | Stage 4 sim rework (QA) | HPA scales on total demand (crash timing can't change pod counts); new pods have a 2 s warm-up before they can crash; a scripted hardware fault at 50 s (same in A and C) makes self-healing matter; self-healing off = no liveness probe (the dead pod keeps getting its share for 15 s); gentler surge; Phase A Boost scales with the storm; budget 62 × scale. Measured: 60–70% thresholds earn 3★ in 80/80 runs, uptime never gets worse as the threshold drops or max pods rises (monotonicity test), self-healing off never gets 3★, scripted human 66–75% in Phase A. | Yes |
+| 2026-10-07 | Stage 4 QA fixes (UI) | Kubernetes cards once per run; Phase B edits survive reload; a finished replay is saved and shown on reload; crash toasts throttled (summary for cascades); hardware-fault message; Pause and Roll back in a bottom bar (bad-update notice grows it, cards don't jump); fast-forward ×3 in Phase C; toasts cleared between screens; diagnosis only says "rock solid but pricey" at ≥ 99%; hint now says "around 60–70%". | Yes |
+| 2026-10-07 | Stage 4 timing | QA: first-timer ≈ 261 s (booth budget 180), expert ≈ 171 s; the spec's two 75 s storms alone are 150 s. Fast-forward in Phase C helps; shorter storms are an M8 option (owner item 29). | Yes |
+| 2026-10-07 | Finale (M6, in progress) | Pipeline reveal (18 s count-up), Live Ops: 8 of 16 incidents (≥ 1 per team), 8 s each, +15 right / −12 wrong or time-out, 1.8 s feedback gap; families clamped 0–1200; ranks Relief rookie 0 / Rapid responder 500 / Supply coordinator 700 / Ops commander 900 / Mission lead 1100. C4X match ranks the four by normalised stage performance. Debrief screenshot card fits 360×740 (e2e). Finished runs aren't resumed; chapter select unlocks after the first finish (replay from a stage, keeping scores). | Yes |
 
 ## Copy needing owner approval
 <!-- NEEDS OWNER APPROVAL --> Reality Check cards in `src/content/realityChecks.json` with `needsApproval: true` (career-facing, D14). Preview them at `/dev/components`.
 1. **Data, "Clean once, apply everywhere":** "You cleaned {handCleaned} records by hand. Data scientists write each rule once as code. A pipeline, an automatic chain of steps, then applies it to millions of records in seconds."
 2. **AI, "Confidence, not certainty":** title "Your {labelled} labels did this"; "Every picture you labelled helped train your model…" and "Your model says this road is clear, 91% sure. It's flooded. Your model never saw night photos. Real AI teams hunt for gaps like this and keep humans checking the results."
 3. **Logic, "That was programming":** "Your blocks just turned into Python…" and "Software engineers also write automatic tests: small checks that run your program on thousands of maps before real people use it. Each tick is a passed test."
+5. **Debrief (finale) roles and "Why digital matters to DIS" cards** in `src/content/finaleCopy.json` (`debrief.roles`, `debrief.why`, also `matchHeading`/`matchIntro` and rank titles). Preview: finish a run or use stage select → Finale.
 4. **Cloud, "This is a real job":** "Site reliability engineers (SREs) keep apps like this running for millions of people. They set up alerts so a human only gets woken up when automation can't fix it."
 
 ## Milestone status
-- [x] M0 · [x] M0.5 · [x] M1 · [x] M2 · [x] M3 · [x] M4 · [ ] M5 · [ ] M6 · [ ] M6.5 · [ ] M7 · [ ] M8
+- [x] M0 · [x] M0.5 · [x] M1 · [x] M2 · [x] M3 · [x] M4 · [x] M5 · [ ] M6 · [ ] M6.5 · [ ] M7 · [ ] M8
 
 ### M0 notes (2026-10-06)
 - Lint, typecheck, unit tests (Vitest) and e2e (Playwright, iPhone 12 + Pixel 5) green.
@@ -133,3 +140,9 @@
 - Timing (QA): booth ≈ 241 s, full ≈ 348 s, expert 68 s. Initial JS ≈ 170 KB gz; Stage 3 lazy (≈14 KB gz).
 - a11y fixes: nesting spoken, Step announces block + truck, failure says where it stopped, focus kept after Remove/Show me, every edit announced, aria-disabled throughout, 48px slots with stable names, road contrast ≥ 3:1, map rows described, Python readable, timer paused while driving, relaxed slows the truck.
 - Carried to M6.5: Stage 3 support cards for booth groups (see "Group support cards for Stage 3"). Carried to M7: pipeline header breaks words at 200% text; moving blocks into/out of Repeat/If needs remove + re-add.
+
+### M5 notes (2026-10-07)
+- Stage 4 "Keep It Alive" playable end to end: manual storm, Meet Kubernetes, configure with live cost, replay with pod graph, diagnosis + tweak loop, "This is a real job", stars.
+- Acceptance: sim unit tests (§7.5 rules, determinism, monotonicity, budget band, self-healing matters) ✅; manual < auto uptime for a sensible config (≈ 70% vs ≈ 99.7%) ✅.
+- a11y: Pause + Roll back in a bottom bar, storm end announced + focused, overload/30 s warnings, no Wrong/Correct prefixes on events, quiet Configure, 200% reflow, contrast fixes.
+- Carried: booth timing over budget (owner item 29); group support cards (M6.5).

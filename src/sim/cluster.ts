@@ -6,7 +6,8 @@
 //     player can Boost a server, Restart a crashed one and Roll back the bad deploy.
 //   Phase C (auto, §7.3/7.4): the player's ClusterConfig drives routing, the HPA, self-healing and
 //     rolling updates. Restart and Roll back stay available (Boost does not: pods are not servers).
-//   Both replay the SAME Traffic object (same seed → identical demand, hot server, deploy time).
+//   Both replay the SAME Traffic object (same seed → identical demand, hot server, deploy time,
+//   hardware-fault time).
 //
 // TICK (TICK_MS = 100 ms, fixed). step*(state, dtMs, …) accumulates dtMs and runs whole ticks, so
 //   it can be driven straight from requestAnimationFrame. Per tick, in order:
@@ -14,14 +15,21 @@
 //   2. the bad deploy lands at traffic.badDeployTick;
 //   3. HPA (auto only) evaluates every HPA_EVERY_S = 2 s (see "HPA" below);
 //   4. timers: starting pods become ready after their boot, crashed pods recover, boosts expire;
-//   5. demand for this tick is routed to pods (see "ROUTING");
-//   6. each ready pod serves min(load, capacity); CPU = load / capacity (may exceed 1). A pod whose
+//   5. the hardware fault strikes at traffic.faultTick (see "HARDWARE FAULT");
+//   6. demand for this tick is routed to pods (see "ROUTING");
+//   7. each ready pod serves min(load, capacity); CPU = load / capacity (may exceed 1). A pod whose
 //      CPU > 100% on more than CRASH_TICKS = 15 consecutive ticks (> 1.5 s) crashes at the end of
-//      the tick. A crashed pod serves nothing;
-//   7. errors from the bad deploy are taken out of the served requests; cost accrues.
+//      the tick, EXCEPT while warming up: for WARMUP_S = 2 s after a pod becomes ready (cold start,
+//      self-heal or Restart) overload does not count (a startup probe / LB slow start). Without
+//      it, healed pods that come back together re-crash together 1.5 s later, a death spiral.
+//      A crashed pod serves nothing;
+//   8. errors from the bad deploy are taken out of the served requests; cost accrues.
 //
 // ROUTING
-//   Load balancer ON: demand is split evenly over READY pods (health-checked). No ready pod → all dropped.
+//   Load balancer ON: demand is split evenly over READY pods (health-checked). No ready pod → all
+//     dropped. With self-healing OFF there is no liveness probe, so nobody marks a crashed pod as
+//     dead: the LB keeps giving it its even share ("zombie"), and that share is lost until it is
+//     back. (Self-healing ON: crashed pods are taken out of rotation at once.)
 //   Load balancer OFF (and Phase A): "sticky" uneven routing. Every pod that has ever been ready
 //     is registered; registered pod k (creation order) gets weight 1/(k+1) (Zipf), so pod 0 is
 //     hammered (3 pods → 54.5% / 27.3% / 18.2%). The share of a crashed/rebooting pod is DROPPED:
@@ -34,12 +42,26 @@
 //   Phase A: stays down until the player taps Restart (§7.1 "Crashed servers need a tap").
 //   Restart tap: the pod reboots for RESTART_BOOT_S = 1 s, then is ready (overload count reset).
 //
-// HPA (auto only). Every 2 s: L = load on ready pods (or the whole demand when none is ready);
-//   desired = clamp(ceil(L / (scaleUpCpu × POD_CAPACITY)), minPods, maxPods) — the Kubernetes
-//   formula, so it scales up exactly when average CPU > scaleUpCpu. Current = all provisioned pods
-//   (ready + starting + crashed). desired > current → add the difference as cold-starting pods,
-//   ready after COLD_START_S = 4 s. desired < current on SCALE_DOWN_EVALS = 3 evaluations in a row
-//   (6 s of quiet) → remove one pod (a starting one first, then a crashed one, then the newest).
+// HARDWARE FAULT (load-independent, so self-healing matters even for a well-sized cluster).
+//   At FAULT_S = 50 s (peak of the storm) the FAULT_RANK-th ready pod in creation order (the 2nd;
+//   the last ready one if fewer) crashes whatever its load. It is a normal crash afterwards:
+//   Phase A → down until Restart; self-healing ON → back in 3 s (LB routes around it, no loss);
+//   OFF → a 15 s zombie that still gets its share (≈ 3–5% uptime lost, so < 99%). Counted in
+//   totals.crashes and totals.faults; state.faultPod is its id (-1 before / if none was ready).
+//
+// HPA (auto only). Every 2 s: desired = clamp(ceil(D / (scaleUpCpu × POD_CAPACITY)), minPods,
+//   maxPods), where D = this tick's whole incoming demand (= the average CPU the HPA's pods would
+//   have, so it scales up exactly when average CPU > scaleUpCpu). Current = ALL provisioned pods
+//   (ready + starting + crashed: a crashed pod is still a replica that Kubernetes restarts in
+//   place). desired > current → add the difference as cold-starting pods, ready after
+//   COLD_START_S = 4 s. desired < current on SCALE_DOWN_EVALS = 3 evaluations in a row (6 s of
+//   quiet) → remove one pod (a starting one first, then — self-healing ON only — a crashed one,
+//   then the newest).
+//   Why demand and why crashed pods count: the pod count then depends only on the demand history
+//   and the config, never on crash timing, so a lower threshold / higher max always has at least
+//   as many pods at every moment. Measuring only ready pods and replacing crashed ones made an
+//   EARLY crash leave spare pods behind for the peak, so 90% could beat 85% (QA, Oct 2026).
+//   Tested: uptime never rises with the threshold or falls with max pods (cluster.test.ts).
 //
 // BAD DEPLOY at BAD_DEPLOY_S.
 //   Rolling update OFF (and Phase A): every pod runs it, 50% of served requests error until the
@@ -47,17 +69,25 @@
 //   Rolling update ON: it goes to one pod first (a canary). That pod errors 50% of its requests
 //     for AUTO_ROLLBACK_S = 2 s, the health check fails and it is rolled back automatically.
 //
+// TRAFFIC. Keyframes × seeded noise × traffic.scale. The viral surge climbs ×6.5 → ×10 over
+//   34–44 s (≈ 0.35×/s): with a 2 s HPA period + 4 s cold start, a 60–70% threshold has the
+//   headroom to ride it; 80%+ often does not.
+//
 // UPTIME = requests served successfully / requests demanded, over the whole phase (request
-//   weighted). Lost: dropped by overloaded pods (excess over capacity), by crashed/booting pods,
-//   by having no ready pod, and errored by the bad deploy.
+//   weighted). Lost: dropped by overloaded pods (excess over capacity), by crashed/booting pods
+//   (and zombies), by having no ready pod, and errored by the bad deploy.
 //
 // COST = CREDITS_PER_POD_MIN (10) credits per minute per provisioned pod (ready, starting or
 //   crashed: you pay for what you asked for). The phase cost is the time-average in credits/min,
-//   compared with traffic.budget (credits/min): round(BUDGET_PER_MIN × traffic.scale).
+//   compared with traffic.budget (credits/min): round(BUDGET_PER_MIN (62) × traffic.scale).
+//   At min 2 / max 10 with every switch on, thresholds 60–70% are always 3★; ≤ 50% is over
+//   budget; 55% and 75–80% are a coin flip depending on the seed; 85–90% rarely make 99%.
 //
 // INTENSITY (§3.2 "a better app means more users"): appQuality 0–1 → traffic.scale =
 //   0.85 + 0.30 × quality, multiplying every demand value (peak ≈ 425–575 req/s; 500 at 0.5).
-//   The budget scales with it so 3★ stays reachable for any app quality.
+//   The budget scales with it so 3★ stays reachable for any app quality. The Phase A Boost
+//   scales twice as steeply (traffic.boost = BOOST_CAPACITY × (1 + 2 × (scale − 1)) = 105–195
+//   req/s) so the scripted human lands at ≈ 66–75% whatever the app quality (it was 60–79%).
 //
 // API NOTE: spec §7.5 names `step(state, dt, config, rng)`. The rng is consumed by
 //   createTraffic(seed) instead (precomputed so Phase A and C see identical traffic), so the 4th
@@ -85,24 +115,22 @@ export const SCALE_DOWN_EVALS = 3;
 export const BAD_DEPLOY_S = 32;
 export const BAD_DEPLOY_ERROR = 0.5;
 export const AUTO_ROLLBACK_S = 2;
-/** Phase A Boost: +BOOST_CAPACITY req/s on one server for BOOST_S, then BOOST_COOLDOWN_S before it can boost again. */
+/** Phase A Boost: +traffic.boost req/s (BOOST_CAPACITY at scale 1, see INTENSITY) on one server for BOOST_S, then BOOST_COOLDOWN_S before it can boost again. */
 export const BOOST_CAPACITY = 150;
 export const BOOST_S = 4;
 export const BOOST_COOLDOWN_S = 4;
 export const MANUAL_SERVERS = 3;
 /** A pod that has just become ready (cold start, heal or Restart) warms up for WARMUP_S: overload does not count towards a crash yet. */
 export const WARMUP_S = 2;
-/** At most one overload crash per CRASH_GAP_S across the cluster (a visible domino instead of every pod at once). */
-export const CRASH_GAP_S = 0.5;
 /** Scripted hardware fault: at FAULT_S one ready pod/server dies regardless of load (both phases). */
 export const FAULT_S = 50;
 /** The fault hits the ready pod at this creation rank (1 = the second one; Phase A: the middle-traffic server). */
 export const FAULT_RANK = 1;
 export const CREDITS_PER_POD_MIN = 10;
-export const BUDGET_PER_MIN = 60;
+export const BUDGET_PER_MIN = 62;
 /** Demand at ×1 (start of the storm) for traffic.scale = 1; the storm ramps to ×10. */
 export const BASE_RPS = 50;
-/** Scripted traffic keyframes: [seconds, multiplier of BASE_RPS]. A viral surge 36–42 s takes it to the ×10 peak (42–58 s). */
+/** Scripted traffic keyframes: [seconds, multiplier of BASE_RPS]. A viral surge 34–44 s takes it to the ×10 peak (44–58 s). */
 export const TRAFFIC_KEYFRAMES: readonly (readonly [number, number])[] = [
   [0, 1],
   [8, 1.5],
@@ -132,7 +160,6 @@ const AUTO_ROLLBACK_TICKS = t(AUTO_ROLLBACK_S);
 const BOOST_TICKS = t(BOOST_S);
 const BOOST_COOLDOWN_TICKS = t(BOOST_COOLDOWN_S);
 const WARMUP_TICKS = t(WARMUP_S);
-const CRASH_GAP_TICKS = t(CRASH_GAP_S);
 
 // ---- Types ----
 export interface Traffic {
@@ -148,7 +175,7 @@ export interface Traffic {
   badDeployTick: number;
   /** Tick of the scripted hardware fault (FAULT_S). */
   faultTick: number;
-  /** Phase A Boost capacity in req/s (BOOST_CAPACITY × scale: the boost grows with the storm). */
+  /** Phase A Boost capacity in req/s: BOOST_CAPACITY × (1 + 2 × (scale − 1)), steeper than demand so Phase A stays equally hard at any app quality. */
   boost: number;
   /** Budget in credits per minute. */
   budget: number;
@@ -228,8 +255,6 @@ export interface SimState {
   scaleDownVotes: number;
   /** Pod id killed by the hardware fault (-1 until it happens or if no pod was ready). */
   faultPod: number;
-  /** Tick of the last overload crash (CRASH_GAP_S spacing). */
-  lastCrashTick: number;
   totals: Totals;
   /** Rates (req/s) of the last tick, for the live meters. */
   last: TickRates;
@@ -306,7 +331,7 @@ export function createTraffic(seed: number, opts: { intensity?: number; rng?: Rn
     hot,
     badDeployTick: t(BAD_DEPLOY_S),
     faultTick: t(FAULT_S),
-    boost: BOOST_CAPACITY * scale,
+    boost: BOOST_CAPACITY * (1 + 2 * (scale - 1)),
     budget: Math.round(BUDGET_PER_MIN * scale),
     peak,
   };
@@ -366,7 +391,6 @@ function baseState(mode: SimState['mode'], traffic: Traffic, pods: Pod[], nextId
     canary: -1,
     scaleDownVotes: 0,
     faultPod: -1,
-    lastCrashTick: -1e9,
     totals: {
       demand: 0,
       ok: 0,
@@ -482,28 +506,15 @@ function applyAction(s: SimState, a: Action, r: Rules): void {
 }
 
 function hpa(s: SimState, r: Rules, demand: number): void {
-  let ready = 0;
-  let alive = 0;
-  let load = 0;
-  for (const p of s.pods) {
-    if (p.status === 'ready') {
-      ready++;
-      load += p.load;
-    }
-    if (p.status !== 'crashed') alive++;
-  }
-  if (ready === 0) load = demand;
-  const want = Math.ceil(load / (r.thr * POD_CAPACITY) - 1e-9);
+  // The metric is the whole incoming demand (what the cluster would be asked to carry), not the
+  // load on the pods that happen to be up, so a crash never changes what the HPA asks for.
+  const want = Math.ceil(demand / (r.thr * POD_CAPACITY) - 1e-9);
   const desired = want < r.minPods ? r.minPods : want > r.maxPods ? r.maxPods : want;
-  // Self-healing on: crashed pods are known dead, so they are not current capacity. Off: nobody
-  // probes them, so the HPA still counts them.
-  const current = r.heal ? alive : s.pods.length;
+  // Crashed pods are still replicas (Kubernetes restarts them in place), so they count.
+  const current = s.pods.length;
   if (desired > current) {
     s.scaleDownVotes = 0;
-    // Never more than maxPods provisioned (crashed pods still hold their slot).
-    let add = desired - current;
-    if (add > r.maxPods - s.pods.length) add = r.maxPods - s.pods.length;
-    for (let i = 0; i < add; i++) s.pods.push(newPod(s.nextId++, 'starting', COLD_TICKS));
+    for (let i = current; i < desired; i++) s.pods.push(newPod(s.nextId++, 'starting', COLD_TICKS));
     return;
   }
   if (desired === current) {
@@ -585,7 +596,6 @@ function tickOnce(s: SimState, r: Rules, action: Action | null): void {
   const lbShare = ready + (r.heal ? 0 : zombies);
   let served = 0;
   let errored = 0;
-  let due: Pod | null = null;
   rank = 0;
   for (const p of s.pods) {
     if (p.registered) rank++;
@@ -604,15 +614,11 @@ function tickOnce(s: SimState, r: Rules, action: Action | null): void {
     if (s.deploy === 'bad' || (s.deploy === 'canary' && p.id === s.canary)) errored += ok * BAD_DEPLOY_ERROR;
     if (load > cap) {
       // Warming up (just became ready): overload does not count towards a crash yet.
-      if (p.since >= WARMUP_TICKS && ++p.overTicks > CRASH_TICKS && (!due || p.overTicks > due.overTicks)) due = p;
+      if (p.since >= WARMUP_TICKS && ++p.overTicks > CRASH_TICKS) {
+        setStatus(p, 'crashed', r.recoverTicks);
+        s.totals.crashes++;
+      }
     } else p.overTicks = 0;
-  }
-  // Domino, not a cliff: at most one overload crash per CRASH_GAP_S (the longest-overloaded pod,
-  // oldest first on a tie); the others stay due and keep counting.
-  if (due && s.tick - s.lastCrashTick >= CRASH_GAP_TICKS) {
-    setStatus(due, 'crashed', r.recoverTicks);
-    s.totals.crashes++;
-    s.lastCrashTick = s.tick;
   }
 
   // Bookkeeping.

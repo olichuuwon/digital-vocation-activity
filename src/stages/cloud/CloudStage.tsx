@@ -233,6 +233,16 @@ function useClusterEvents(state: SimState, auto: boolean, selfHealing = false) {
     if (p.tick < PHASE_TICKS - STORM_WARN_TICKS && state.tick >= PHASE_TICKS - STORM_WARN_TICKS)
       announce(fill(c.manual.stormLeft, { s: STORM_WARN_TICKS / 10 }));
     const was = new Map(p.pods.map((x) => [x.id, x]));
+    // The scripted hardware fault (§7: shows why self-healing matters) gets its own message.
+    if (p.faultPod < 0 && state.faultPod >= 0) {
+      const n = state.faultPod + 1;
+      buzz('error');
+      lastCrash.current = state.tick;
+      return void toast(
+        !auto ? fill(c.manual.faultToast, { n }) : fill(selfHealing ? c.replay.faultHealed : c.replay.faultNoHeal, { n }),
+        'info',
+      );
+    }
     const newlyCrashed = state.pods.filter((x) => x.status === 'crashed' && was.get(x.id)?.status !== 'crashed');
     const crashed = newlyCrashed[0];
     // With self-healing on, Kubernetes fixes crashes: only the "replaced it" news is worth a toast.

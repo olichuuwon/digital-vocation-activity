@@ -35,6 +35,7 @@ export const stage4CopySchema = z.object({
     overloaded: words(8),
     stormLeft: words(8),
     stormOver: words(8),
+    faultToast: words(12),
   }),
   configure: z.object({
     heading: words(5),
@@ -79,6 +80,8 @@ export const stage4CopySchema = z.object({
     podsSummary: words(12),
     stormOver: words(12),
     fastForward: words(2),
+    faultHealed: words(10),
+    faultNoHeal: words(12),
     crashes: words(10),
   }),
   /** One line after the replay explaining the result (bad configs fail in teachable ways, §7.4). */

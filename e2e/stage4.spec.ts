@@ -66,3 +66,21 @@ test('Stage 4: the default config fails in a teachable way, and Tweak goes back 
   await expect(page.getByRole('heading', { name: 'Set up Kubernetes' })).toBeVisible();
   await expect(page.getByTestId('hint')).toContainText(/Hint/);
 });
+
+test('Stage 4: reloading after the replay shows the saved result, not another 75 s storm', async ({ page }) => {
+  test.setTimeout(90_000);
+  await page.goto(URL);
+  await manualPhase(page);
+  await kubernetesCards(page);
+  await page.getByRole('button', { name: 'Start', exact: true }).click();
+  await page.getByRole('button', { name: 'Replay the storm' }).click();
+  await page.getByRole('button', { name: 'Start', exact: true }).click();
+  const diagnosis = page.getByTestId('diagnosis');
+  await expect(diagnosis).toBeVisible({ timeout: 20_000 });
+  const kind = await diagnosis.getAttribute('data-diagnosis');
+  await page.goto('/');
+  await page.getByRole('button', { name: 'Resume run' }).click();
+  await page.getByRole('button', { name: 'Start', exact: true }).click();
+  await expect(page.getByTestId('diagnosis')).toHaveAttribute('data-diagnosis', kind ?? '');
+  await expect(page.getByTestId('replay-stats')).toHaveCount(0);
+});

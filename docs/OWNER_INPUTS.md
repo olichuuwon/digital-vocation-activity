@@ -4,7 +4,7 @@ Items waiting for the project owner. The game currently runs on the default show
 
 **How to answer:** tell Claude the item numbers, e.g. `1 ok, 6 ok, 7 change: 3★ at 85%`. Anything you don't mention keeps its default. Claude ticks the box, applies the change and logs it in `docs/DECISIONS.md`.
 
-Last updated: 2026-10-07 (during M4).
+Last updated: 2026-10-07 (after M5, during M6).
 
 ## A. Text that needs your approval (D14)
 Preview these at `/dev/components`, under "Reality Check". The text lives in `src/content/realityChecks.json`.
@@ -56,6 +56,15 @@ Try it: https://digital-vocation-activity.vercel.app/?debug=1&stage=3 (add `&mod
 - [ ] **27. "AI misread" link (§3.2):** the spec puts it in "Level 3". It's built into the full-mode bonus Ask the AI, where a weaker Stage 2 model makes wrong drops. Booth players don't play that level. Should booth players see it too, for example as a note in the Stage 3 Reality Check? *Default: full mode only.*
 - [ ] **28. Stage 3 length:** at a first-timer's pace QA measured about 4 min for booth (budget 3) and 5.8 min for full (budget 5–6). An expert takes about 1 min. *Default: tune in M8 (e.g. shorter intros, or fold the tutorial into Level 1).*
 
-## H. Setup notes (no answer needed)
+## H. Stage 4 and the finale
+Try them with stage select (Play solo → pick a length → pick a stage).
+
+- [ ] **29. Stage 4 length:** a first-timer takes about 4.4 min against a 3 min budget, mostly because the spec's two storms are 75 s each. Phase C now has a ×3 fast-forward button. *Default: keep 75 s storms and tune in M8 (e.g. 50 s storms).*
+- [ ] **30. Stage 4 scoring:** 3★ means at least 99% uptime and under budget. A hardware fault at 50 s makes self-healing matter. "Around 60–70%" is the sweet spot, and the hint says so. *Default: keep.*
+- [ ] **31. Finale text (D14):** the C4X match one-liners, the three "Why digital matters to DIS" cards and the rank titles ("Ops commander" sounds slightly military; swap it if you prefer) in `src/content/finaleCopy.json`. *Default: shown as drafted.*
+- [ ] **32. Live Ops balance:** 8 incidents, 8 s each, +15 families for a right answer and −12 for a wrong one or time-out. Live Ops can move you about one rank. *Default: keep.*
+- [ ] **33. Stage select flag:** on for development (`src/content/flags.json`). *Default: switch off before the event, unless you want it.*
+
+## I. Setup notes (no answer needed)
 - Supabase keys: Claude keeps them in `.env.local` (git-ignored) and never commits them. The live site reads them from Vercel → Project → Settings → Environment Variables (`VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`).
 - **Deploys:** Vercel deploys `main`. Claude works on the branch `claude/beautiful-allen-ne188s`. Merge it into `main` (PR or fast-forward) to put M3 live.
