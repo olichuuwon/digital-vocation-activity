@@ -20,6 +20,8 @@ export const gameStateSchema = z.object({
   stars: z.object({ data: star, ai: star, logic: star, cloud: star }),
   bestFamilies: count,
   startedAt: z.number(),
+  /** Set at the debrief (M6): the run is over; Home offers a new run, not Resume. */
+  finishedAt: z.number().optional(),
 });
 
 export const settingsSchema = z.object({

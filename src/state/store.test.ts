@@ -91,7 +91,7 @@ describe('sanitisePersisted', () => {
   });
 
   it('handles junk input', () => {
-    expect(sanitisePersisted(null)).toEqual({ run: null, bestFamilies: 0, settings: DEFAULT_SETTINGS });
+    expect(sanitisePersisted(null)).toEqual({ run: null, chapterUnlocked: false, bestFamilies: 0, settings: DEFAULT_SETTINGS });
     expect(sanitisePersisted('oops').run).toBeNull();
   });
 
@@ -106,5 +106,32 @@ describe('sanitisePersisted', () => {
     useGame.setState({ relaxedThisSession: true });
     useGame.getState().startRun('booth');
     expect(JSON.parse(localStorage.getItem(STORAGE_KEY)!).state.relaxedThisSession).toBeUndefined();
+  });
+});
+
+describe('finishRun / replayFrom (M6)', () => {
+  beforeEach(() => useGame.setState({ run: null, bestFamilies: 300, chapterUnlocked: false }));
+
+  it('records families, keeps the best, unlocks chapter select, marks the run finished', () => {
+    useGame.getState().startRun('booth');
+    useGame.getState().finishRun(820);
+    const g = useGame.getState();
+    expect(g.bestFamilies).toBe(820);
+    expect(g.chapterUnlocked).toBe(true);
+    expect(g.run!.finishedAt).toBeTypeOf('number');
+    expect(g.run!.scores.finale.familiesReached).toBe(820);
+    g.finishRun(500);
+    expect(useGame.getState().bestFamilies).toBe(820);
+  });
+
+  it('replayFrom reopens the run at a stage, keeping scores', () => {
+    useGame.getState().startRun('booth');
+    useGame.getState().finishRun(700);
+    useGame.getState().replayFrom(2);
+    const r = useGame.getState().run!;
+    expect(r.stage).toBe(2);
+    expect(r.levelIndex).toBe(0);
+    expect(r.finishedAt).toBeUndefined();
+    expect(r.scores.finale.familiesReached).toBe(700);
   });
 });

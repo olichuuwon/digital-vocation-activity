@@ -18,7 +18,8 @@ export function Home({
   onEnter: () => void;
   onLeaderboard: () => void;
 }) {
-  const hasRun = useGame((s) => s.run !== null);
+  // A finished run isn't resumed: its debrief is done (§3.1).
+  const hasRun = useGame((s) => s.run !== null && !s.run.finishedAt);
   const startRunInStore = useGame((s) => s.startRun);
   const startRun = (mode: Mode) => {
     startRunInStore(mode);

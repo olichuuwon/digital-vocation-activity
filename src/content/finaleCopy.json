@@ -1,0 +1,141 @@
+{
+  "reveal": {
+    "heading": "Mission live",
+    "intro": "Everything you built now runs together. Watch your four parts deliver supplies across the city.",
+    "data": "Data quality {pct}%",
+    "model": "Model accuracy {pct}%",
+    "logic": "Logic score {pct}%",
+    "uptime": "Uptime {pct}%",
+    "families": "{n} families reached",
+    "go": "Go live"
+  },
+  "liveOps": {
+    "heading": "Live ops",
+    "intro": "Incidents (live problems) will pop up. Send each one to the right team within {s} seconds. One team can't do it alone.",
+    "start": "Start shift",
+    "incidentOf": "Incident {n} of {total}",
+    "route": "Which team fixes this?",
+    "right": "Sorted! +{n} families reached.",
+    "wrong": "Not quite. {team} fixes this one.",
+    "timeout": "Too slow! {team} would have fixed it.",
+    "families": "{n} families",
+    "done": "Shift over. Every team played its part!"
+  },
+  "incidents": {
+    "inc01": {
+      "text": "New requests are arriving with the sector left blank.",
+      "why": "Data scientists find missing values and fix or flag them before they cause trouble."
+    },
+    "inc02": {
+      "text": "The AI says a flooded road is clear. It's night-time.",
+      "why": "The model never saw night photos. AI engineers retrain it with night examples."
+    },
+    "inc03": {
+      "text": "Every truck is turning left at junction 4.",
+      "why": "The route program has a bug, a mistake in its steps. Developers fix it."
+    },
+    "inc04": {
+      "text": "Traffic spike! A news broadcast sent thousands of people to the app.",
+      "why": "Cloud engineers scale up, adding more copies of the app to share the load."
+    },
+    "inc05": {
+      "text": "Some families are listed twice and getting double supplies.",
+      "why": "Data scientists de-duplicate: they spot repeated records and merge them into one."
+    },
+    "inc06": {
+      "text": "A new update just went out. Now users are seeing errors.",
+      "why": "Cloud engineers roll back, switching to the last version that worked."
+    },
+    "inc07": {
+      "text": "The AI keeps labelling tents as blankets.",
+      "why": "AI engineers add more labelled tent photos so the model learns the difference."
+    },
+    "inc08": {
+      "text": "A truck program is delivering to the same house twice.",
+      "why": "The program's steps repeat by mistake. Developers fix the logic so each house gets one drop."
+    },
+    "inc09": {
+      "text": "The app is slow. One server is overloaded while others sit idle.",
+      "why": "Cloud engineers use a load balancer to spread users evenly across servers."
+    },
+    "inc10": {
+      "text": "Water amounts are in millilitres in some rows, litres in others.",
+      "why": "Data scientists standardise units, converting every row to litres so totals add up."
+    },
+    "inc11": {
+      "text": "The AI is 99% sure on blurry photos. It's wrong.",
+      "why": "Sure isn't the same as right. AI engineers test and retrain the model on blurry photos."
+    },
+    "inc12": {
+      "text": "A new road just flooded. Trucks are stuck, waiting.",
+      "why": "The program has no rule for blocked roads. Developers add one to find another way."
+    },
+    "inc13": {
+      "text": "One sector's name is spelled three different ways.",
+      "why": "Data scientists pick one spelling and update every row, so no sector gets missed."
+    },
+    "inc14": {
+      "text": "The AI keeps calling rescue boats \"cars\".",
+      "why": "The model never saw boats while training. AI engineers add boat photos and retrain it."
+    },
+    "inc15": {
+      "text": "Drones are flying back to base before dropping their supplies.",
+      "why": "The steps are in the wrong order. Developers swap them: drop first, then return."
+    },
+    "inc16": {
+      "text": "The app crashed at 3 a.m. and nobody's awake.",
+      "why": "Cloud engineers turn on self-healing, so crashed copies restart automatically, no human needed."
+    }
+  },
+  "teamButtons": {
+    "data": "Data Science",
+    "ai": "AI Engineering",
+    "logic": "Software Development",
+    "cloud": "Cloud Engineering"
+  },
+  "debrief": {
+    "heading": "Mission complete",
+    "familiesOf": "{n} of 1,200 families reached",
+    "newBest": "New best!",
+    "rankLabel": "Rank: {rank}",
+    "ranks": {
+      "rookie": "Relief rookie",
+      "responder": "Rapid responder",
+      "coordinator": "Supply coordinator",
+      "commander": "Ops commander",
+      "mission-lead": "Mission lead"
+    },
+    "matchHeading": "Your C4X Digital match",
+    "matchIntro": "The four specialisations, ranked by how you played. Every one mattered.",
+    "roles": {
+      "data": "Turns messy data into trustworthy insight.",
+      "ai": "Builds and checks AI that can see, predict and decide.",
+      "logic": "Builds the apps and systems people rely on.",
+      "cloud": "Keeps systems running at scale, automatically."
+    },
+    "learnedHeading": "What you learned",
+    "whyHeading": "Why digital matters to DIS",
+    "why": [
+      {
+        "title": "One system, four skills",
+        "body": "In a disaster, help depends on good information. Data shows who needs what, AI spots changes in photos, software plans the routes and the cloud keeps it all running."
+      },
+      {
+        "title": "Faster, clearer decisions",
+        "body": "Missions like disaster relief move fast. Digital tools help teams see the whole picture quickly, so supplies reach the right people sooner."
+      },
+      {
+        "title": "Built to be trusted",
+        "body": "When systems support defence, they must keep working and give answers people can trust. That's why every team checks, tests and plans for things going wrong, just like you did today."
+      }
+    ],
+    "soloNote": "Solo runs aren't ranked. Team up to get on the board.",
+    "date": "Played {date}",
+    "playAgain": "Play again",
+    "replayStage": "Replay a stage",
+    "chapterHeading": "Pick a stage",
+    "chapterIntro": "Jump back into any stage and try to beat your best score.",
+    "leaderboard": "Leaderboard",
+    "home": "Home"
+  }
+}

@@ -10,7 +10,7 @@ export const STORAGE_KEY = 'ship-it';
 
 export const DEFAULT_SETTINGS: Settings = { theme: 'system', sound: false, relaxed: false };
 
-type Persisted = Pick<Store, 'run' | 'bestFamilies' | 'settings'>;
+type Persisted = Pick<Store, 'run' | 'bestFamilies' | 'settings' | 'chapterUnlocked'>;
 
 /** Validates saved data so a bad save falls back to defaults instead of crashing (no dead ends). */
 export function sanitisePersisted(raw: unknown): Persisted {
@@ -24,7 +24,12 @@ export function sanitisePersisted(raw: unknown): Persisted {
     const max = content ? levelsFor(content, run.mode).length - 1 : 0;
     run = { ...run, levelIndex: Math.min(run.levelIndex, max) };
   }
-  return { run, bestFamilies: best, settings: settings.success ? settings.data : DEFAULT_SETTINGS };
+  return {
+    run,
+    bestFamilies: best,
+    settings: settings.success ? settings.data : DEFAULT_SETTINGS,
+    chapterUnlocked: p.chapterUnlocked === true,
+  };
 }
 
 export function newRun(mode: Mode, now = Date.now()): GameState {
@@ -49,6 +54,8 @@ interface Store {
   run: GameState | null;
   /** Best families across runs; survives starting a new run. */
   bestFamilies: number;
+  /** "Replay a stage" (chapter select) unlocks after the first finished run (§8.3). */
+  chapterUnlocked: boolean;
   settings: Settings;
   /** ?relaxed=1 for this page load only, so a shared booth phone doesn't stay relaxed. */
   relaxedThisSession: boolean;
@@ -59,6 +66,10 @@ interface Store {
   /** Save a stage's normalised scores and stars (persisted with the run). */
   recordStage: <D extends Discipline>(d: D, scores: Scores[D], stars: StarCount) => void;
   jumpToStage: (stage: Stage) => void;
+  /** Debrief reached: record families, best score, unlock chapter select. Idempotent per run. */
+  finishRun: (families: number) => void;
+  /** Chapter select: replay from a stage (keeps earlier scores; the run continues from there). */
+  replayFrom: (stage: Stage) => void;
   quitRun: () => void;
   updateSettings: (patch: Partial<Settings>) => void;
 }
@@ -68,6 +79,7 @@ export const useGame = create<Store>()(
     (set) => ({
       run: null,
       bestFamilies: 0,
+      chapterUnlocked: false,
       settings: DEFAULT_SETTINGS,
       relaxedThisSession: false,
       settingsOpen: false,
@@ -79,6 +91,27 @@ export const useGame = create<Store>()(
           s.run ? { run: { ...s.run, scores: { ...s.run.scores, [d]: scores }, stars: { ...s.run.stars, [d]: stars } } } : s,
         ),
       jumpToStage: (stage) => set((s) => (s.run ? { run: { ...s.run, stage, levelIndex: 0 } } : s)),
+      finishRun: (families) =>
+        set((s) => {
+          if (!s.run) return s;
+          const best = Math.max(s.bestFamilies, families);
+          return {
+            bestFamilies: best,
+            chapterUnlocked: true,
+            run: {
+              ...s.run,
+              finishedAt: s.run.finishedAt ?? Date.now(),
+              scores: { ...s.run.scores, finale: { ...s.run.scores.finale, familiesReached: families } },
+            },
+          };
+        }),
+      replayFrom: (stage) =>
+        set((s) => {
+          if (!s.run) return s;
+          const { finishedAt: _done, ...rest } = s.run;
+          void _done;
+          return { run: { ...rest, stage, levelIndex: 0 } };
+        }),
       quitRun: () => set({ run: null }),
       updateSettings: (patch) => set((s) => ({ settings: { ...s.settings, ...patch } })),
     }),
@@ -86,7 +119,7 @@ export const useGame = create<Store>()(
       name: STORAGE_KEY,
       version: 1,
       storage: createJSONStorage(() => safeStorage),
-      partialize: (s): Persisted => ({ run: s.run, bestFamilies: s.bestFamilies, settings: s.settings }),
+      partialize: (s): Persisted => ({ run: s.run, bestFamilies: s.bestFamilies, settings: s.settings, chapterUnlocked: s.chapterUnlocked }),
       // Older save versions go through the same validation as current ones.
       migrate: (persisted) => sanitisePersisted(persisted),
       merge: (persisted, current) => ({ ...current, ...sanitisePersisted(persisted) }),

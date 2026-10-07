@@ -21,6 +21,8 @@ export interface GameState {
   stars: Record<Discipline, StarCount>;
   bestFamilies: number;
   startedAt: number;
+  /** Set when the run reaches the debrief (finished runs aren't resumed). */
+  finishedAt?: number;
 }
 
 export type Theme = 'system' | 'light' | 'dark';
