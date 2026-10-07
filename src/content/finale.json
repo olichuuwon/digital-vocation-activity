@@ -1,0 +1,35 @@
+{
+  "revealSeconds": 18,
+  "liveOps": {
+    "count": 8,
+    "secondsEach": 8,
+    "reward": 15,
+    "penalty": 12,
+    "gapMs": 1800
+  },
+  "incidents": [
+    { "id": "inc01", "team": "data" },
+    { "id": "inc02", "team": "ai" },
+    { "id": "inc03", "team": "logic" },
+    { "id": "inc04", "team": "cloud" },
+    { "id": "inc05", "team": "data" },
+    { "id": "inc06", "team": "cloud" },
+    { "id": "inc07", "team": "ai" },
+    { "id": "inc08", "team": "logic" },
+    { "id": "inc09", "team": "cloud" },
+    { "id": "inc10", "team": "data" },
+    { "id": "inc11", "team": "ai" },
+    { "id": "inc12", "team": "logic" },
+    { "id": "inc13", "team": "data" },
+    { "id": "inc14", "team": "ai" },
+    { "id": "inc15", "team": "logic" },
+    { "id": "inc16", "team": "cloud" }
+  ],
+  "ranks": [
+    { "id": "rookie", "min": 0 },
+    { "id": "responder", "min": 500 },
+    { "id": "coordinator", "min": 700 },
+    { "id": "commander", "min": 900 },
+    { "id": "mission-lead", "min": 1100 }
+  ]
+}
