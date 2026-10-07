@@ -33,7 +33,7 @@ test('Stage 1 booth: perfect play earns 3 stars and hands off to Stage 2', async
   await page.getByRole('button', { name: 'Continue' }).click();
   await page.getByRole('button', { name: /already/i }).click();
   await page.getByRole('button', { name: 'Continue' }).click();
-  await expect(page.getByText('3 of 3 stars')).toBeAttached();
+  await expect(page.getByText('3 of 3 stars').first()).toBeAttached();
   await page.getByRole('button', { name: 'Continue' }).click();
   await page.getByRole('button', { name: 'Ready' }).click();
   await expect(page.getByRole('heading', { name: 'Teach the machine to see' })).toBeVisible();

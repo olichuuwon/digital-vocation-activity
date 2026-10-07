@@ -46,7 +46,7 @@ test('Stage 4: manual storm, Kubernetes, a sensible config beats manual and earn
   await page.getByRole('button', { name: 'Keep this result' }).click();
   await expect(page.getByRole('heading', { name: 'This is a real job' })).toBeVisible();
   await page.getByRole('button', { name: 'Continue' }).click();
-  await expect(page.getByText('3 of 3 stars')).toBeAttached();
+  await expect(page.getByText('3 of 3 stars').first()).toBeAttached();
   await page.getByRole('button', { name: 'Continue' }).click();
   await expect(page.getByRole('heading', { name: 'Mission live' })).toBeVisible();
 });

@@ -66,7 +66,7 @@ test('Stage 3 booth: build the tutorial by taps, finish the rest, reach Stage 4'
   await expect(page.getByTestId('python')).toContainText('if road_ahead_is_flooded():');
   await page.getByRole('button', { name: 'Next' }).click();
   await page.getByRole('button', { name: 'Continue' }).click();
-  await expect(page.getByText(/of 3 stars/)).toBeAttached();
+  await expect(page.getByText(/of 3 stars/).first()).toBeAttached();
   await page.getByRole('button', { name: 'Continue' }).click();
   await page.getByRole('button', { name: 'Ready' }).click();
   await expect(page.getByRole('heading', { name: 'Keep it alive' })).toBeVisible();
