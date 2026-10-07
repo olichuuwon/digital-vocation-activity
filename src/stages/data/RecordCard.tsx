@@ -1,4 +1,4 @@
-import { motion, useMotionValue, useTransform, type PanInfo } from 'framer-motion';
+import { m, useMotionValue, useTransform, type PanInfo } from 'framer-motion';
 import type { CSSProperties, Ref } from 'react';
 import type { DataRecord } from '../../content/stage1Schema';
 import { c } from './content';
@@ -52,7 +52,7 @@ export function RecordCard({
   };
 
   return (
-    <motion.article
+    <m.article
       className={s.card}
       style={{ x, y, rotate }}
       drag={allowFix ? true : 'x'}
@@ -67,16 +67,16 @@ export function RecordCard({
       data-status={debug ? record.status : undefined}
       data-fix={debug && record.fix ? record.fix.correct : undefined}
     >
-      <motion.span className={`${s.stamp} ${s.stampKeep}`} style={{ opacity: keepOpacity }} aria-hidden="true">
+      <m.span className={`${s.stamp} ${s.stampKeep}`} style={{ opacity: keepOpacity }} aria-hidden="true">
         {c.actions.keep}
-      </motion.span>
-      <motion.span className={`${s.stamp} ${s.stampTrash}`} style={{ opacity: trashOpacity }} aria-hidden="true">
+      </m.span>
+      <m.span className={`${s.stamp} ${s.stampTrash}`} style={{ opacity: trashOpacity }} aria-hidden="true">
         {c.actions.trash}
-      </motion.span>
+      </m.span>
       {allowFix && (
-        <motion.span className={`${s.stamp} ${s.stampFix}`} style={{ opacity: fixOpacity }} aria-hidden="true">
+        <m.span className={`${s.stamp} ${s.stampFix}`} style={{ opacity: fixOpacity }} aria-hidden="true">
           {c.actions.fix}
-        </motion.span>
+        </m.span>
       )}
       <dl className={s.fields}>
         <Field label={c.fieldLabels.household} value={record.household} />
@@ -84,7 +84,7 @@ export function RecordCard({
         <Field label={c.fieldLabels.people} value={record.people} />
         <Field label={c.fieldLabels.water} value={formatWater(record.water)} />
       </dl>
-    </motion.article>
+    </m.article>
   );
 }
 

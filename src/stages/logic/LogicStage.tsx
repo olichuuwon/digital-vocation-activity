@@ -1,4 +1,4 @@
-import { motion } from 'framer-motion';
+import { m } from 'framer-motion';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useAnnouncer, useScreenHeading } from '../../app/screenFocus';
 import { BriefingCard } from '../../components/BriefingCard';
@@ -190,7 +190,7 @@ function BlocksToPython({ program }: { program: Program }) {
       <p className="visually-hidden" id="python-label">
         {c.a11y.python}
       </p>
-      <motion.pre
+      <m.pre
         aria-labelledby="python-label"
         initial={{ opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
@@ -199,7 +199,7 @@ function BlocksToPython({ program }: { program: Program }) {
         data-testid="python"
       >
         {py.slice(0, 14).join('\n')}
-      </motion.pre>
+      </m.pre>
     </div>
   );
 }

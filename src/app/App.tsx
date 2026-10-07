@@ -1,23 +1,18 @@
-import { MotionConfig } from 'framer-motion';
+import { LazyMotion, MotionConfig } from 'framer-motion';
 import { lazy, Suspense, useEffect, useMemo, useState } from 'react';
 import { ToastHost } from '../components/Toast';
 import { groupActions, useGroup, useGroupStore } from '../net/group';
+import { useTeamRelaxedSync } from '../net/group/relaxedSync';
 import { useGame } from '../state/store';
 import { DebugPanel } from './DebugPanel';
 import { isDevComponentsPath, isHostPath, parseParams } from './params';
 import { PipelineStrip } from './PipelineStrip';
 import { useAnnouncer } from './screenFocus';
-import { GroupCreate } from './screens/GroupCreate';
 import { GroupDebugBar } from './screens/GroupDebugBar';
 import { GroupEnded } from './screens/GroupEnded';
-import { GroupJoin } from './screens/GroupJoin';
-import { GroupLobby } from './screens/GroupLobby';
 import { GroupPill } from './screens/GroupPill';
 import { Home } from './screens/Home';
-import { Leaderboard } from './screens/Leaderboard';
 import { StagePlaceholder } from './screens/StagePlaceholder';
-import { SupportScreen } from './screens/SupportScreen';
-import { DataStage } from '../stages/data/DataStage';
 import { SettingsDialog } from './SettingsDialog';
 import ui from './ui.module.css';
 import { useTheme } from './useTheme';
@@ -25,11 +20,22 @@ import { useTheme } from './useTheme';
 // Booth screen code (incl. the QR encoder) only loads on /host.
 const Host = lazy(() => import('./screens/Host'));
 const DevComponents = lazy(() => import('./screens/DevComponents'));
+// Everything past Home loads on demand too (M7 perf: Lighthouse mobile ≥ 90). Stage 1 is
+// prefetched once Home has painted, so Play starts without a wait.
+const loadDataStage = () => import('../stages/data/DataStage');
+const DataStage = lazy(() => loadDataStage().then((m) => ({ default: m.DataStage })));
+const GroupCreate = lazy(() => import('./screens/GroupCreate').then((m) => ({ default: m.GroupCreate })));
+const GroupJoin = lazy(() => import('./screens/GroupJoin').then((m) => ({ default: m.GroupJoin })));
+const GroupLobby = lazy(() => import('./screens/GroupLobby').then((m) => ({ default: m.GroupLobby })));
+const Leaderboard = lazy(() => import('./screens/Leaderboard').then((m) => ({ default: m.Leaderboard })));
+const SupportScreen = lazy(() => import('./screens/SupportScreen').then((m) => ({ default: m.SupportScreen })));
 // Stages after the first load on demand, keeping the first load small (§11 perf budget).
 const AiStage = lazy(() => import('../stages/ai/AiStage'));
 const LogicStage = lazy(() => import('../stages/logic/LogicStage'));
 const CloudStage = lazy(() => import('../stages/cloud/CloudStage'));
 const FinaleStage = lazy(() => import('../stages/finale/FinaleStage'));
+
+const loadMotion = () => import('./motionFeatures').then((r) => r.default);
 
 export function App() {
   const route = useMemo(() => {
@@ -37,17 +43,24 @@ export function App() {
     const base = import.meta.env.BASE_URL;
     return isHostPath(pathname, base) ? 'host' : isDevComponentsPath(pathname, base) ? 'dev' : 'game';
   }, []);
-  // Framer Motion honours prefers-reduced-motion everywhere (§10).
+  // Framer Motion honours prefers-reduced-motion everywhere (§10). Its features load after first
+  // paint (`m` components, LazyMotion strict), keeping ~30 KB gz off the critical path (M7 perf).
   return (
-    <MotionConfig reducedMotion="user">
-      {route === 'host' ? <HostApp /> : route === 'dev' ? <DevApp /> : <GameApp />}
-    </MotionConfig>
+    <LazyMotion features={loadMotion} strict>
+      <MotionConfig reducedMotion="user">
+        {route === 'host' ? <HostApp /> : route === 'dev' ? <DevApp /> : <GameApp />}
+      </MotionConfig>
+    </LazyMotion>
   );
 }
 
 function DevApp() {
   const theme = useGame((s) => s.settings.theme);
   const announcement = useAnnouncer((s) => s.message);
+  useEffect(() => {
+    const idle = window.requestIdleCallback ?? ((fn: () => void) => window.setTimeout(fn, 1500));
+    idle(() => void loadDataStage().catch(() => {}));
+  }, []);
   useTheme(theme);
   return (
     <div className={ui.shell}>
@@ -77,6 +90,7 @@ function GameApp() {
   const run = useGame((s) => s.run);
   const theme = useGame((s) => s.settings.theme);
   const announcement = useAnnouncer((s) => s.message);
+  useTeamRelaxedSync();
   // Reopening with a saved run lands on Home so the player can choose Resume (§3.1).
   // A ?join=CODE link (the lobby QR) opens Join with the code filled in.
   const [onHome, setOnHome] = useState(() => !(params.debug && params.stage !== null) && !params.join);
@@ -144,6 +158,7 @@ function GameApp() {
           <span aria-hidden="true">⚙️</span>
         </button>
       </header>
+      <Suspense fallback={null}>
       {group.snap.ended && group.snap.ended !== 'left' ? (
         <GroupEnded
           reason={group.snap.ended}
@@ -231,6 +246,7 @@ function GameApp() {
           }}
         />
       )}
+      </Suspense>
       <SettingsDialog open={settingsOpen} onClose={() => setSettingsOpen(false)} />
       <p role="status" aria-live="polite" className="visually-hidden">
         {announcement}

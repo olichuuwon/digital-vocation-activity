@@ -76,6 +76,10 @@ Try it: open the site on 2–3 phones, Create group on one, scan its QR with the
 - [ ] **39. Quiet support cards:** in some booth levels a support card has little to do (e.g. Reveal has only 2 charges; Manifest matters mostly in full mode). Play a 3–4 phone group and note any phone that sat idle for a whole level. *Default: re-balance after playtests (M8).*
 - [ ] **40. Two-phone check on the live site:** group play uses Supabase Realtime, which Claude couldn't test from the cloud sandbox (no WebSockets there; the e2e tests use a local relay). Please create a group on one phone and join from another on the live site. If they never see each other: Supabase → Project Settings → Realtime → make sure public channels are allowed (not "private channels only"). *Default: n/a, needs your check.*
 
+## K. Polish (M7)
+- [ ] **41. Fonts:** the game uses each phone's built-in font (fast, nothing downloaded). Want a brand font? Send the font files (licensed for web use) and Claude will self-host them. *Default: built-in fonts.*
+- [ ] **42. Sound:** off by default; Settings → Sound plays a soft two-note chime for right and a low two-note tone for wrong. Keep, change, or remove? *Default: keep.*
+
 ## I. Setup notes (no answer needed)
 - Supabase keys: Claude keeps them in `.env.local` (git-ignored) and never commits them. The live site reads them from Vercel → Project → Settings → Environment Variables (`VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`).
 - **Deploys:** Vercel deploys `main`. Claude works on the branch `claude/beautiful-allen-ne188s`. Merge it into `main` (PR or fast-forward) to put M3 live.

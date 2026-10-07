@@ -1,4 +1,4 @@
-import { animate, motion, useReducedMotion } from 'framer-motion';
+import { animate, m, useReducedMotion } from 'framer-motion';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useAnnouncer, useScreenHeading } from '../../app/screenFocus';
 import { Timer } from '../../components/Timer';
@@ -102,14 +102,14 @@ function Reveal({ p, logicPlayed, onGo }: { p: ReturnType<typeof pipeline>; logi
       <p className={ui.body}>{c.reveal.intro}</p>
       <ol className={s.chain} data-testid="pipeline" role="list">
         {links.map(([icon, text], i) => (
-          <motion.li key={text} initial={reduce ? false : { opacity: 0, x: -12 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.4 + i * 0.8 }}>
+          <m.li key={text} initial={reduce ? false : { opacity: 0, x: -12 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.4 + i * 0.8 }}>
             <span aria-hidden="true">{icon}</span> {text}
             {i < links.length - 1 && (
               <span className={s.arrow} aria-hidden="true">
                 ↓
               </span>
             )}
-          </motion.li>
+          </m.li>
         ))}
       </ol>
       <p className={s.bigNumber} aria-hidden="true">
@@ -312,7 +312,7 @@ function LiveOps({ run, base, onDone }: { run: GameState; base: number; onDone: 
         urgentAt={3}
         onExpire={() => route(null)}
       />
-      <motion.article
+      <m.article
         key={incident.id}
         className={s.incident}
         initial={{ opacity: 0, y: 12 }}
@@ -323,7 +323,7 @@ function LiveOps({ run, base, onDone }: { run: GameState; base: number; onDone: 
       >
         <span aria-hidden="true">{allHands ? '📣 ' : '🚨 '}</span>
         {itemText(incident)}
-      </motion.article>
+      </m.article>
       {feedback ? (
         // Already spoken via the announcer; shown here for sighted players.
         <div className={s.feedback} data-ok={feedback.ok} aria-hidden="true" data-testid="feedback">

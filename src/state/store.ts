@@ -59,6 +59,8 @@ interface Store {
   settings: Settings;
   /** ?relaxed=1 for this page load only, so a shared booth phone doesn't stay relaxed. */
   relaxedThisSession: boolean;
+  /** Group mode: a teammate has relaxed timers on, so the main phone's timers relax too. Not persisted. */
+  teamRelaxed: boolean;
   /** Settings sheet open: every level timer and sim clock pauses (WCAG 2.2.1). Not persisted. */
   settingsOpen: boolean;
   startRun: (mode: Mode) => void;
@@ -82,6 +84,7 @@ export const useGame = create<Store>()(
       chapterUnlocked: false,
       settings: DEFAULT_SETTINGS,
       relaxedThisSession: false,
+      teamRelaxed: false,
       settingsOpen: false,
       startRun: (mode) => set((s) => ({ run: { ...newRun(mode), bestFamilies: s.bestFamilies } })),
       completeLevel: () =>
@@ -128,4 +131,4 @@ export const useGame = create<Store>()(
 );
 
 /** Effective relaxed-timer setting (§10): the player's choice or the facilitator's URL param. */
-export const useRelaxed = () => useGame((s) => s.settings.relaxed || s.relaxedThisSession);
+export const useRelaxed = () => useGame((s) => s.settings.relaxed || s.relaxedThisSession || s.teamRelaxed);

@@ -1,4 +1,4 @@
-import { motion } from 'framer-motion';
+import { m } from 'framer-motion';
 import { useEffect } from 'react';
 import { useAnnouncer, useScreenHeading } from '../app/screenFocus';
 import { copy, fill } from '../content';
@@ -32,7 +32,7 @@ export function StarResult({
       <p className="visually-hidden">{label}</p>
       <div className={s.stars} aria-hidden="true" data-testid="stars">
         {[1, 2, 3].map((n) => (
-          <motion.span
+          <m.span
             key={n}
             className={n <= stars ? s.starOn : s.starOff}
             initial={{ scale: 0.3, opacity: 0 }}
@@ -40,7 +40,7 @@ export function StarResult({
             transition={{ delay: 0.15 * n, type: 'spring', stiffness: 400, damping: 15 }}
           >
             {n <= stars ? '★' : '☆'}
-          </motion.span>
+          </m.span>
         ))}
       </div>
       {lines.length > 0 && (

@@ -89,16 +89,6 @@ export function SupportScreen() {
           {fill(t.promoted, { name: promotedName })}
         </p>
       )}
-      {upNext && (
-        <div className={s.upNext} data-testid="up-next">
-          <strong>{t.upNext}</strong>
-          <span>{fill(t.upNextBody, { stage: stage < 4 ? (stageContent(stage + 1)?.specialisation ?? '') : t.finale })}</span>
-          <button type="button" className={`${ui.btn} ${ui.primary}`} onClick={() => sendAction(HANDOFF_READY)}>
-            {t.ready}
-          </button>
-        </div>
-      )}
-
       <div className={s.slot} data-testid="support-slot">
         {View ? (
           <Suspense fallback={null}>
@@ -110,6 +100,16 @@ export function SupportScreen() {
           </div>
         )}
       </div>
+      {/* In the thumb zone: sticks to the bottom of the screen (§10 mobile). */}
+      {upNext && (
+        <div className={s.upNext} data-testid="up-next">
+          <strong>{t.upNext}</strong>
+          <span>{fill(t.upNextBody, { stage: stage < 4 ? (stageContent(stage + 1)?.specialisation ?? '') : t.finale })}</span>
+          <button type="button" className={`${ui.btn} ${ui.primary}`} onClick={() => sendAction(HANDOFF_READY)}>
+            {t.ready}
+          </button>
+        </div>
+      )}
     </main>
   );
 }

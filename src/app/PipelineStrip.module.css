@@ -4,7 +4,8 @@
   padding: 0;
   flex: 1;
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  /* 4 across at normal text; 2 per row at large text (200%), so words never split. */
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 3rem), 1fr));
   min-width: 0;
   gap: 4px;
 }
@@ -46,7 +47,7 @@
 .label {
   max-width: 100%;
   text-align: center;
-  overflow-wrap: anywhere;
+  overflow-wrap: break-word;
 }
 
 .current .label {

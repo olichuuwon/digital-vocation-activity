@@ -110,6 +110,11 @@
 | 2026-10-07 | Finale in a group (§8.2) | The main phone shows the feed, timer and families; routing buttons appear only on the support phone holding that specialisation, and the support's tap is the routing (no second "confirm" tap on the main phone: an 8 s timer has no room for it). A late tap carries the incident id, so it can't route the next one. Two "all hands" calls (`finale.json` `allHandsCount` 2, `allHandsSeconds` 5) are added to the 8 incidents, spread out and never first; every present member (the main phone too) taps Ready within 5 s for +15, else −12. Solo: unchanged. | Yes |
 | 2026-10-07 | Support cards: QA/a11y fixes | Co-op needs a *present* support (a drop hands the controls straight back to the main phone; cards re-deal after 30 s). Stage 4 Configure: the main phone shows values read-only; Balancer and Autoscaler are dealt to the supports. Stage 4 Replay: supports get a "Storm watch" card (uptime, pods, cost vs budget, Restart crashed pods, Roll back). Until a support player picks a tab, the first card with something live shows; hidden tabs get a "New" badge. Support news, incidents and all-hands calls are spoken through the shared announcer (incidents unthrottled). Ready buttons take focus during all-hands. Stage 3 co-op shows "ask your scouts" and its map description hides house needs. | No |
 | 2026-10-07 | Quiet support cards in booth levels | QA: some cards have little to do in some booth levels (Reveal has 2 charges per level; Auditor is only live in Audit; Manifest only in L5; Scout only in L3; Fix kit only in fix levels). The auto-tab and the rulebook/field guide keep a single support busy; with 3 supports one phone can still be quiet for a level. Re-dealing per level is a balancing job for M8 playtests (owner item 39). | Yes |
+| 2026-10-07 | Sound (M7, §3.3) | Two short synthesised cues (Web Audio, no files): success = rising 660→880 Hz, error = falling 220→196 Hz, quiet (gain 0.08). Off by default; they play wherever haptics fire (toasts, Live Ops, support news, Stage 4 crashes). Turning the toggle on plays a sample and unlocks audio on iOS. | Yes |
+| 2026-10-07 | Perf budget (M7) | Framer Motion via `LazyMotion` + `m` (features load after first paint); everything past Home is lazy (Stage 1 prefetched when idle). Entry JS 110 → 89 KB gz. Lighthouse mobile on the production build (brotli, like Vercel): performance 92–96, accessibility 100, best practices 100, SEO 100 (added `robots.txt`). | No |
+| 2026-10-07 | axe in CI (M7) | `e2e/a11y.spec.ts` (@axe-core/playwright, WCAG 2.0–2.2 A/AA) scans Home, Settings, Leaderboard, Host, every stage's play screen, Live Ops, debrief, group create/join/lobby and a support card, in light and dark themes, on both phones. All clean. | No |
+| 2026-10-07 | Relaxed timers in groups (M7) | A support phone with relaxed timers on tells the main phone (action `relaxed`), whose timers then run ×1.5; re-sent when the main phone changes, dropped when that teammate leaves. | No |
+| 2026-10-07 | M7 a11y polish | Pipeline header wraps 2 per row at large text (no split words); Draw the Box picture is focusable (arrows move, Shift + arrows resize); lobby code read letter by letter (visually hidden spaced text); "You're up next" sticks to the bottom of the support screen. Toasts may cover the Stage 2 top row briefly but never block taps (pointer-events: none). | No |
 
 ## Copy needing owner approval
 <!-- NEEDS OWNER APPROVAL --> Reality Check cards in `src/content/realityChecks.json` with `needsApproval: true` (career-facing, D14). Preview them at `/dev/components`.
@@ -120,7 +125,7 @@
 4. **Cloud, "This is a real job":** "Site reliability engineers (SREs) keep apps like this running for millions of people. They set up alerts so a human only gets woken up when automation can't fix it."
 
 ## Milestone status
-- [x] M0 · [x] M0.5 · [x] M1 · [x] M2 · [x] M3 · [x] M4 · [x] M5 · [x] M6 · [x] M6.5 · [ ] M7 · [ ] M8
+- [x] M0 · [x] M0.5 · [x] M1 · [x] M2 · [x] M3 · [x] M4 · [x] M5 · [x] M6 · [x] M6.5 · [x] M7 · [ ] M8
 
 ### M0 notes (2026-10-06)
 - Lint, typecheck, unit tests (Vitest) and e2e (Playwright, iPhone 12 + Pixel 5) green.
@@ -182,3 +187,10 @@
 - a11y: support news spoken once via the shared announcer; WAI-ARIA tabs; pressed states visible; 48px steppers and toggles; notices spoken once instead of live countdowns; lobby joins spoken; focus kept in Create and lobby reordering.
 - Not verified here: Supabase Realtime itself (the sandbox can't open WebSockets). Needs a two-phone check on the live site (owner item 40).
 - Carried to M7: relaxed mode is per phone (a support's relaxed setting doesn't slow the main phone's timers); supports have no countdown during all-hands; lobby code `aria-label` on a `<p>`; up-next Ready sits at the top of the support screen; the main phone's Stage 1 intro still shows the new rule. Carried to M8: re-deal quiet cards per level (owner item 39); Stage 3 L3 scouting lets a group pass one flood before the "lucky run" flood (game-designer).
+
+### M7 notes (2026-10-07)
+- Polish: sound (off by default), haptics + sound share one call, relaxed mode synced across a group, a11y pass (axe clean on every screen type, both themes), perf budget.
+- Acceptance: axe clean ✅ (`e2e/a11y.spec.ts`); Lighthouse mobile ≥ 90 ✅ (92–96 performance, 100 the rest, on the brotli-served build). Entry JS ≈ 89 KB gz.
+- Fonts stay system stacks (no download, nothing third-party); self-hosted fonts only if the owner wants a brand font (owner item 41).
+- Carried to M8: moving a block into or out of Repeat/If still needs remove + re-add; support phones show no countdown during all-hands (they buzz and speak instead); the main phone's Stage 1 intro shows the new rule in groups too.
+

@@ -91,8 +91,12 @@ export function GroupLobby() {
           <div className={s.qr} aria-hidden="true" />
         )}
         <p className={ui.muted}>{t.codeLabel}</p>
-        <p className={s.code} data-testid="group-code" aria-label={`${t.codeLabel} ${code.split('').join(' ')}`}>
-          {code}
+        <p className={s.code}>
+          <span aria-hidden="true" data-testid="group-code">
+            {code}
+          </span>
+          {/* Spaced letters, so screen readers spell the code instead of reading it as a word. */}
+          <span className="visually-hidden">{code.split('').join(' ')}</span>
         </p>
         <p className={ui.muted}>{t.scanHint}</p>
         <p className={ui.muted}>

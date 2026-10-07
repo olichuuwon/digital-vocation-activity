@@ -1,4 +1,4 @@
-import { animate, motion, useReducedMotion } from 'framer-motion';
+import { animate, m, useReducedMotion } from 'framer-motion';
 import { useEffect, useState, type ReactNode } from 'react';
 import type { RealityVisual } from '../content/schemas';
 
@@ -29,7 +29,7 @@ function Pods({ count, colour = 'var(--cloud)', highlight }: { count: number; co
   return (
     <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', justifyContent: 'center' }}>
       {Array.from({ length: count }, (_, i) => (
-        <motion.span
+        <m.span
           key={i}
           initial={{ scale: 0 }}
           animate={{ scale: 1 }}
@@ -47,7 +47,7 @@ function Pods({ count, colour = 'var(--cloud)', highlight }: { count: number; co
           }}
         >
           {i === highlight ? '✗' : ''}
-        </motion.span>
+        </m.span>
       ))}
     </div>
   );
@@ -107,7 +107,7 @@ export function RealityVisualView({ visual, vars = {} }: { visual: RealityVisual
         <svg viewBox="0 0 200 100" width="100%" height="120">
           <line x1="10" y1="90" x2="190" y2="90" stroke="currentColor" opacity="0.4" />
           <line x1="10" y1="90" x2="10" y2="10" stroke="currentColor" opacity="0.4" />
-          <motion.path
+          <m.path
             d="M10 85 C 50 70, 80 35, 190 18"
             fill="none"
             stroke="var(--ai)"
@@ -120,12 +120,12 @@ export function RealityVisualView({ visual, vars = {} }: { visual: RealityVisual
           <text x="110" y="70" fontSize="12" fill="currentColor">
             accuracy ↑ with labels
           </text>
-          <motion.g initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: reduce ? 0 : 1.2 }}>
+          <m.g initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: reduce ? 0 : 1.2 }}>
             <rect x="16" y="8" width="84" height="22" rx="11" fill="var(--ai)" />
             <text x="58" y="23" fontSize="11" fontWeight="800" fill="#fff" textAnchor="middle" data-testid="labelled-count">
               {vars.labelled ?? 20} from you
             </text>
-          </motion.g>
+          </m.g>
         </svg>
       );
     case 'night-road':
@@ -148,9 +148,9 @@ export function RealityVisualView({ visual, vars = {} }: { visual: RealityVisual
             ))}
           </div>
           <span style={{ fontSize: '1.375rem' }}>→</span>
-          <motion.pre initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.6 }} style={{ margin: 0, fontSize: '0.75rem' }}>
+          <m.pre initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.6 }} style={{ margin: 0, fontSize: '0.75rem' }}>
             {'for i in range(3):\n    move()\ndrop()'}
-          </motion.pre>
+          </m.pre>
         </div>
       );
     case 'test-maps': {
@@ -158,7 +158,7 @@ export function RealityVisualView({ visual, vars = {} }: { visual: RealityVisual
       return (
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(10, 1fr)', gap: 3, width: '100%', maxWidth: '18rem' }}>
           {Array.from({ length: 100 }, (_, i) => (
-            <motion.span
+            <m.span
               key={i}
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -175,7 +175,7 @@ export function RealityVisualView({ visual, vars = {} }: { visual: RealityVisual
               }}
             >
               {i < 100 - failing ? '✓' : '✗'}
-            </motion.span>
+            </m.span>
           ))}
         </div>
       );

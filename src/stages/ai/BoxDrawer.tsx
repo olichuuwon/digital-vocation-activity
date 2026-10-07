@@ -88,6 +88,16 @@ export function BoxDrawer({
         onPointerUp={end}
         onPointerCancel={end}
         data-testid="box-frame"
+        // Keyboard twin of dragging (§10): arrows move, Shift + arrows resize.
+        tabIndex={0}
+        role="group"
+        aria-label={c.box.keys}
+        onKeyDown={(e) => {
+          const d = { ArrowLeft: [-1, 0], ArrowRight: [1, 0], ArrowUp: [0, -1], ArrowDown: [0, 1] }[e.key];
+          if (!d) return;
+          e.preventDefault();
+          onChange(e.shiftKey ? resizeBox(box, d[0]! * STEP, d[1]! * STEP) : moveBox(box, d[0]! * STEP, d[1]! * STEP));
+        }}
         data-box={box.map((n) => Math.round(n)).join(',')}
       >
         <SceneArt image={image} title={title}>

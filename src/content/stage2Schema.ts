@@ -211,6 +211,8 @@ export const stage2CopySchema = z.object({
     lock: words(3),
     move: words(3),
     resize: words(3),
+    /** Keyboard help on the focusable picture (M7). */
+    keys: words(12),
     left: txt,
     right: txt,
     up: txt,

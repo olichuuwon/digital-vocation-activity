@@ -1,4 +1,4 @@
-import { motion, useReducedMotion } from 'framer-motion';
+import { m, useReducedMotion } from 'framer-motion';
 import { useId, type ReactNode } from 'react';
 import { copy } from '../content';
 import s from './components.module.css';
@@ -36,14 +36,14 @@ export function TutorialOverlay({
   return (
     <section className={s.tutorial} aria-label={t.tutorialLabel}>
       {children}
-      <motion.span
+      <m.span
         className={s.hand}
         aria-hidden="true"
         animate={reduce ? undefined : { x: p.x, y: p.y }}
         transition={{ duration: 1.1, repeat: Infinity, repeatType: 'loop', ease: 'easeInOut', repeatDelay: 0.3 }}
       >
         👆
-      </motion.span>
+      </m.span>
       <p className={s.body} id={textId}>
         {text}
       </p>

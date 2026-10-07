@@ -1,3 +1,4 @@
+import { playCue, unlockSound } from './sound';
 import { useEffect, useRef } from 'react';
 import { copy } from '../content';
 import { useGame } from '../state/store';
@@ -49,7 +50,14 @@ export function SettingsDialog({ open, onClose }: { open: boolean; onClose: () =
           <input
             type="checkbox"
             checked={settings.sound}
-            onChange={(e) => updateSettings({ sound: e.target.checked })}
+            onChange={(e) => {
+              updateSettings({ sound: e.target.checked });
+              // Turning sound on is a tap: unlock audio (iOS) and play a sample.
+              if (e.target.checked) {
+                unlockSound();
+                playCue('success');
+              }
+            }}
           />
           {t.sound}
         </label>

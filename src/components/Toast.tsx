@@ -1,4 +1,4 @@
-import { AnimatePresence, motion } from 'framer-motion';
+import { AnimatePresence, m } from 'framer-motion';
 import { useEffect } from 'react';
 import { useRelaxed } from '../state/store';
 import { toastMs, useToast, type Kind } from './toastStore';
@@ -19,7 +19,7 @@ export function ToastHost() {
     <div className={s.toastHost} aria-hidden="true">
       <AnimatePresence>
         {message && (
-          <motion.p
+          <m.p
             key={id}
             className={s.toast}
             initial={{ y: 16, opacity: 0 }}
@@ -28,7 +28,7 @@ export function ToastHost() {
           >
             <span aria-hidden="true">{ICON[kind]} </span>
             {message}
-          </motion.p>
+          </m.p>
         )}
       </AnimatePresence>
     </div>

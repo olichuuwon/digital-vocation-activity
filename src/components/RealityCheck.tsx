@@ -1,4 +1,4 @@
-import { AnimatePresence, motion } from 'framer-motion';
+import { AnimatePresence, m } from 'framer-motion';
 import { useEffect, useState, type ReactNode } from 'react';
 import { useScreenHeading } from '../app/screenFocus';
 import { copy, fill } from '../content';
@@ -43,7 +43,7 @@ export function RealityCheck({
         {check.heading}
       </h1>
       <AnimatePresence mode="wait">
-        <motion.div
+        <m.div
           key={i}
           className={s.reality}
           onClick={next}
@@ -58,7 +58,7 @@ export function RealityCheck({
           </div>
           {card.title && <h2>{fill(card.title, vars)}</h2>}
           <p className={s.body}>{fill(card.body, vars)}</p>
-        </motion.div>
+        </m.div>
       </AnimatePresence>
       {/* Persistent region outside AnimatePresence: a region that mounts already filled isn't read. */}
       <p aria-live="polite" className="visually-hidden">

@@ -58,6 +58,7 @@
     "lock": "Lock it in",
     "move": "Move",
     "resize": "Resize",
+    "keys": "Your box. Arrow keys move it; Shift plus arrows resize it.",
     "left": "Move left",
     "right": "Move right",
     "up": "Move up",
