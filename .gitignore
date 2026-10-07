@@ -1,10 +1,9 @@
 node_modules
 dist
-dist-e2e
+dist-*
 .env
 .env.local
 playwright-report
 test-results
 *.tsbuildinfo
 .DS_Store
-dist-a11y
