@@ -90,6 +90,14 @@ export const BOOST_CAPACITY = 150;
 export const BOOST_S = 4;
 export const BOOST_COOLDOWN_S = 4;
 export const MANUAL_SERVERS = 3;
+/** A pod that has just become ready (cold start, heal or Restart) warms up for WARMUP_S: overload does not count towards a crash yet. */
+export const WARMUP_S = 2;
+/** At most one overload crash per CRASH_GAP_S across the cluster (a visible domino instead of every pod at once). */
+export const CRASH_GAP_S = 0.5;
+/** Scripted hardware fault: at FAULT_S one ready pod/server dies regardless of load (both phases). */
+export const FAULT_S = 50;
+/** The fault hits the ready pod at this creation rank (1 = the second one; Phase A: the middle-traffic server). */
+export const FAULT_RANK = 1;
 export const CREDITS_PER_POD_MIN = 10;
 export const BUDGET_PER_MIN = 60;
 /** Demand at ×1 (start of the storm) for traffic.scale = 1; the storm ramps to ×10. */
@@ -100,8 +108,8 @@ export const TRAFFIC_KEYFRAMES: readonly (readonly [number, number])[] = [
   [8, 1.5],
   [18, 3],
   [28, 5],
-  [36, 6.5],
-  [42, 10],
+  [34, 6.5],
+  [44, 10],
   [58, 9.5],
   [66, 8],
   [75, 7],
@@ -123,6 +131,8 @@ const COLD_TICKS = t(COLD_START_S);
 const AUTO_ROLLBACK_TICKS = t(AUTO_ROLLBACK_S);
 const BOOST_TICKS = t(BOOST_S);
 const BOOST_COOLDOWN_TICKS = t(BOOST_COOLDOWN_S);
+const WARMUP_TICKS = t(WARMUP_S);
+const CRASH_GAP_TICKS = t(CRASH_GAP_S);
 
 // ---- Types ----
 export interface Traffic {
@@ -136,6 +146,10 @@ export interface Traffic {
   /** Phase A server that gets hammered (0–2). */
   hot: number;
   badDeployTick: number;
+  /** Tick of the scripted hardware fault (FAULT_S). */
+  faultTick: number;
+  /** Phase A Boost capacity in req/s (BOOST_CAPACITY × scale: the boost grows with the storm). */
+  boost: number;
   /** Budget in credits per minute. */
   budget: number;
   peak: number;
@@ -182,7 +196,10 @@ export interface Totals {
   dropped: number;
   errored: number;
   podSeconds: number;
+  /** Crashes, including the hardware fault. */
   crashes: number;
+  /** Hardware faults (0 or 1). */
+  faults: number;
   restarts: number;
   boosts: number;
   rollbacks: number;
@@ -209,6 +226,10 @@ export interface SimState {
   /** Pod id running the canary (rolling update), else -1. */
   canary: number;
   scaleDownVotes: number;
+  /** Pod id killed by the hardware fault (-1 until it happens or if no pod was ready). */
+  faultPod: number;
+  /** Tick of the last overload crash (CRASH_GAP_S spacing). */
+  lastCrashTick: number;
   totals: Totals;
   /** Rates (req/s) of the last tick, for the live meters. */
   last: TickRates;
@@ -221,7 +242,9 @@ export interface PhaseSummary {
   cost: number;
   budget: number;
   underBudget: boolean;
+  /** Crashes, including the hardware fault. */
   crashes: number;
+  faults: number;
   restarts: number;
   boosts: number;
   rollbacks: number;
@@ -282,6 +305,8 @@ export function createTraffic(seed: number, opts: { intensity?: number; rng?: Rn
     demand,
     hot,
     badDeployTick: t(BAD_DEPLOY_S),
+    faultTick: t(FAULT_S),
+    boost: BOOST_CAPACITY * scale,
     budget: Math.round(BUDGET_PER_MIN * scale),
     peak,
   };
@@ -340,6 +365,8 @@ function baseState(mode: SimState['mode'], traffic: Traffic, pods: Pod[], nextId
     deploySince: 0,
     canary: -1,
     scaleDownVotes: 0,
+    faultPod: -1,
+    lastCrashTick: -1e9,
     totals: {
       demand: 0,
       ok: 0,
@@ -347,6 +374,7 @@ function baseState(mode: SimState['mode'], traffic: Traffic, pods: Pod[], nextId
       errored: 0,
       podSeconds: 0,
       crashes: 0,
+      faults: 0,
       restarts: 0,
       boosts: 0,
       rollbacks: 0,
@@ -384,6 +412,8 @@ interface Rules {
   recoverTicks: number;
   rolling: boolean;
   boost: boolean;
+  /** Self-healing (liveness probes): crashed pods are known to be dead. */
+  heal: boolean;
 }
 
 const MANUAL_RULES: Rules = {
@@ -395,6 +425,7 @@ const MANUAL_RULES: Rules = {
   recoverTicks: Number.POSITIVE_INFINITY,
   rolling: false,
   boost: true,
+  heal: false,
 };
 
 function rulesFor(config: ClusterConfig): Rules {
@@ -408,6 +439,7 @@ function rulesFor(config: ClusterConfig): Rules {
     recoverTicks: c.selfHealing ? SELF_HEAL_TICKS : MANUAL_RECOVER_TICKS,
     rolling: c.rollingUpdate,
     boost: false,
+    heal: c.selfHealing,
   };
 }
 
@@ -451,20 +483,27 @@ function applyAction(s: SimState, a: Action, r: Rules): void {
 
 function hpa(s: SimState, r: Rules, demand: number): void {
   let ready = 0;
+  let alive = 0;
   let load = 0;
   for (const p of s.pods) {
     if (p.status === 'ready') {
       ready++;
       load += p.load;
     }
+    if (p.status !== 'crashed') alive++;
   }
   if (ready === 0) load = demand;
   const want = Math.ceil(load / (r.thr * POD_CAPACITY) - 1e-9);
   const desired = want < r.minPods ? r.minPods : want > r.maxPods ? r.maxPods : want;
-  const current = s.pods.length;
+  // Self-healing on: crashed pods are known dead, so they are not current capacity. Off: nobody
+  // probes them, so the HPA still counts them.
+  const current = r.heal ? alive : s.pods.length;
   if (desired > current) {
     s.scaleDownVotes = 0;
-    for (let i = current; i < desired; i++) s.pods.push(newPod(s.nextId++, 'starting', COLD_TICKS));
+    // Never more than maxPods provisioned (crashed pods still hold their slot).
+    let add = desired - current;
+    if (add > r.maxPods - s.pods.length) add = r.maxPods - s.pods.length;
+    for (let i = 0; i < add; i++) s.pods.push(newPod(s.nextId++, 'starting', COLD_TICKS));
     return;
   }
   if (desired === current) {
@@ -474,7 +513,8 @@ function hpa(s: SimState, r: Rules, demand: number): void {
   if (++s.scaleDownVotes < SCALE_DOWN_EVALS) return;
   let victim = -1;
   for (let i = s.pods.length - 1; i >= 0 && victim < 0; i--) if (s.pods[i]?.status === 'starting') victim = i;
-  for (let i = s.pods.length - 1; i >= 0 && victim < 0; i--) if (s.pods[i]?.status === 'crashed') victim = i;
+  // Only self-healing knows which pods are dead; without it the HPA just removes the newest.
+  if (r.heal) for (let i = s.pods.length - 1; i >= 0 && victim < 0; i--) if (s.pods[i]?.status === 'crashed') victim = i;
   if (victim < 0) victim = s.pods.length - 1;
   if (s.pods[victim]?.id === s.canary) s.canary = -1;
   s.pods.splice(victim, 1);
@@ -514,16 +554,38 @@ function tickOnce(s: SimState, r: Rules, action: Action | null): void {
     }
   }
 
+  // Hardware fault: the FAULT_RANK-th ready pod (or the last ready one) dies, whatever its load.
+  if (s.tick === tr.faultTick) {
+    let k = 0;
+    let victim: Pod | null = null;
+    for (const p of s.pods) {
+      if (p.status !== 'ready') continue;
+      victim = p;
+      if (k++ === FAULT_RANK) break;
+    }
+    if (victim) {
+      setStatus(victim, 'crashed', r.recoverTicks);
+      s.faultPod = victim.id;
+      s.totals.crashes++;
+      s.totals.faults++;
+    }
+  }
+
   // Routing.
   let ready = 0;
+  let zombies = 0;
   let wsum = 0;
   let rank = 0;
   for (const p of s.pods) {
     if (p.status === 'ready') ready++;
+    else if (p.status === 'crashed') zombies++;
     if (p.registered) wsum += 1 / ++rank;
   }
+  // Self-healing off: no liveness probe, so the load balancer keeps sending crashed pods their share.
+  const lbShare = ready + (r.heal ? 0 : zombies);
   let served = 0;
   let errored = 0;
+  let due: Pod | null = null;
   rank = 0;
   for (const p of s.pods) {
     if (p.registered) rank++;
@@ -533,19 +595,24 @@ function tickOnce(s: SimState, r: Rules, action: Action | null): void {
       continue;
     }
     // Ready pods are always registered, so rank ≥ 1 here.
-    const load = r.lb ? demand / ready : demand / (rank * wsum);
-    const cap = POD_CAPACITY + (p.boostTicks > 0 ? BOOST_CAPACITY : 0);
+    const load = r.lb ? demand / lbShare : demand / (rank * wsum);
+    const cap = POD_CAPACITY + (p.boostTicks > 0 ? tr.boost : 0);
     p.load = load;
     p.cpu = load / cap;
     const ok = load < cap ? load : cap;
     served += ok;
     if (s.deploy === 'bad' || (s.deploy === 'canary' && p.id === s.canary)) errored += ok * BAD_DEPLOY_ERROR;
     if (load > cap) {
-      if (++p.overTicks > CRASH_TICKS) {
-        setStatus(p, 'crashed', r.recoverTicks);
-        s.totals.crashes++;
-      }
+      // Warming up (just became ready): overload does not count towards a crash yet.
+      if (p.since >= WARMUP_TICKS && ++p.overTicks > CRASH_TICKS && (!due || p.overTicks > due.overTicks)) due = p;
     } else p.overTicks = 0;
+  }
+  // Domino, not a cliff: at most one overload crash per CRASH_GAP_S (the longest-overloaded pod,
+  // oldest first on a tie); the others stay due and keep counting.
+  if (due && s.tick - s.lastCrashTick >= CRASH_GAP_TICKS) {
+    setStatus(due, 'crashed', r.recoverTicks);
+    s.totals.crashes++;
+    s.lastCrashTick = s.tick;
   }
 
   // Bookkeeping.
@@ -618,6 +685,7 @@ export function summarize(s: SimState): PhaseSummary {
     budget: s.traffic.budget,
     underBudget: cost <= s.traffic.budget,
     crashes: tot.crashes,
+    faults: tot.faults,
     restarts: tot.restarts,
     boosts: tot.boosts,
     rollbacks: tot.rollbacks,
