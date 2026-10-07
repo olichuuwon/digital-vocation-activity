@@ -100,5 +100,26 @@
     "blocks": "Extra blocks: {n}",
     "tests": "{passed} of {total} test maps passed"
   },
-  "learned": "You solved {count} puzzles by breaking problems into steps, repeating, deciding and debugging (fixing mistakes). That's programming!"
+  "learned": "You solved {count} puzzles by breaking problems into steps, repeating, deciding and debugging (fixing mistakes). That's programming!",
+  "a11y": {
+    "inside": "inside {block}",
+    "atEnd": "at the end",
+    "slot": "Add blocks here, {where}",
+    "stoppedHere": "stopped here",
+    "running": "running now",
+    "added": "Added {block}. {count}",
+    "addingInside": "Now adding inside {block}.",
+    "removed": "Removed {block}. {count}",
+    "moved": "Moved to position {n}.",
+    "repeatSet": "Repeat ×{n}.",
+    "swapped": "Swapped to {block}. Swaps left: {n}.",
+    "step": "{block}. {truck}",
+    "delivered": "Supplies delivered.",
+    "stoppedAt": "Stopped at {block}. {truck}",
+    "row": "Row {n}: {tiles}",
+    "truckHere": "truck here, facing {dir}",
+    "wrongSupply": "House, wrong supply",
+    "housesDone": "{done} of {total} houses have supplies.",
+    "python": "Your program in Python:"
+  }
 }

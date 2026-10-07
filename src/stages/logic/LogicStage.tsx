@@ -1,6 +1,6 @@
 import { motion } from 'framer-motion';
-import { useEffect, useMemo, useState } from 'react';
-import { useScreenHeading } from '../../app/screenFocus';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { useAnnouncer, useScreenHeading } from '../../app/screenFocus';
 import { BriefingCard } from '../../components/BriefingCard';
 import { HandOff } from '../../components/HandOff';
 import { HintBox } from '../../components/HintBox';
@@ -14,13 +14,14 @@ import { briefingFor, fill, levelsFor, realityCheck, stageContent } from '../../
 import type { LogicLevel, LogicLevelId, Program } from '../../content/stage3Schema';
 import { parseMap, robustness, runProgram, succeedsAll, type RunResult } from '../../sim/grid';
 import { toPython } from '../../sim/python';
-import { useGame } from '../../state/store';
+import { useGame, useRelaxed } from '../../state/store';
+import { RELAXED_FACTOR } from '../../state/timer';
 import type { GameState } from '../../state/types';
 import { mulberry32 } from '../data/logic';
 import { c, stage3, t } from './content';
 import { GridMap } from './GridMap';
 import { logicStars, nextAssist, SCORED_LEVEL_IDS, stageScore, toLogicScores, type LevelOutcome } from './logic';
-import { blockCount, flatten } from './program';
+import { blockCount, flatten, getBlock } from './program';
 import { blockText, ICON } from './blocks';
 import { ProgramEditor } from './ProgramEditor';
 import { stage3For, useStage3Progress, type EndPhase } from './progress';
@@ -151,7 +152,7 @@ function BlocksToPython({ program }: { program: Program }) {
   const py = toPython(program);
   return (
     <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: 8, width: '100%', fontSize: '0.8125rem' }}>
-      <ul role="list" style={{ listStyle: 'none', margin: 0, padding: 0, display: 'flex', flexDirection: 'column', gap: 3 }}>
+      <ul aria-hidden="true" style={{ listStyle: 'none', margin: 0, padding: 0, display: 'flex', flexDirection: 'column', gap: 3 }}>
         {rows.slice(0, 10).map((r, i) => (
           <li
             key={i}
@@ -169,11 +170,15 @@ function BlocksToPython({ program }: { program: Program }) {
           </li>
         ))}
       </ul>
+      <p className="visually-hidden" id="python-label">
+        {c.a11y.python}
+      </p>
       <motion.pre
+        aria-labelledby="python-label"
         initial={{ opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.6 }}
-        style={{ margin: 0, fontSize: '0.8125rem', textAlign: 'left', overflowX: 'auto', background: 'var(--surface-2)', padding: 8, borderRadius: 8 }}
+        style={{ margin: 0, fontSize: '0.8125rem', textAlign: 'left', whiteSpace: 'pre-wrap', overflowWrap: 'anywhere', background: 'var(--surface-2)', padding: 8, borderRadius: 8 }}
         data-testid="python"
       >
         {py.slice(0, 14).join('\n')}
@@ -183,6 +188,9 @@ function BlocksToPython({ program }: { program: Program }) {
 }
 
 type Assist = 'none' | 'hint' | 'answer';
+
+const truckText = (tr: { x: number; y: number; dir: 'N' | 'E' | 'S' | 'W' }) =>
+  fill(c.map.truck, { row: tr.y + 1, col: tr.x + 1, dir: c.map.facing[tr.dir] });
 
 function tileName(ch: string, flood: string | null): string {
   if (ch === '.') return c.map.grass;
@@ -219,6 +227,11 @@ function PlayLevel({
   const [solved, setSolved] = useState<RunResult | null>(null);
   const [tutorialSeen, setTutorialSeen] = useState(!isTutorial);
   const headingRef = useScreenHeading<HTMLHeadingElement>(levelName(level.id));
+  const announce = useAnnouncer((a) => a.announce);
+  const relaxed = useRelaxed();
+  // Relaxed mode (§10) slows the truck too, so there's time to follow it.
+  const stepMs = relaxed ? Math.round(STEP_MS * RELAXED_FACTOR) : STEP_MS;
+  const runBtnRef = useRef<HTMLButtonElement>(null);
   const assist: Assist = answerShown ? 'answer' : nextAssist(failedRuns);
   const used = blockCount(program);
 
@@ -237,6 +250,16 @@ function PlayLevel({
     aiWrongDrops: res?.aiWrongDrops ?? 0,
   });
 
+  /** Step mode speaks each block and where the truck is (the map alone isn't announced). */
+  const sayStep = (result: RunResult, i: number) => {
+    const st = result.trace[i];
+    if (!st) return;
+    const b = getBlock(program, st.addr);
+    let text = fill(c.a11y.step, { block: b ? blockText(b) : '', truck: `${truckText(st.truck)}.` });
+    if (st.event === 'deliver') text += ` ${c.a11y.delivered}`;
+    announce(text);
+  };
+
   const start = (auto: boolean) => {
     if (solved) return;
     if (level.blockLimit !== null && used > level.blockLimit) return toast(c.run.overLimit, 'error');
@@ -245,6 +268,7 @@ function PlayLevel({
     const result = runProgram(level, program, { flood, modelAccuracy, rng });
     setAttempts((a) => a + 1);
     setRunning({ result, i: result.trace.length ? 0 : -1, auto, judged: false });
+    if (!auto) sayStep(result, 0);
   };
 
   const finish = (result: RunResult) => {
@@ -263,7 +287,10 @@ function PlayLevel({
     // New help is spoken with the failure (HintBox is quiet), so one live region speaks at a time.
     const help = nextAssist(failedRuns + 1);
     const spoken = help !== nextAssist(failedRuns) ? (help === 'hint' ? fill(c.hint, { text: c.levelHint[level.id] }) : c.answer) : '';
-    toast(c.run[why], 'error', spoken);
+    const at = result.failAt !== undefined ? result.trace[result.failAt] : undefined;
+    const atBlock = at ? getBlock(program, at.addr) : undefined;
+    const where = at && atBlock ? fill(c.a11y.stoppedAt, { block: blockText(atBlock), truck: `${truckText(at.truck)}.` }) : '';
+    toast(c.run[why], 'error', [where, spoken].filter(Boolean).join(' '));
   };
 
   // Auto-run: advance one trace step at a time, then judge the run.
@@ -273,20 +300,26 @@ function PlayLevel({
     if (running.i >= last) {
       if (running.judged) return;
       // Let the last move animate, then judge. Run/Reset stay locked until then, so this can't be skipped.
-      const id = setTimeout(() => finish(running.result), running.auto ? STEP_MS : 0);
+      const id = setTimeout(() => finish(running.result), running.auto ? stepMs : 0);
       return () => clearTimeout(id);
     }
     if (!running.auto) return;
-    const id = setTimeout(() => setRunning((r) => (r ? { ...r, i: r.i + 1 } : r)), STEP_MS);
+    const id = setTimeout(() => setRunning((r) => (r ? { ...r, i: r.i + 1 } : r)), stepMs);
     return () => clearTimeout(id);
     // finish is stable enough for this effect: it reads state through refs/setters.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [running]);
 
   const step = () => {
-    if (!running) return start(false);
+    if (!running) {
+      start(false);
+      return;
+    }
     const last = running.result.trace.length - 1;
-    if (running.i < last) setRunning({ ...running, i: running.i + 1, auto: false });
+    if (running.i < last) {
+      setRunning({ ...running, i: running.i + 1, auto: false });
+      sayStep(running.result, running.i + 1);
+    }
   };
 
   const trace = running?.result.trace ?? [];
@@ -309,11 +342,17 @@ function PlayLevel({
   const failStep = failed && running.result.failAt !== undefined ? trace[running.result.failAt] : undefined;
   const isRunning = running !== null && !running.judged && (running.auto || done);
   const flood = running ? running.result.flood : null;
-  const mapLabel = `${fill(c.map.label, { size: map.size })}. ${fill(c.map.truck, {
-    row: truck.y + 1,
-    col: truck.x + 1,
-    dir: c.map.facing[truck.dir],
-  })}.`;
+  const mapLabel = `${fill(c.map.label, { size: map.size })}. ${truckText(truck)}. ${fill(c.a11y.housesDone, {
+    done: delivered.size,
+    total: map.houses.length,
+  })}`;
+  const describeTile = (ch: string, x: number, y: number) => {
+    const key = `${x},${y}`;
+    let name = tileName(ch, flood);
+    if (/[HWFM]/.test(ch) && delivered.has(key)) name = wrong.has(key) ? c.a11y.wrongSupply : c.map.delivered;
+    if (truck.x === x && truck.y === y) name += ` (${fill(c.a11y.truckHere, { dir: c.map.facing[truck.dir] })})`;
+    return name;
+  };
 
   return (
     <section className={s.level}>
@@ -323,7 +362,7 @@ function PlayLevel({
       {level.seconds !== null && (
         <Timer
           seconds={level.seconds}
-          running={!solved}
+          running={!solved && !isRunning}
           onExpire={() => {
             toast(c.timeUp, 'info');
             onDone(isTutorial ? null : outcome(false), program);
@@ -331,11 +370,20 @@ function PlayLevel({
         />
       )}
       <div className={s.mapWrap} data-flood={debug ? (flood ?? '') : undefined}>
-        <GridMap grid={level.grid} flood={flood} truck={truck} delivered={delivered} wrongDrops={wrong} crashed={!!failStep} label={mapLabel} />
+        <GridMap
+          grid={level.grid}
+          flood={flood}
+          truck={truck}
+          delivered={delivered}
+          wrongDrops={wrong}
+          crashed={!!failStep}
+          label={mapLabel}
+          describedBy="map-rows"
+        />
       </div>
-      <ol className="visually-hidden">
+      <ol className="visually-hidden" id="map-rows">
         {level.grid.map((row, y) => (
-          <li key={y}>{[...row].map((ch) => tileName(ch, flood)).join(', ')}</li>
+          <li key={y}>{fill(c.a11y.row, { n: y + 1, tiles: [...row].map((ch, x) => describeTile(ch, x, y)).join(', ') })}</li>
         ))}
       </ol>
       {!tutorialSeen && (
@@ -368,6 +416,7 @@ function PlayLevel({
           <>
             <button
               type="button"
+              ref={runBtnRef}
               className={s.runBtn}
               data-primary="true"
               aria-disabled={isRunning || program.length === 0 || undefined}
@@ -392,6 +441,8 @@ function PlayLevel({
                   setEdits(0);
                   setProgram(level.solution);
                   toast(c.answer, 'info');
+                  // The button swaps for Reset: put focus on Run instead, so a second tap can't undo the answer.
+                  requestAnimationFrame(() => runBtnRef.current?.focus());
                 }}
               >
                 {c.run.showAnswer}

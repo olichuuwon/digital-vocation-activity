@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
+import { useAnnouncer } from '../../app/screenFocus';
 import { fill } from '../../content';
 import type { BlockOp, Program } from '../../content/stage3Schema';
+import { REPEAT_MAX, REPEAT_MIN } from '../../content/stage3Schema';
 import { toast } from '../../components/toastStore';
 import { blockText, ICON } from './blocks';
 import { c } from './content';
@@ -25,7 +27,25 @@ import {
 import s from './logic.module.css';
 
 const sameList = (a: ListPath, b: ListPath) => a.length === b.length && a.every((x, i) => x === b[i]);
+/** Stable DOM key for a block address, used to put focus back after edits. */
+const addrKey = (a: BlockAddr) => `${a.list.join('.')}:${a.index}`;
 
+/** "inside Repeat ×3" / "inside If road ahead is flooded" / "inside Otherwise", or "" at the top level. */
+function insideText(program: Program, list: ListPath): string {
+  if (list.length === 0) return '';
+  const owner = getBlock(program, { list: list.slice(0, -2), index: list[list.length - 2] as number });
+  if (!owner) return '';
+  const field = list[list.length - 1];
+  const name = owner.op === 'ifFlooded' && field === 'else' ? c.blocks.otherwise : blockText(owner);
+  return fill(c.a11y.inside, { block: name });
+}
+
+/** Spoken/visible name of an "add here" slot, stable whether or not it's the active one. */
+function slotName(program: Program, list: ListPath): string {
+  return fill(c.a11y.slot, { where: insideText(program, list) || c.a11y.atEnd });
+}
+
+/** What the active "add here" spot is called on screen ("Adding inside Repeat"). */
 function cursorLabel(program: Program, cur: Cursor): string {
   if (cur.list.length === 0) return c.editor.addHere;
   const owner = getBlock(program, { list: cur.list.slice(0, -2), index: cur.list[cur.list.length - 2] as number });
@@ -40,6 +60,7 @@ function cursorLabel(program: Program, cur: Cursor): string {
  * - Tap a program block: select it, then Move up / Move down / Remove / More or fewer times.
  * - Tap an "Add blocks here" slot to add inside a Repeat or If.
  * Debug It (`swap`): tap a block, then a palette block to swap it in (limited swaps).
+ * Every edit is announced once (one live region), and focus never falls back to <body> (§10).
  */
 export function ProgramEditor({
   program,
@@ -55,7 +76,7 @@ export function ProgramEditor({
   onChange: (p: Program) => void;
   palette: readonly BlockOp[];
   blockLimit: number | null;
-  /** True while the truck runs. */
+  /** True while the truck runs or once solved: the program can be read but not changed. */
   locked: boolean;
   activeAddr?: BlockAddr | null;
   failedAddr?: BlockAddr | null;
@@ -64,15 +85,30 @@ export function ProgramEditor({
 }) {
   const [cursor, setCursor] = useState<Cursor>({ list: [], index: program.length });
   const [selected, setSelected] = useState<BlockAddr | null>(null);
+  const announce = useAnnouncer((a) => a.announce);
   const used = blockCount(program);
   const full = blockLimit !== null && used >= blockLimit;
   const rows = flatten(program);
   const selBlock = selected ? getBlock(program, selected) : undefined;
+  const countText = (n: number) =>
+    blockLimit === null ? fill(c.editor.noLimit, { n }) : fill(c.editor.blocksUsed, { n, max: blockLimit });
+
   // Keep the running block in view while the truck drives (the program box scrolls on its own).
   const boxRef = useRef<HTMLElement>(null);
   useEffect(() => {
     boxRef.current?.querySelector('[data-active="true"]')?.scrollIntoView?.({ block: 'nearest' });
   }, [activeAddr]);
+
+  // After Remove the focused button disappears: move focus to the nearest block or slot.
+  const pendingFocus = useRef<string | null>(null);
+  useEffect(() => {
+    const key = pendingFocus.current;
+    if (!key) return;
+    pendingFocus.current = null;
+    const box = boxRef.current;
+    const el = box?.querySelector<HTMLElement>(`[data-key="${key}"]`) ?? box?.querySelector<HTMLElement>('[data-key="end"]');
+    el?.focus();
+  });
 
   const commit = (p: Program, nextSel: BlockAddr | null, nextCursor?: Cursor) => {
     onChange(p);
@@ -92,7 +128,9 @@ export function ProgramEditor({
       if (selBlock.op === op) return;
       if (swap.left <= 0) return toast(fill(c.editor.editsLeft, { n: 0 }), 'error');
       swap.onSwap();
-      commit(swapOp(program, selected, op), selected);
+      const next = swapOp(program, selected, op);
+      commit(next, selected);
+      announce(fill(c.a11y.swapped, { block: blockText(getBlock(next, selected)!), n: swap.left - 1 }));
       return;
     }
     if (full) return toast(c.editor.overLimit, 'error');
@@ -101,31 +139,44 @@ export function ProgramEditor({
     const next = insertAt(program, at, block);
     const addr = { list: at.list, index: at.index };
     // A new Repeat/If: keep adding inside it, which is nearly always the next step.
-    const inside =
-      op === 'repeat' ? childList(addr, 'body') : op === 'ifFlooded' ? childList(addr, 'then') : null;
+    const inside = op === 'repeat' ? childList(addr, 'body') : op === 'ifFlooded' ? childList(addr, 'then') : null;
     commit(next, null, inside ? { list: inside, index: 0 } : { list: at.list, index: at.index + 1 });
+    const where = insideText(next, at.list);
+    const said = fill(c.a11y.added, { block: `${blockText(block)}${where ? `, ${where}` : ''}`, count: countText(blockCount(next)) });
+    announce(inside ? `${said} ${fill(c.a11y.addingInside, { block: blockText(block) })}` : said);
   };
 
   const remove = () => {
-    if (!selected || locked || swap) return;
+    if (!selected || !selBlock || locked || swap) return;
     const cursorOrphaned = isInside(cursor.list, selected);
     const next = removeAt(program, selected);
     commit(next, null, cursorOrphaned ? { list: [], index: next.length } : undefined);
+    const left = getList(next, selected.list) ?? [];
+    const focusAt = left.length === 0 ? null : { list: selected.list, index: Math.min(selected.index, left.length - 1) };
+    pendingFocus.current = focusAt ? addrKey(focusAt) : 'end';
+    announce(fill(c.a11y.removed, { block: blockText(selBlock), count: countText(blockCount(next)) }));
   };
 
+  const listLen = selected ? (getList(program, selected.list)?.length ?? 0) : 0;
   const move = (d: -1 | 1) => {
     if (!selected || locked || swap) return;
+    const to = selected.index + d;
+    if (to < 0 || to >= listLen) return;
     const r = moveBy(program, selected, d);
     commit(r.program, r.addr, { list: [], index: r.program.length });
+    announce(fill(c.a11y.moved, { n: r.addr.index + 1 }));
   };
 
   const times = (d: -1 | 1) => {
     if (!selected || selBlock?.op !== 'repeat' || locked) return;
+    const n = selBlock.n + d;
+    if (n < REPEAT_MIN || n > REPEAT_MAX) return;
     if (swap) {
       if (swap.left <= 0) return toast(fill(c.editor.editsLeft, { n: 0 }), 'error');
       swap.onSwap();
     }
-    commit(setRepeat(program, selected, selBlock.n + d), selected);
+    commit(setRepeat(program, selected, n), selected);
+    announce(fill(c.a11y.repeatSet, { n }));
   };
 
   const rootEnd: Cursor = { list: [], index: program.length };
@@ -133,13 +184,13 @@ export function ProgramEditor({
 
   return (
     <>
-      <section className={s.programBox} aria-labelledby="program-heading" ref={boxRef}>
+      <section className={s.programBox} aria-labelledby="program-heading" ref={boxRef} tabIndex={locked ? 0 : undefined}>
         <div className={s.programHead}>
           <h2 id="program-heading" style={{ fontSize: 'inherit', margin: 0 }}>
             {c.editor.program}
           </h2>
           <span className={`${s.count} ${full ? s.countFull : ''}`} data-testid="block-count">
-            {blockLimit === null ? fill(c.editor.noLimit, { n: used }) : fill(c.editor.blocksUsed, { n: used, max: blockLimit })}
+            {countText(used)}
           </span>
         </div>
         {program.length === 0 && <p className={s.empty}>{c.editor.empty}</p>}
@@ -161,13 +212,16 @@ export function ProgramEditor({
                     type="button"
                     className={s.slot}
                     aria-pressed={on}
-                    disabled={locked}
+                    aria-disabled={locked || undefined}
+                    aria-label={slotName(program, list)}
                     onClick={() => {
+                      if (locked) return;
                       setSelected(null);
                       setCursor({ list, index: getList(program, list)?.length ?? 0 });
                     }}
                   >
-                    {on ? `➕ ${cursorLabel(program, cursor)}` : `＋ ${c.editor.addHere}`}
+                    <span aria-hidden="true">{on ? '➕ ' : '＋ '}</span>
+                    {on ? cursorLabel(program, cursor) : c.editor.addHere}
                   </button>
                 </li>
               );
@@ -175,22 +229,28 @@ export function ProgramEditor({
             const b = r.block!;
             const isSel = sameAddr(selected, r.addr);
             const active = sameAddr(activeAddr, r.addr);
+            const failedHere = sameAddr(failedAddr, r.addr);
+            const where = insideText(program, r.addr.list);
             return (
               <li key={`b-${r.addr.list.join('.')}-${r.addr.index}`} className={s.row} style={pad}>
                 <button
                   type="button"
                   className={s.blockBtn}
                   aria-pressed={isSel}
+                  aria-disabled={locked || undefined}
+                  aria-current={active ? 'step' : undefined}
                   data-active={active || undefined}
-                  data-failed={sameAddr(failedAddr, r.addr) || undefined}
+                  data-failed={failedHere || undefined}
                   data-op={b.op}
-                  disabled={locked}
-                  onClick={() => setSelected(isSel ? null : r.addr)}
+                  data-key={addrKey(r.addr)}
+                  onClick={() => !locked && setSelected(isSel ? null : r.addr)}
                 >
-                  {active && <span aria-hidden="true">▶</span>}
+                  {failedHere ? <span aria-hidden="true">✗</span> : active && <span aria-hidden="true">▶</span>}
                   <span aria-hidden="true">{ICON[b.op]}</span>
                   {blockText(b)}
                   {b.op === 'ifFlooded' && <span aria-hidden="true">:</span>}
+                  {where && <span className="visually-hidden">, {where}</span>}
+                  {failedHere && <span className="visually-hidden">, {c.a11y.stoppedHere}</span>}
                 </button>
               </li>
             );
@@ -201,13 +261,17 @@ export function ProgramEditor({
                 type="button"
                 className={s.slot}
                 aria-pressed={cursorIsRootEnd}
-                disabled={locked}
+                aria-disabled={locked || undefined}
+                aria-label={slotName(program, [])}
+                data-key="end"
                 onClick={() => {
+                  if (locked) return;
                   setSelected(null);
                   setCursor(rootEnd);
                 }}
               >
-                {cursorIsRootEnd ? `➕ ${c.editor.addHere}` : `＋ ${c.editor.addHere}`}
+                <span aria-hidden="true">{cursorIsRootEnd ? '➕ ' : '＋ '}</span>
+                {c.editor.addHere}
               </button>
             </li>
           )}
@@ -222,7 +286,7 @@ export function ProgramEditor({
                 <span aria-hidden="true">⬆ </span>
                 {c.editor.moveUp}
               </button>
-              <button type="button" className={s.tool} onClick={() => move(1)}>
+              <button type="button" className={s.tool} onClick={() => move(1)} aria-disabled={selected.index >= listLen - 1 || undefined}>
                 <span aria-hidden="true">⬇ </span>
                 {c.editor.moveDown}
               </button>
@@ -234,10 +298,22 @@ export function ProgramEditor({
           )}
           {selBlock.op === 'repeat' && (
             <>
-              <button type="button" className={s.tool} onClick={() => times(-1)} aria-label={c.editor.fewer}>
+              <button
+                type="button"
+                className={s.tool}
+                onClick={() => times(-1)}
+                aria-label={c.editor.fewer}
+                aria-disabled={selBlock.n <= REPEAT_MIN || undefined}
+              >
                 −
               </button>
-              <button type="button" className={s.tool} onClick={() => times(1)} aria-label={c.editor.more}>
+              <button
+                type="button"
+                className={s.tool}
+                onClick={() => times(1)}
+                aria-label={c.editor.more}
+                aria-disabled={selBlock.n >= REPEAT_MAX || undefined}
+              >
                 +
               </button>
             </>

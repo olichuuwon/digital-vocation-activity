@@ -35,8 +35,8 @@ function Tile({ ch, x, y, flooded }: { ch: string; x: number; y: number; flooded
     );
   return (
     <g>
-      <rect x={X} y={Y} width="10" height="10" fill="#7d838c" />
-      <rect x={X + 0.4} y={Y + 0.4} width="9.2" height="9.2" fill="none" stroke="#9aa1a9" strokeWidth="0.4" />
+      <rect x={X} y={Y} width="10" height="10" fill="#555b63" />
+      <rect x={X + 0.4} y={Y + 0.4} width="9.2" height="9.2" fill="none" stroke="#6d747d" strokeWidth="0.4" />
       {flooded && (
         <g>
           <rect x={X} y={Y} width="10" height="10" fill="#2f7fd0" />
@@ -96,6 +96,7 @@ export const GridMap = memo(function GridMap({
   wrongDrops,
   crashed,
   label,
+  describedBy,
 }: {
   grid: readonly string[];
   /** Active flood group, or null before a run reveals it. */
@@ -108,12 +109,14 @@ export const GridMap = memo(function GridMap({
   crashed: boolean;
   /** Accessible summary (the map is one image to screen readers; the text lives in `label`). */
   label: string;
+  /** Id of the text description of each row. */
+  describedBy?: string;
 }) {
   const size = grid.length;
   const tiles: { ch: string; x: number; y: number }[] = [];
   grid.forEach((row, y) => [...row].forEach((ch, x) => tiles.push({ ch, x, y })));
   return (
-    <svg viewBox={`0 0 ${size * 10} ${size * 10}`} className={s.map} role="img" aria-label={label} data-testid="grid-map">
+    <svg viewBox={`0 0 ${size * 10} ${size * 10}`} className={s.map} role="img" aria-label={label} aria-describedby={describedBy} data-testid="grid-map">
       {tiles.map(({ ch, x, y }) => (
         <Tile key={`${x},${y}`} ch={ch} x={x} y={y} flooded={ch === '~' || (flood !== null && ch === flood)} />
       ))}

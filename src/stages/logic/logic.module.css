@@ -115,9 +115,15 @@
   border-style: double;
 }
 
+.blockBtn[aria-disabled='true'] {
+  cursor: default;
+}
+
+/* Where the run stopped: ✗ marker + dashed border (not colour alone, differs from the running block). */
 .blockBtn[data-failed='true'] {
   border-color: var(--danger);
   border-width: 4px;
+  border-style: dashed;
 }
 
 .label {
@@ -129,7 +135,7 @@
 
 .slot {
   flex: 1;
-  min-height: 32px;
+  min-height: var(--tap);
   border: 2px dashed var(--border);
   border-radius: 10px;
   background: transparent;

@@ -50,7 +50,7 @@ export function RealityCheck({
           transition={{ duration: 0.25 }}
           data-testid="reality-card"
         >
-          <div className={s.visual} aria-hidden="true">
+          <div className={s.visual} aria-hidden={visuals?.[card.visual] ? undefined : true}>
             {visuals?.[card.visual] ?? <RealityVisualView visual={card.visual} vars={vars} />}
           </div>
           {card.title && <h2>{fill(card.title, vars)}</h2>}

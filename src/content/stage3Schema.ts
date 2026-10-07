@@ -202,5 +202,11 @@ export const stage3CopySchema = z.object({
     tests: txt,
   }),
   learned: words(25),
+  /** Screen-reader-only text (§10). */
+  a11y: z.object({
+    inside: txt, atEnd: txt, slot: txt, stoppedHere: txt, running: txt, added: txt, addingInside: txt,
+    removed: txt, moved: txt, repeatSet: txt, swapped: txt, step: txt, delivered: txt, stoppedAt: txt,
+    row: txt, truckHere: txt, wrongSupply: txt, housesDone: txt, python: txt,
+  }),
 });
 export type Stage3Copy = z.infer<typeof stage3CopySchema>;
