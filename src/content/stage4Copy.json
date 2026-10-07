@@ -1,0 +1,83 @@
+{
+  "levelIntro": {
+    "cloud-manual": "Traffic surges to ×10! Keep 3 servers (computers running your app) alive: Boost busy ones, Restart crashed ones, Roll back bad updates. Good luck!",
+    "cloud-configure": "Now let Kubernetes do the work. Pick your settings and keep the cost under budget.",
+    "cloud-replay": "Same storm, new setup. Sit back and watch Kubernetes handle it. You can still tap Restart or Roll back if needed."
+  },
+  "tutorialHint": "Tap Boost on the busiest server. Tap Restart the moment one crashes.",
+  "manual": {
+    "server": "Server {n}",
+    "busy": "{pct}% busy",
+    "crashed": "Crashed",
+    "rebooting": "Restarting…",
+    "restart": "Restart",
+    "boost": "Boost",
+    "boosted": "Boosted!",
+    "cooling": "Cooling down",
+    "rollback": "Roll back",
+    "badDeploy": "Bad update! Half your users are getting errors.",
+    "uptime": "Uptime {pct}%",
+    "traffic": "Traffic ×{n}",
+    "crashToast": "Server {n} crashed! Tap Restart to bring it back.",
+    "deployToast": "A bad update went out. Tap Roll back!",
+    "rolledBack": "Rolled back. Everything's working again."
+  },
+  "configure": {
+    "heading": "Set up Kubernetes",
+    "loadBalancer": "Load balancer",
+    "loadBalancerHelp": "Spreads users evenly across your pods, so no single pod gets swamped.",
+    "minPods": "Min pods",
+    "maxPods": "Max pods",
+    "podsHelp": "Min: pods always running, even when quiet. Max: the most allowed at peak.",
+    "threshold": "Add pods when busier than {pct}%",
+    "thresholdHelp": "Lower means pods get added sooner. New pods take 4 seconds to start.",
+    "selfHealing": "Self-healing",
+    "selfHealingHelp": "Kubernetes restarts crashed pods by itself, in about 3 seconds.",
+    "rolling": "Rolling updates",
+    "rollingHelp": "Tries new updates on one pod first. Bad ones roll back automatically.",
+    "on": "On",
+    "off": "Off",
+    "fewer": "Fewer",
+    "more": "More",
+    "cost": "Cost: {n} credits/min",
+    "budget": "Budget: {n} credits/min",
+    "overBudget": "Over budget. Fewer pods will cost less.",
+    "underBudget": "Under budget. Nice!",
+    "go": "Replay the storm"
+  },
+  "replay": {
+    "pods": "Pods: {n}",
+    "uptime": "Uptime {pct}%",
+    "cost": "Cost: {n} credits/min",
+    "healed": "A pod crashed. Kubernetes replaced it.",
+    "scaledUp": "Getting busy. The autoscaler is adding pods.",
+    "scaledDown": "Quieter now. The autoscaler removed a pod.",
+    "autoRollback": "Bad update caught on one pod and rolled back automatically.",
+    "compareHeading": "By hand vs Kubernetes",
+    "manual": "By hand",
+    "auto": "With Kubernetes",
+    "tweak": "Tweak settings",
+    "accept": "Keep this result"
+  },
+  "diagnosis": {
+    "perfect": "Spot on! Your pods handled the whole storm, and you stayed under budget.",
+    "overBudget": "Rock solid, but pricey: too many pods blew the budget. Lower Min pods and let the autoscaler add more.",
+    "tooFewPods": "Max pods was too low for the peak, so your pods got overloaded and crashed. Raise Max pods.",
+    "thresholdHigh": "New pods arrived too late. They take 4 seconds to start, so set a lower busy level.",
+    "noLoadBalancer": "Without a load balancer, one pod got swamped while others sat quiet. Turn it on to spread users evenly.",
+    "noHealing": "Crashed pods stayed down, waiting for a human. Turn on self-healing so Kubernetes restarts them in seconds.",
+    "noRolling": "The bad update hit every pod at once. Turn on rolling updates to test it on one pod first."
+  },
+  "hint": "Turn on all three switches. Keep Min pods low, allow enough Max pods for the peak, and add pods early.",
+  "timeUp": "Time's up! Let's see how it held up.",
+  "result": {
+    "heading3": "Unshakeable! Nothing kept your app down.",
+    "heading2": "Strong and steady!",
+    "heading1": "Still standing. Good start!",
+    "heading0": "Storms are tough. Have another go!",
+    "manual": "By hand: {pct}% uptime",
+    "auto": "With Kubernetes: {pct}% uptime",
+    "cost": "Cost: {n} of {budget} credits/min"
+  },
+  "learned": "By hand you kept {manual}% uptime; Kubernetes kept {auto}%. Tapping can't keep up, but automation can, at a cost."
+}
