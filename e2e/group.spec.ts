@@ -130,9 +130,10 @@ async function playCards(page: Page) {
   }
 }
 
-// Digits 2, 6 and 9 only: the profanity filter reads other digits as letters (4 → a, 5 → s), so
-// a random "Rejoin 9445" ("9ass") would be refused and the lobby would never open.
-const uniqueName = (prefix: string) => `${prefix} ${Array.from({ length: 6 }, () => '269'[Math.floor(Math.random() * 3)]).join('')}`;
+// Group names can't contain numbers, so tests tell groups apart with two fruit words.
+const FRUIT = ['Kiwi', 'Mango', 'Lime', 'Plum', 'Pear', 'Fig', 'Lychee', 'Durian'];
+const fruit = () => FRUIT[Math.floor(Math.random() * FRUIT.length)]!;
+const uniqueName = (prefix: string) => `${prefix} ${fruit()} ${fruit()}`;
 
 test('3 phones: create, join by QR link and by code, reorder, play a group run, rank on Today’s board', async ({ browser }, info) => {
   test.setTimeout(180_000);

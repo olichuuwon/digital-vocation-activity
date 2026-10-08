@@ -9,7 +9,7 @@ import s from './Group.module.css';
 
 const t = groupCopy.join;
 const e = groupCopy.errors;
-const nickError: Record<TextProblem, string> = { empty: e.nickEmpty, tooLong: e.nickTooLong, blocked: e.nickBlocked };
+const nickError: Record<TextProblem, string> = { empty: e.nickEmpty, tooLong: e.nickTooLong, digits: e.nickDigits, blocked: e.nickBlocked };
 
 /** Join a group (§3.5.1): code (prefilled from the leader's QR) + nickname. */
 export function GroupJoin({ initialCode, onBack }: { initialCode: string; onBack: () => void }) {

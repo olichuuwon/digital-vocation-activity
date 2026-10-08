@@ -40,7 +40,9 @@
     "notFound": "Can't find that group. Check the code with your host.",
     "full": "That group is full. Groups have up to 4 players.",
     "started": "That group has already started.",
-    "noNetwork": "Can't reach the game server. Check the internet and try again."
+    "noNetwork": "Can't reach the game server. Check the internet and try again.",
+    "nameDigits": "Letters only, please: no numbers in the group name.",
+    "nickDigits": "Letters only, please: no numbers in your nickname."
   },
   "lobby": {
     "codeLabel": "Code",

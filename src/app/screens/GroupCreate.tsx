@@ -11,8 +11,8 @@ import s from './Group.module.css';
 const t = groupCopy.create;
 const e = groupCopy.errors;
 
-const nameError: Record<TextProblem, string> = { empty: e.nameEmpty, tooLong: e.nameTooLong, blocked: e.nameBlocked };
-const nickError: Record<TextProblem, string> = { empty: e.nickEmpty, tooLong: e.nickTooLong, blocked: e.nickBlocked };
+const nameError: Record<TextProblem, string> = { empty: e.nameEmpty, tooLong: e.nameTooLong, digits: e.nameDigits, blocked: e.nameBlocked };
+const nickError: Record<TextProblem, string> = { empty: e.nickEmpty, tooLong: e.nickTooLong, digits: e.nickDigits, blocked: e.nickBlocked };
 
 /** Create a group (§3.5.1): pick a generated name or type one, nickname, run length. */
 export function GroupCreate({ facilitatorMode, onBack }: { facilitatorMode: Mode | null; onBack: () => void }) {

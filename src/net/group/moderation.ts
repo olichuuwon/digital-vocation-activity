@@ -46,12 +46,15 @@ export const tidy = (s: string) => s.trim().replace(/\s+/g, ' ');
 // eslint-disable-next-line no-control-regex
 const BAD_CHARS = /[\u0000-\u001f\u007f-\u009f\u200b-\u200f\u202a-\u202e\u2060-\u2064\u2066-\u2069\ufeff]/;
 
-export type TextProblem = 'empty' | 'tooLong' | 'blocked';
+export type TextProblem = 'empty' | 'tooLong' | 'digits' | 'blocked';
 
 function check(raw: string, max: number): TextProblem | null {
   const s = tidy(raw);
   if (!s) return 'empty';
   if ([...s].length > max) return 'tooLong';
+  // No numbers at all (owner decision 2026-10-08): digits are the easiest way round the
+  // filter ("4ss"), and real names don't need them.
+  if (/\p{Nd}/u.test(s)) return 'digits';
   if (BAD_CHARS.test(s) || isBlocked(s)) return 'blocked';
   return null;
 }

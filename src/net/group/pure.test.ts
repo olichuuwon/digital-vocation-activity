@@ -77,6 +77,11 @@ describe('moderation', () => {
     expect(checkGroupName('Holy shit')).toBe('blocked');
     expect(checkNickname('A'.repeat(17))).toBe('tooLong');
     expect(checkNickname('Mei')).toBeNull();
+    // No numbers at all (owner decision), including other scripts' digits.
+    expect(checkGroupName('Team 4455')).toBe('digits');
+    expect(checkGroupName('Squad 7')).toBe('digits');
+    expect(checkNickname('Mei2')).toBe('digits');
+    expect(checkNickname('Mei٣')).toBe('digits');
   });
 
   it('generates distinct, clean names that fit 20 characters', () => {

@@ -21,7 +21,7 @@ export const groupCopySchema = z.object({
   ]),
   join: section(['heading', 'codeLabel', 'codeHint', 'nicknameLabel', 'nicknameHint', 'join', 'looking', 'back']),
   errors: section([
-    'nameEmpty', 'nameTooLong', 'nameBlocked', 'nickEmpty', 'nickTooLong', 'nickBlocked',
+    'nameEmpty', 'nameTooLong', 'nameBlocked', 'nameDigits', 'nickEmpty', 'nickTooLong', 'nickBlocked', 'nickDigits',
     'badCode', 'notFound', 'full', 'started', 'noNetwork',
   ]),
   lobby: section([
