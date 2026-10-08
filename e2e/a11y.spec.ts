@@ -12,6 +12,8 @@ async function axe(page: Page, screen: string) {
   await page.waitForTimeout(700);
   for (const scheme of ['light', 'dark'] as const) {
     await page.emulateMedia({ colorScheme: scheme, reducedMotion: 'reduce' });
+    // Let the theme switch finish painting before measuring contrast (flaky on fast local machines).
+    await page.waitForTimeout(300);
     const r = await new AxeBuilder({ page }).withTags(TAGS).analyze();
     const found = r.violations.map((v) => `${v.id}: ${v.nodes.map((n) => n.target.join(' ')).join(' | ')}`);
     expect(found, `${screen} (${scheme})`).toEqual([]);
