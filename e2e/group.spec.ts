@@ -12,7 +12,9 @@ const ROW_ID = 4242;
 async function phone(browser: Browser, info: TestInfo) {
   const { viewport, userAgent, deviceScaleFactor, isMobile, hasTouch, baseURL } = info.project.use;
   const ctx = await browser.newContext({ viewport, userAgent, deviceScaleFactor, isMobile, hasTouch, baseURL, serviceWorkers: 'block' });
-  return ctx.newPage();
+  const page = await ctx.newPage();
+  page.on('pageerror', (e) => console.log(`[pageerror] ${e.message}`));
+  return page;
 }
 
 /** Mocks the leaderboard: submit_run answers rank 3; today's board includes the group once submitted. */
@@ -44,7 +46,13 @@ async function createGroup(page: Page, name: string, nick: string) {
   await page.getByLabel('Your nickname').fill(nick);
   await page.getByRole('button', { name: 'Create group' }).click();
   // Connecting to the relay (and loading the lobby screen) can take a while on a busy CI runner.
-  await expect(page.getByTestId('group-name')).toHaveText(name, { timeout: 15_000 });
+  try {
+    await expect(page.getByTestId('group-name')).toHaveText(name, { timeout: 15_000 });
+  } catch (err) {
+    // Diagnostics for CI (no trace viewer there): what the screen shows instead of the lobby.
+    console.log(`[createGroup] "${name}" lobby missing. Screen: ${(await page.locator('body').innerText()).replace(/\s+/g, ' ').slice(0, 600)}`);
+    throw err;
+  }
   const code = (await page.getByTestId('group-code').textContent())!.trim();
   expect(code).toMatch(/^[A-HJ-NP-Z2-9]{4}$/);
   return code;
