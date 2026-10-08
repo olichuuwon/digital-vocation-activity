@@ -1,16 +1,19 @@
 import { describe, expect, it } from 'vitest';
 import {
   BAD_DEPLOY_S,
+  BASE_RPS,
   CLOUD_STARS,
   COLD_START_S,
   CRASH_TICKS,
   CREDITS_PER_POD_MIN,
   FAULT_S,
   MANUAL_RECOVER_S,
+  PHASE_SECONDS,
   PHASE_TICKS,
   POD_CAPACITY,
   SELF_HEAL_S,
   TICK_MS,
+  TRAFFIC_KEYFRAMES,
   WARMUP_S,
   cloudScores,
   cloudStageScore,
@@ -66,10 +69,35 @@ describe('traffic', () => {
     expect(a.totals.demand).toBeCloseTo(c.totals.demand, 9);
   });
 
+  it('booth-length storm keeps every beat in order: bad deploy, viral surge, fault at the ×10 peak, cool-down', () => {
+    expect(PHASE_SECONDS).toBe(45);
+    const tr = createTraffic(1, { intensity: 0.5 });
+    const base = BASE_RPS * tr.scale;
+    const at = (s: number) => mean(Array.from(tr.demand.slice(s * 10 - 5, s * 10 + 5))) / base;
+    // The bad deploy lands before the surge, while traffic is still climbing.
+    expect(BAD_DEPLOY_S).toBeLessThan(22);
+    expect(at(BAD_DEPLOY_S)).toBeLessThan(6.5);
+    // The hardware fault hits the peak, after the HPA has caught up with the surge.
+    expect(FAULT_S).toBeGreaterThan(31);
+    expect(at(FAULT_S)).toBeGreaterThan(9);
+    // A zombie (self-healing off) stays for the rest of the storm; a healed pod is back well before the end.
+    expect(FAULT_S + MANUAL_RECOVER_S).toBeGreaterThanOrEqual(PHASE_SECONDS);
+    expect(FAULT_S + SELF_HEAL_S + WARMUP_S).toBeLessThan(PHASE_SECONDS - 5);
+    // Cool-down: the end is quieter than the peak (the autoscaler removes pods).
+    expect(at(44)).toBeLessThan(at(34) - 1);
+    // No climb grows faster than ≈ 5.5% a second, so a 60–70% threshold can keep up (2 s HPA + 4 s cold start).
+    for (let i = 1; i < TRAFFIC_KEYFRAMES.length; i++) {
+      const [t0, v0] = TRAFFIC_KEYFRAMES[i - 1]!;
+      const [t1, v1] = TRAFFIC_KEYFRAMES[i]!;
+      if (v1 > v0 && v0 >= 2.5) expect(Math.log(v1 / v0) / (t1 - t0)).toBeLessThan(0.055);
+    }
+  });
+
   it('ramps to ×10, uneven, and scales with app quality (§3.2)', () => {
     const tr = createTraffic(1, { intensity: 0.5 });
-    const first = mean(Array.from(tr.demand.slice(0, 20)));
-    const peak = mean(Array.from(tr.demand.slice(450, 560)));
+    const first = mean(Array.from(tr.demand.slice(0, 5))); // the first half second (×1)
+    // The ×10 peak holds 31–37 s.
+    const peak = mean(Array.from(tr.demand.slice(310, 370)));
     expect(peak / first).toBeGreaterThan(8.5);
     expect(peak / first).toBeLessThan(11.5);
     expect(intensityScale(0)).toBeCloseTo(0.85);
@@ -292,7 +320,9 @@ describe('Phase C (auto)', () => {
     const on = at(SENSIBLE);
     expect(on.last.ok).toBeCloseTo(on.last.demand, 6);
     const off = at({ ...SENSIBLE, selfHealing: false });
-    const n = off.pods.length;
+    // The LB splits over ready pods plus the zombie (pods still cold-starting get nothing).
+    const n = off.pods.filter((p) => p.status !== 'starting').length;
+    expect(off.pods.find((p) => p.id === off.faultPod)?.status).toBe('crashed');
     expect(off.last.dropped).toBeCloseTo(off.last.demand / n, 6);
   });
 
@@ -395,7 +425,9 @@ describe('Phase C (auto)', () => {
     // The player can still intervene in Phase C.
     const fixed = run(tr, { ...SENSIBLE, rollingUpdate: false }, humanPolicy());
     expect(fixed.rollbacks).toBe(1);
-    expect(fixed.uptime).toBeGreaterThan(0.98);
+    // A 2.5 s reaction costs ≈ 2–3% of a 45 s storm: much better than not rolling back, still short of 99%.
+    expect(fixed.uptime).toBeGreaterThan(0.97);
+    expect(fixed.uptime).toBeGreaterThan(offSum.uptime + 0.3);
     const on = simulatePhase(tr, SENSIBLE);
     expect(on.deploy).toBe('rolledBack');
     expect(summarize(on).errored).toBeGreaterThan(0);

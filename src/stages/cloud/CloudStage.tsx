@@ -57,8 +57,8 @@ const pct = (x: number) => Math.floor(x * 100 + 1e-9);
 const levelName = (id: LevelId) => stageContent(4)!.levels.find((l) => l.id === id)?.name ?? '';
 /** Most "Tweak settings" round trips after a replay. */
 const MAX_TWEAKS = 2;
-/** Base seconds for Phase B (§7.3 "~60s"); relaxed ×1.5 and +30s apply via Timer. */
-const CONFIGURE_SECONDS = 60;
+/** Base seconds for Phase B (§7.3 says ~60 s; 45 s for the booth budget, owner item 29); relaxed ×1.5 and +30s apply via Timer. */
+const CONFIGURE_SECONDS = 45;
 /** A good-enough setup shown as the answer after two tweaks (no dead ends). */
 const SUGGESTED: ClusterConfig = { loadBalancer: true, minPods: 2, maxPods: 10, scaleUpCpu: 0.65, selfHealing: true, rollingUpdate: true };
 
@@ -211,8 +211,8 @@ function Clock({ tick }: { tick: number }) {
   );
 }
 
-/** Ticks left in the storm when "30 seconds left" is spoken (the clock bar is visual only). */
-const STORM_WARN_TICKS = 300;
+/** Ticks left in the 45 s storm when "10 seconds left" is spoken (the clock bar is visual only). */
+const STORM_WARN_TICKS = 100;
 /** Sim ticks between "overloaded" warnings for the same server (5 s). */
 const OVERLOAD_WARN_GAP = 50;
 
@@ -220,7 +220,7 @@ const OVERLOAD_WARN_GAP = 50;
  * Live feedback for things that happen to the cluster: one toast or announcement at a time, never
  * per tick. Events the player didn't cause use 'info' toasts (no "Wrong:" prefix) plus a buzz.
  * Screen readers also hear a warning when a server goes over 100% (it crashes 1.5 s later) and
- * when 30 seconds of storm are left.
+ * when 10 seconds of storm are left.
  */
 function useClusterEvents(state: SimState, auto: boolean, selfHealing = false) {
   const announce = useAnnouncer((a) => a.announce);
@@ -811,7 +811,7 @@ function Replay({
   traffic: Traffic;
   config: ClusterConfig;
   manualUptime: number;
-  /** A storm that already finished (reload): show its result instead of replaying 75 s. */
+  /** A storm that already finished (reload): show its result instead of replaying the storm. */
   saved: ReplayResult | null;
   onFinished: (r: ReplayResult) => void;
   canTweak: boolean;

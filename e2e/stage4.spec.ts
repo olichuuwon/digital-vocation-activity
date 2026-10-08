@@ -1,6 +1,6 @@
 import { expect, test, type Page } from '@playwright/test';
 
-// simSpeed (debug only) runs the 75 s storms fast so the suite stays quick.
+// simSpeed (debug only) runs the 45 s storms fast so the suite stays quick.
 const URL = '/?debug=1&simSpeed=25&stage=4';
 
 async function manualPhase(page: Page) {
@@ -67,7 +67,7 @@ test('Stage 4: the default config fails in a teachable way, and Tweak goes back 
   await expect(page.getByTestId('hint')).toContainText(/Hint/);
 });
 
-test('Stage 4: reloading after the replay shows the saved result, not another 75 s storm', async ({ page }) => {
+test('Stage 4: reloading after the replay shows the saved result, not another storm', async ({ page }) => {
   test.setTimeout(90_000);
   await page.goto(URL);
   await manualPhase(page);

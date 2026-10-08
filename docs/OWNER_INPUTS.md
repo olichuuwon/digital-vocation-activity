@@ -59,8 +59,8 @@ Try it: https://digital-vocation-activity.vercel.app/?debug=1&stage=3 (add `&mod
 ## H. Stage 4 and the finale
 Try them with stage select (Play solo → pick a length → pick a stage).
 
-- [ ] **29. Stage 4 length:** a first-timer takes about 4.4 min against a 3 min budget, mostly because the spec's two storms are 75 s each. Phase C now has a ×3 fast-forward button. *Default: keep 75 s storms and tune in M8 (e.g. 50 s storms).*
-- [ ] **30. Stage 4 scoring:** 3★ means at least 99% uptime and under budget. A hardware fault at 50 s makes self-healing matter. "Around 60–70%" is the sweet spot, and the hint says so. *Default: keep.*
+- [x] **29. Stage 4 length:** ✅ Addressed 2026-10-08 after the owner's playtest: storms are now 45 s each (were 75 s), Configure 45 s (was 60 s), Fast-forward ×3 kept in Phase C. Same beats and lessons (manual ≈ 64–78%, a sensible Kubernetes setup ≥ 99% under budget). A first-timer should take about 2.6–3.1 min (was 4.4). See DECISIONS 2026-10-08 "Stage 4 shorter". *Please re-check at the next playtest.*
+- [ ] **30. Stage 4 scoring:** 3★ means at least 99% uptime and under budget. A hardware fault at 32 s (the peak of the 45 s storm) makes self-healing matter. "Around 60–70%" is the sweet spot, and the hint says so. *Default: keep.*
 - [ ] **31. Finale text (D14):** the C4X match one-liners, the three "Why digital matters to DIS" cards and the rank titles ("Ops commander" sounds slightly military; swap it if you prefer) in `src/content/finaleCopy.json`. *Default: shown as drafted.*
 - [ ] **32. Live Ops balance:** 8 incidents, 8 s each, +15 families for a right answer and −12 for a wrong one or time-out. Live Ops can move you about one rank. *Default: keep.*
 - [ ] **33. Stage select flag:** on for development (`src/content/flags.json`). *Default: switch off before the event, unless you want it.*

@@ -82,7 +82,7 @@
     "tooFewPods": "Max pods was too low for the peak, so your pods got overloaded and crashed. Raise Max pods.",
     "thresholdHigh": "New pods arrived too late. They take 4 seconds to start, so set a lower busy level.",
     "noLoadBalancer": "Without a load balancer, one pod got swamped while others sat quiet. Turn it on to spread users evenly.",
-    "noHealing": "A pod died and kept getting users for 15 seconds. Self-healing restarts it in about 3.",
+    "noHealing": "A pod died and kept getting users for up to 15 seconds. Self-healing restarts it in about 3.",
     "noRolling": "The bad update hit every pod at once. Turn on rolling updates to test it on one pod first.",
     "overBudgetShaky": "Too pricey and still wobbly. Pick a sensible busy level and fewer Max pods, not more pods everywhere.",
     "overBudgetMinOne": "Over budget: pods get added too eagerly. Raise the busy level a little, or lower Max pods."

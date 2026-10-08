@@ -43,10 +43,11 @@
 //   Restart tap: the pod reboots for RESTART_BOOT_S = 1 s, then is ready (overload count reset).
 //
 // HARDWARE FAULT (load-independent, so self-healing matters even for a well-sized cluster).
-//   At FAULT_S = 50 s (peak of the storm) the FAULT_RANK-th ready pod in creation order (the 2nd;
+//   At FAULT_S = 32 s (1 s into the ×10 peak) the FAULT_RANK-th ready pod in creation order (the 2nd;
 //   the last ready one if fewer) crashes whatever its load. It is a normal crash afterwards:
 //   Phase A → down until Restart; self-healing ON → back in 3 s (LB routes around it, no loss);
-//   OFF → a 15 s zombie that still gets its share (≈ 3–5% uptime lost, so < 99%). Counted in
+//   OFF → a zombie that still gets its share for the last 13 s of the storm (it would be 15 s;
+//   ≈ 5–7% uptime lost, so always < 99%). Counted in
 //   totals.crashes and totals.faults; state.faultPod is its id (-1 before / if none was ready).
 //
 // HPA (auto only). Every 2 s: desired = clamp(ceil(D / (scaleUpCpu × POD_CAPACITY)), minPods,
@@ -69,9 +70,13 @@
 //   Rolling update ON: it goes to one pod first (a canary). That pod errors 50% of its requests
 //     for AUTO_ROLLBACK_S = 2 s, the health check fails and it is rolled back automatically.
 //
-// TRAFFIC. Keyframes × seeded noise × traffic.scale. The viral surge climbs ×6.5 → ×10 over
-//   34–44 s (≈ 0.35×/s): with a 2 s HPA period + 4 s cold start, a 60–70% threshold has the
-//   headroom to ride it; 80%+ often does not.
+// TRAFFIC. Keyframes × seeded noise × traffic.scale. Booth-length storm (owner item 29, Oct 2026:
+//   45 s, was 75 s): a quick jump to ×2.5 (min pods cover it), a steady climb to ×6.5 by 22 s with
+//   the bad deploy at 16 s, the viral surge ×6.5 → ×10 over 22–31 s, the ×10 peak 31–37 s with the
+//   hardware fault at 32 s, then a short cool-down (scale-down) to 45 s. Every climb grows ≤ ≈ 5%
+//   per second (relative), like the 75 s storm: with a 2 s HPA period + 4 s cold start a 60–70%
+//   threshold rides it; 75% usually does, 80% often does not, 85–90% almost never. Steeper relative
+//   climbs (tried: the 75 s keyframes squeezed linearly) broke the 60–70% band.
 //
 // UPTIME = requests served successfully / requests demanded, over the whole phase (request
 //   weighted). Lost: dropped by overloaded pods (excess over capacity), by crashed/booting pods
@@ -79,15 +84,15 @@
 //
 // COST = CREDITS_PER_POD_MIN (10) credits per minute per provisioned pod (ready, starting or
 //   crashed: you pay for what you asked for). The phase cost is the time-average in credits/min,
-//   compared with traffic.budget (credits/min): round(BUDGET_PER_MIN (62) × traffic.scale).
-//   At min 2 / max 10 with every switch on, thresholds 60–70% are always 3★; ≤ 50% is over
-//   budget; 55% and 75–80% are a coin flip depending on the seed; 85–90% rarely make 99%.
+//   compared with traffic.budget (credits/min): round(BUDGET_PER_MIN (64) × traffic.scale).
+//   At min 2 / max 10 with every switch on, thresholds 60–70% are always 3★; 40–45% are always
+//   and 50% mostly over budget; 55% and 75–80% depend on the seed; 85–90% rarely make 99%.
 //
 // INTENSITY (§3.2 "a better app means more users"): appQuality 0–1 → traffic.scale =
 //   0.85 + 0.30 × quality, multiplying every demand value (peak ≈ 425–575 req/s; 500 at 0.5).
 //   The budget scales with it so 3★ stays reachable for any app quality. The Phase A Boost
 //   scales twice as steeply (traffic.boost = BOOST_CAPACITY × (1 + 2 × (scale − 1)) = 105–195
-//   req/s) so the scripted human lands at ≈ 66–75% whatever the app quality (it was 60–79%).
+//   req/s) so the scripted human lands at ≈ 64–78% whatever the app quality (it was 60–79%).
 //
 // API NOTE: spec §7.5 names `step(state, dt, config, rng)`. The rng is consumed by
 //   createTraffic(seed) instead (precomputed so Phase A and C see identical traffic), so the 4th
@@ -101,8 +106,8 @@ export type Rng = () => number;
 // ---- Constants (spec §7.5 unless noted) ----
 export const TICK_MS = 100;
 export const TICK_S = TICK_MS / 1000;
-/** Phase A and Phase C length (§7.1/§7.4 "~60–90s"). */
-export const PHASE_SECONDS = 75;
+/** Phase A and Phase C length. Spec §7.1/§7.4 say ~60–90 s; shortened to 45 s for the 3-minute booth budget (owner item 29). */
+export const PHASE_SECONDS = 45;
 export const PHASE_TICKS = PHASE_SECONDS * 10;
 export const POD_CAPACITY = 100; // req/s
 export const CRASH_TICKS = 15; // crash when overloaded on MORE than this many consecutive ticks (> 1.5 s)
@@ -112,7 +117,7 @@ export const RESTART_BOOT_S = 1;
 export const HPA_EVERY_S = 2;
 export const COLD_START_S = 4;
 export const SCALE_DOWN_EVALS = 3;
-export const BAD_DEPLOY_S = 32;
+export const BAD_DEPLOY_S = 16;
 export const BAD_DEPLOY_ERROR = 0.5;
 export const AUTO_ROLLBACK_S = 2;
 /** Phase A Boost: +traffic.boost req/s (BOOST_CAPACITY at scale 1, see INTENSITY) on one server for BOOST_S, then BOOST_COOLDOWN_S before it can boost again. */
@@ -123,24 +128,24 @@ export const MANUAL_SERVERS = 3;
 /** A pod that has just become ready (cold start, heal or Restart) warms up for WARMUP_S: overload does not count towards a crash yet. */
 export const WARMUP_S = 2;
 /** Scripted hardware fault: at FAULT_S one ready pod/server dies regardless of load (both phases). */
-export const FAULT_S = 50;
+export const FAULT_S = 32;
 /** The fault hits the ready pod at this creation rank (1 = the second one; Phase A: the middle-traffic server). */
 export const FAULT_RANK = 1;
 export const CREDITS_PER_POD_MIN = 10;
-export const BUDGET_PER_MIN = 62;
+export const BUDGET_PER_MIN = 64;
 /** Demand at ×1 (start of the storm) for traffic.scale = 1; the storm ramps to ×10. */
 export const BASE_RPS = 50;
-/** Scripted traffic keyframes: [seconds, multiplier of BASE_RPS]. A viral surge 34–44 s takes it to the ×10 peak (44–58 s). */
+/** Scripted traffic keyframes: [seconds, multiplier of BASE_RPS]. A viral surge 22–31 s takes it to the ×10 peak (31–37 s). */
 export const TRAFFIC_KEYFRAMES: readonly (readonly [number, number])[] = [
   [0, 1],
-  [8, 1.5],
-  [18, 3],
-  [28, 5],
-  [34, 6.5],
-  [44, 10],
-  [58, 9.5],
-  [66, 8],
-  [75, 7],
+  [3, 2.5],
+  [9, 3.4],
+  [15, 4.6],
+  [22, 6.5],
+  [31, 10],
+  [37, 9.5],
+  [41, 8.5],
+  [45, 7.5],
 ];
 /** Seeded noise: a value knot every second (±NOISE_KNOT), linearly interpolated, plus ±NOISE_TICK per tick. */
 export const NOISE_KNOT = 0.08;

@@ -15,7 +15,7 @@ export interface AutoResult {
   budget: number;
 }
 
-/** A finished Phase C, saved the moment the storm ends so a reload shows it instead of re-running 75 s. */
+/** A finished Phase C, saved the moment the storm ends so a reload shows it instead of re-running the 45 s storm. */
 export interface ReplayResult extends AutoResult {
   manualUptime: number;
   peakPods: number;
