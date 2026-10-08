@@ -122,7 +122,9 @@ async function playCards(page: Page) {
   }
 }
 
-const uniqueName = (prefix: string) => `${prefix} ${Math.floor(1000 + Math.random() * 9000)}`;
+// Digits 2, 6 and 9 only: the profanity filter reads other digits as letters (4 → a, 5 → s), so
+// a random "Rejoin 9445" ("9ass") would be refused and the lobby would never open.
+const uniqueName = (prefix: string) => `${prefix} ${Array.from({ length: 6 }, () => '269'[Math.floor(Math.random() * 3)]).join('')}`;
 
 test('3 phones: create, join by QR link and by code, reorder, play a group run, rank on Today’s board', async ({ browser }, info) => {
   test.setTimeout(180_000);
