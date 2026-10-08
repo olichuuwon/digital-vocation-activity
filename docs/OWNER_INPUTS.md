@@ -80,6 +80,11 @@ Try it: open the site on 2–3 phones, Create group on one, scan its QR with the
 - [ ] **41. Fonts:** the game uses each phone's built-in font (fast, nothing downloaded). Want a brand font? Send the font files (licensed for web use) and Claude will self-host them. *Default: built-in fonts.*
 - [ ] **42. Sound:** off by default; Settings → Sound plays a soft two-note chime for right and a low two-note tone for wrong. Keep, change, or remove? *Default: keep.*
 
+## L. Security (2026-10-08)
+- [ ] **43. ⚠️ Set the new facilitator passcode (needed for hiding names on `/host`):** in Supabase → SQL Editor, paste and run the whole of `supabase/migrations/0002_facilitator_passcode.sql`, then run
+  `select private.set_facilitator_pin('your passphrase here');`
+  with a passphrase of 12+ characters (e.g. four random words). Until you do, `/host` says "No passcode has been set up yet" (the old 6-digit PIN stops working). Share it only with facilitators; re-running the same command changes it and clears any lockout.
+
 ## I. Setup notes (no answer needed)
 - Supabase keys: Claude keeps them in `.env.local` (git-ignored) and never commits them. The live site reads them from Vercel → Project → Settings → Environment Variables (`VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`).
 - **Deploys:** Vercel deploys `main`. Claude works on the branch `claude/beautiful-allen-ne188s`. Merge it into `main` (PR or fast-forward) to put M3 live.

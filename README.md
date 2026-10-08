@@ -72,7 +72,7 @@ The game also supports:
 
 ## For facilitators
 
-- **Booth screen:** open `/host` on a laptop or TV (for example https://digital-vocation-activity.vercel.app/host). It shows a join QR code and the live leaderboard. Hiding a group name needs the facilitator PIN.
+- **Booth screen:** open `/host` on a laptop or TV (for example https://digital-vocation-activity.vercel.app/host). It shows a join QR code and the live leaderboard. Hiding a group name needs the facilitator passcode (12+ characters); the controls lock themselves after 5 minutes without use.
 - **Set the run length for everyone:** add `?mode=booth` or `?mode=full` to the link.
 - **Relaxed timers for a session:** add `?relaxed=1`. This lasts for one page load only, so a shared phone doesn't stay relaxed for the next player.
 - **Timing:** a booth run is designed for a 20-minute rotation, with about 2 minutes to join and 2 minutes to debrief.
