@@ -11,7 +11,9 @@
     "typecheck": "tsc -b",
     "test": "vitest run",
     "e2e": "playwright test",
-    "validate-content": "vitest run src/content"
+    "validate-content": "vitest run src/content",
+    "live:groups": "mkdir -p test-results && node e2e-live/group-live.mjs 2 && node e2e-live/group-live.mjs 3 && node e2e-live/group-live.mjs 4",
+    "live:race": "node e2e-live/race.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.117.3",
