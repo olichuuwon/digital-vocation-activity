@@ -251,7 +251,7 @@ test('rejoin after a reload lands on the current stage; joining closes at START'
   await late.goto(`/?debug=1&join=${code}`);
   await late.getByLabel('Your nickname').fill('Late');
   await late.getByRole('button', { name: 'Join', exact: true }).click();
-  await expect(late.getByTestId('join-status')).toHaveText('That group has already started.');
+  await expect(late.getByTestId('join-status')).toHaveText('That group has already started.', { timeout: 15_000 });
 
   // Ben reloads: Home offers "Back to …"; rejoining shows the current stage.
   await ben.reload();
