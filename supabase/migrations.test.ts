@@ -11,6 +11,7 @@ import { pgcrypto } from '@electric-sql/pglite/contrib/pgcrypto';
  * so the migration's explicit revokes are what keep the table safe.
  */
 const migration = readFileSync(fileURLToPath(new URL('./migrations/0001_runs.sql', import.meta.url)), 'utf8');
+const passcodeMigration = readFileSync(fileURLToPath(new URL('./migrations/0002_facilitator_passcode.sql', import.meta.url)), 'utf8');
 
 const SUPABASE_LIKE_SETUP = `
   create role anon nologin;
@@ -23,8 +24,9 @@ const SUPABASE_LIKE_SETUP = `
   alter default privileges in schema public grant all on functions to anon, authenticated;
 `;
 
-const PIN = '482913';
+const PIN = 'orange kite harbour';
 let db: PGlite;
+let oldPinGone = false;
 let tokenSeq = 0;
 const token = () => `00000000-0000-4000-8000-${String(++tokenSeq).padStart(12, '0')}`;
 
@@ -88,6 +90,11 @@ beforeAll(async () => {
   await db.exec(SUPABASE_LIKE_SETUP);
   await db.exec(migration);
   await db.exec(migration); // idempotent: a second paste must not fail
+  // A PIN set under 0001's rules is removed by 0002 (the owner must set a passcode).
+  await db.query(`insert into private.settings values ('facilitator_pin_hash', extensions.crypt('482913', extensions.gen_salt('bf', 8)))`);
+  await db.exec(passcodeMigration);
+  await db.exec(passcodeMigration);
+  oldPinGone = (await db.query(`select 1 from private.settings where key = 'facilitator_pin_hash'`)).rows.length === 0;
   await db.query('select private.set_facilitator_pin($1)', [PIN]);
 }, 60_000);
 
@@ -273,14 +280,16 @@ describe('facilitator PIN', () => {
     expect(await setHidden(999_999, true, PIN)).toBe('not_found');
   });
 
-  it('locks out after 20 wrong PINs in 10 minutes, even for the right PIN, then recovers', async () => {
+  it('locks out after 10 wrong passcodes in 15 minutes, even for the right one, then recovers', async () => {
     const { id } = await anonSubmit();
-    for (let i = 0; i < 20; i++) expect(await setHidden(id, true, '999999')).toBe('wrong_pin');
+    for (let i = 0; i < 10; i++) expect(await setHidden(id, true, i % 2 ? '999999' : 'wrong passcode here')).toBe('wrong_pin');
     expect(await setHidden(id, true, PIN)).toBe('locked');
     expect((await hostList(PIN)).status).toBe('locked');
     expect(await today()).toHaveLength(1);
     // Simulate the window passing (only timestamps are stored).
-    await db.exec(`update private.pin_failures set failed_at = now() - interval '11 minutes'`);
+    await db.exec(`update private.pin_failures set failed_at = now() - interval '14 minutes'`);
+    expect(await setHidden(id, true, PIN)).toBe('locked');
+    await db.exec(`update private.pin_failures set failed_at = now() - interval '16 minutes'`);
     expect(await setHidden(id, true, PIN)).toBe('ok');
   });
 
@@ -291,11 +300,19 @@ describe('facilitator PIN', () => {
     expect(cols.rows.map((c) => c.column_name)).toEqual(['failed_at']);
   });
 
-  it('owner PIN setter validates 4–8 digits', async () => {
-    expect((await errorOf(db.query(`select private.set_facilitator_pin('12a4')`))).code).toBe('22023');
-    expect((await errorOf(db.query(`select private.set_facilitator_pin('1234')`))).code).toBe('22023');
-    expect((await errorOf(db.query(`select private.set_facilitator_pin('123')`))).code).toBe('22023');
-    expect((await errorOf(db.query(`select private.set_facilitator_pin('123456789')`))).code).toBe('22023');
+  it('owner passcode setter needs 12–72 characters, no control characters or edge spaces', async () => {
+    for (const bad of ['482913', '12345678', 'short pass', 'x'.repeat(73), ' leading space!', 'tab\there long enough']) {
+      expect((await errorOf(db.query('select private.set_facilitator_pin($1)', [bad]))).code).toBe('22023');
+    }
+    // Strong hash: bcrypt cost 12.
+    const hash = (await db.query<{ value: string }>(`select value from private.settings where key = 'facilitator_pin_hash'`)).rows[0]!.value;
+    expect(hash).toMatch(/^\$2.\$12\$/);
+  });
+
+  it('0002 removed the old 6–8 digit PIN, so it no longer unlocks anything', async () => {
+    expect(oldPinGone).toBe(true);
+    const { id } = await anonSubmit();
+    expect(await setHidden(id, true, '482913')).toBe('wrong_pin');
   });
 });
 

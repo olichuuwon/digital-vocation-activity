@@ -117,7 +117,13 @@ const statusText: Partial<Record<HostStatus, string>> = {
   not_configured: t.notConfigured,
 };
 
-/** PIN-gated hide/unhide. The PIN lives in memory only and is checked server-side. */
+/** Passcode lengths the server accepts (supabase/migrations/0002_facilitator_passcode.sql). */
+const PASSCODE_MIN = 12;
+const PASSCODE_MAX = 72;
+/** Unlocked controls lock themselves after this long without use (shared booth laptop). */
+const IDLE_LOCK_MS = 5 * 60_000;
+
+/** Passcode-gated hide/unhide. The passcode lives in memory only and is checked server-side. */
 function FacilitatorPanel({ onChanged }: { onChanged: () => void }) {
   const [pinInput, setPinInput] = useState('');
   const [pin, setPin] = useState<string | null>(null);
@@ -135,6 +141,7 @@ function FacilitatorPanel({ onChanged }: { onChanged: () => void }) {
   }, [pin]);
 
   const run = async (fn: () => Promise<void>) => {
+    setUses((n) => n + 1);
     setBusy(true);
     setMessage('');
     try {
@@ -152,6 +159,13 @@ function FacilitatorPanel({ onChanged }: { onChanged: () => void }) {
     setPinInput('');
     setMessage(msg);
   };
+  // Auto-lock after 5 minutes without a tap (the timer restarts on every action).
+  const [uses, setUses] = useState(0);
+  useEffect(() => {
+    if (pin === null) return;
+    const id = window.setTimeout(() => lock(t.autoLocked), IDLE_LOCK_MS);
+    return () => window.clearTimeout(id);
+  }, [pin, uses]);
 
   const list = (p: string) =>
     run(async () => {
@@ -200,15 +214,16 @@ function FacilitatorPanel({ onChanged }: { onChanged: () => void }) {
               aria-invalid={message ? true : undefined}
               aria-describedby={message ? 'host-pin-message' : undefined}
               type="password"
-              inputMode="numeric"
               autoComplete="off"
-              pattern="[0-9]*"
-              maxLength={8}
+              autoCapitalize="off"
+              autoCorrect="off"
+              spellCheck={false}
+              maxLength={PASSCODE_MAX}
               value={pinInput}
-              onChange={(e) => setPinInput(e.target.value.replace(/\D/g, ''))}
+              onChange={(e) => setPinInput(e.target.value)}
             />
           </label>
-          <button type="submit" className={`${ui.btn} ${ui.primary}`} disabled={busy || pinInput.length < 6}>
+          <button type="submit" className={`${ui.btn} ${ui.primary}`} disabled={busy || pinInput.length < PASSCODE_MIN}>
             {busy ? t.checking : t.unlock}
           </button>
         </form>

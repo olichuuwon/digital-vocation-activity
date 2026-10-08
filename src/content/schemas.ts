@@ -65,7 +65,7 @@ export const copySchema = z.object({
     playingSoon: text, facilitator: text, facilitatorNote: text, pinLabel: text, unlock: text,
     lock: text, refresh: text, checking: text, wrongPin: text, locked: text, notConfigured: text,
     networkError: text, noneToday: text, hide: text, unhide: text, hiddenTag: text,
-    hiddenDone: text, shownDone: text, stale: text,
+    hiddenDone: text, shownDone: text, stale: text, autoLocked: text,
   }),
   components: z.object({
     timeLeft: text, secondsLeft: text, timeUp: text, paused: text, starsLabel: text, continue: text,
