@@ -154,7 +154,7 @@ test('3 phones: create, join by QR link and by code, reorder, play a group run, 
   await ann.getByRole('button', { name: 'Move Cai up' }).click();
   const list = ben.getByTestId('member');
   await expect(list.nth(0)).toContainText('Cai');
-  await expect(list.nth(0)).toContainText('IC (team leader)');
+  await expect(list.nth(0)).toContainText('Leader');
   await expect(list.nth(0)).toContainText('stage 3 and the finale');
   await expect(list.nth(1)).toContainText('Ann');
   await expect(list.nth(1)).toContainText('host');

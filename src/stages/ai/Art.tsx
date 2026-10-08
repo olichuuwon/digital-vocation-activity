@@ -42,41 +42,54 @@ const item: Record<Label, Draw> = {
   },
   food: (style) => {
     if (style === 1) {
-      // Rice sack
+      // Rice sack: a bowl of rice with chopsticks printed on the front, grains spilling out
       return (
         <>
-          <path d="M18 14 q32 -14 64 0 l8 80 q-40 10 -80 0z" fill="#e8d3a0" stroke={INK} strokeWidth="3" />
-          <path d="M30 14 q20 8 40 0" fill="none" stroke={INK} strokeWidth="3" />
-          <ellipse cx="50" cy="56" rx="16" ry="20" fill="none" stroke="#8a5a14" strokeWidth="4" />
-          <path d="M50 40 v32 M42 50 l8 6 l8 -6 M42 60 l8 6 l8 -6" stroke="#8a5a14" strokeWidth="3" fill="none" />
+          <path d="M14 16 q36 -16 72 0 l8 78 q-44 10 -88 0z" fill="#efdcae" stroke={INK} strokeWidth="3" />
+          <path d="M26 16 q24 10 48 0" fill="none" stroke={INK} strokeWidth="3" />
+          <path d="M22 6 l10 10 M78 6 l-10 10" stroke={INK} strokeWidth="3" />
+          <path d="M28 50 h44 q0 24 -22 24 q-22 0 -22 -24z" fill="#ffffff" stroke={INK} strokeWidth="2.5" />
+          <path d="M30 50 q20 -16 40 0z" fill="#ffffff" stroke={INK} strokeWidth="2" />
+          <path d="M56 30 l16 -14 M62 32 l16 -14" stroke="#8a5a14" strokeWidth="3" strokeLinecap="round" />
+          <circle cx="40" cy="45" r="1.6" fill="#c9b27a" />
+          <circle cx="50" cy="42" r="1.6" fill="#c9b27a" />
+          <circle cx="60" cy="45" r="1.6" fill="#c9b27a" />
+          <ellipse cx="88" cy="96" rx="9" ry="3" fill="#fff6dc" stroke={INK} strokeWidth="1.5" />
         </>
       );
     }
     if (style === 2) {
-      // Stack of cans
+      // Stack of food tins: pull-tab lids and an apple on each label
       return (
         <>
           {[
             [6, 50],
             [52, 50],
             [29, 2],
-          ].map(([x, y]) => (
+          ].map(([x = 0, y = 0]) => (
             <g key={`${x}-${y}`}>
-              <rect x={x} y={y} width="42" height="46" rx="5" fill="#f0a830" stroke={INK} strokeWidth="3" />
-              <rect x={x} y={(y ?? 0) + 14} width="42" height="18" fill="#c0392b" />
-              <circle cx={(x ?? 0) + 21} cy={(y ?? 0) + 23} r="5" fill="#fff" />
+              <rect x={x} y={y} width="42" height="46" rx="5" fill="#d9dde3" stroke={INK} strokeWidth="3" />
+              <ellipse cx={x + 21} cy={y + 5} rx="17" ry="3.5" fill="#f2f4f7" stroke={INK} strokeWidth="1.5" />
+              <circle cx={x + 30} cy={y + 5} r="2.5" fill="none" stroke={INK} strokeWidth="1.5" />
+              <rect x={x} y={y + 13} width="42" height="24" fill="#2e7d32" />
+              <circle cx={x + 21} cy={y + 26} r="7.5" fill="#e53935" stroke={INK} strokeWidth="1.5" />
+              <path d={`M${x + 21} ${y + 18} q4 -4 7 -2 q-3 3 -7 2z`} fill="#7cb342" />
             </g>
           ))}
         </>
       );
     }
-    // Cardboard ration box
+    // Food box: bread, an apple and a banana poking out of an open crate
     return (
       <>
-        <path d="M4 26 l46 -22 l46 22 v70 h-92z" fill="#c8964f" stroke={INK} strokeWidth="3" />
-        <path d="M4 26 h92 M50 4 v22" stroke={INK} strokeWidth="3" />
-        <rect x="26" y="44" width="48" height="36" rx="4" fill="#f6e7c8" stroke={INK} strokeWidth="2.5" />
-        <path d="M50 50 v24 M42 58 l8 6 l8 -6 M42 66 l8 6 l8 -6" stroke="#8a5a14" strokeWidth="3" fill="none" />
+        <path d="M14 30 q18 -26 44 -8 q8 6 4 14 h-46z" fill="#d9a35b" stroke={INK} strokeWidth="3" />
+        <path d="M26 20 l6 8 M38 16 l6 8 M50 18 l4 8" stroke="#8a5a14" strokeWidth="2.5" />
+        <circle cx="74" cy="28" r="13" fill="#e53935" stroke={INK} strokeWidth="3" />
+        <path d="M74 15 q2 -8 10 -9 q-1 8 -10 9z" fill="#7cb342" stroke={INK} strokeWidth="1.5" />
+        <path d="M58 38 q20 4 34 -14 q2 4 -2 9 q-14 16 -32 8z" fill="#ffd54f" stroke={INK} strokeWidth="2.5" />
+        <path d="M4 36 h92 l-6 60 h-80z" fill="#c8964f" stroke={INK} strokeWidth="3" />
+        <path d="M4 36 h92" stroke={INK} strokeWidth="4" />
+        <path d="M12 56 h76 M14 76 h72" stroke="#8a5a14" strokeWidth="2.5" />
       </>
     );
   },
@@ -93,18 +106,29 @@ const item: Record<Label, Draw> = {
     </>
   ),
   blanket: (style) => {
-    const colours = [
-      ['#8e6cc7', '#b9a2e3'],
-      ['#2a9d8f', '#8fd3c8'],
-      ['#c0392b', '#f0a69f'],
-    ][style] ?? ['#8e6cc7', '#b9a2e3'];
+    // A folded blanket: plaid pattern, rounded fold edges on the left, fringe on the right.
+    const [base, stripe] = [
+      ['#8e6cc7', '#d9ccf2'],
+      ['#2a9d8f', '#bfe8e2'],
+      ['#c0392b', '#f5c1bb'],
+    ][style] ?? ['#8e6cc7', '#d9ccf2'];
     return (
       <>
-        {[0, 1, 2].map((i) => (
-          <g key={i}>
-            <rect x={i * 3} y={8 + i * 30} width={100 - i * 6} height="28" rx="10" fill={colours[i % 2]} stroke={INK} strokeWidth="3" />
-            <path d={`M${10 + i * 3} ${22 + i * 30} h${80 - i * 6}`} stroke="#fff" strokeWidth="3" strokeDasharray="6 6" opacity="0.8" />
-          </g>
+        <rect x="8" y="6" width="80" height="88" rx="4" fill={base} stroke={INK} strokeWidth="3" />
+        {[24, 44, 64].map((x) => (
+          <rect key={`v${x}`} x={x} y="6" width="6" height="88" fill={stripe} opacity="0.75" />
+        ))}
+        {[18, 48, 78].map((y) => (
+          <rect key={`h${y}`} x="8" y={y} width="80" height="5" fill={stripe} opacity="0.75" />
+        ))}
+        {/* Folds: each layer's rounded edge on the left */}
+        {[6, 36, 66].map((y) => (
+          <path key={`f${y}`} d={`M10 ${y} q-10 14 0 28`} fill={base} stroke={INK} strokeWidth="3" />
+        ))}
+        <path d="M8 34 h80 M8 64 h80" stroke={INK} strokeWidth="2.5" />
+        {/* Fringe */}
+        {Array.from({ length: 9 }, (_, i) => (
+          <path key={`t${i}`} d={`M88 ${10 + i * 10} h9`} stroke={INK} strokeWidth="2.5" strokeLinecap="round" />
         ))}
       </>
     );
