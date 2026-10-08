@@ -79,6 +79,10 @@ afterEach(() => {
   vi.useRealTimers();
 });
 
+/** Rotation with the first member (not the leader) as P1, the IC who plays the finale. */
+const icFirst = (leader: { engine: { snapshot(): { meId: string | null } } }, members: { engine: { snapshot(): { meId: string | null } } }[]) =>
+  [members[0]!, leader, ...members.slice(1)].map((d) => d.engine.snapshot().meId!);
+
 describe('lobby', () => {
   it('members join by code and see each other with nicknames from presence', async () => {
     const { leader, members, all } = await lobbyOf(3);
@@ -303,11 +307,13 @@ describe('run', () => {
 
   it('submits once from the leader and shares the rank with everyone', async () => {
     const { leader, members, all } = await lobbyOf(3);
+    // The leader moves a teammate to P1 (the IC): that phone plays the finale, the leader's submits.
+    leader.engine.setRotation(icFirst(leader, members));
+    await flush();
     leader.engine.start();
     await flush();
     vi.advanceTimersByTime(9 * 60_000);
-    // Debug-jump to the finale; its main phone (rotation[1]) finishes.
-    leader.game.local((r) => ({ ...r, stage: 5 }));
+    members[0]!.game.local((r) => ({ ...r, stage: 5 }));
     await flush();
     const fin = members[0]!;
     expect(fin.engine.amMain()).toBe(true);
@@ -330,9 +336,11 @@ describe('run', () => {
 
   it('the finale main submits if the leader is gone', async () => {
     const { leader, members } = await lobbyOf(3);
+    leader.engine.setRotation(icFirst(leader, members));
+    await flush();
     leader.engine.start();
     await flush();
-    leader.game.local((r) => ({ ...r, stage: 5 }));
+    members[0]!.game.local((r) => ({ ...r, stage: 5 }));
     await flush();
     hub.setOnline(leader.client(), false);
     await vi.advanceTimersByTimeAsync(2_000);

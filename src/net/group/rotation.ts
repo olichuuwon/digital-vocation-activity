@@ -3,14 +3,14 @@ import type { Stage } from '../../state/types';
 // Main-phone rotation and support-card dealing (spec §3.5.2). Pure functions.
 
 /**
- * Index in the rotation of the main phone for a stage. Stage 0 (prologue) is played by the
- * first in the rotation; stage k (1–4) by rotation[(k-1) % n]; the finale (5) continues the
- * cycle: rotation[4 % n]. With 4 players everyone leads one stage and the first leads the
- * finale too; with 3, members 1 and 2 lead twice; with 2, they alternate.
+ * Index in the rotation of the main phone for a stage. Player 1 is the group's IC (owner
+ * decision, 2026-10-08): they play the prologue and always the finale. Stages 1–4 rotate:
+ * stage k by rotation[(k-1) % n]. 2 players: P1 = 1, 3, finale; P2 = 2, 4. 3 players: P1 =
+ * 1, 4, finale; P2 = 2; P3 = 3. 4 players: one stage each, P1 also the finale.
  */
 export function nominalMainIndex(stage: Stage, n: number): number {
   if (n <= 0) return 0;
-  return stage === 0 ? 0 : (stage - 1) % n;
+  return stage === 0 || stage === 5 ? 0 : (stage - 1) % n;
 }
 
 /** Member id of the main phone: a takeover for that stage (main dropped) beats the rotation. */

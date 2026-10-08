@@ -148,31 +148,36 @@ test('3 phones: create, join by QR link and by code, reorder, play a group run, 
   // Nicknames reach teammates through presence only.
   await expect(ben.getByTestId('member').nth(0)).toContainText('Ann');
 
-  // Leader reorders: Cai moves to 2nd, so Cai leads stage 2 and (in a 3-player group) the finale.
+  // Leader reorders: Cai moves to the top, so Cai is P1, the IC: stages 1 and 4 and the finale.
   await ann.getByRole('button', { name: 'Move Cai up' }).click();
-  await expect(ben.getByTestId('member').nth(1)).toContainText('Cai');
-  await expect(ben.getByTestId('member').nth(1)).toContainText('stage 2 and the finale');
+  await ann.getByRole('button', { name: 'Move Cai up' }).click();
+  await expect(ben.getByTestId('member').nth(0)).toContainText('Cai');
+  await expect(ben.getByTestId('member').nth(0)).toContainText('IC');
+  await expect(ben.getByTestId('member').nth(0)).toContainText('stage 1, 4 and the finale');
+  await expect(ben.getByTestId('member').nth(1)).toContainText('Ann');
+  await expect(ben.getByTestId('member').nth(1)).toContainText('stage 2');
+  await expect(ben.getByTestId('member').nth(1)).not.toContainText('finale');
   // Members have no reorder or start controls.
   await expect(ben.getByRole('button', { name: /Move .* up/ })).toHaveCount(0);
   await expect(ben.getByRole('button', { name: 'Start' })).toHaveCount(0);
 
   await ann.getByRole('button', { name: 'Start' }).click();
 
-  // Ann holds the main phone for the prologue and stage 1; the others support.
-  await expect(ann.getByTestId('prologue-heading')).toBeVisible();
-  for (const p of [ben, cai]) {
+  // Cai (P1) holds the main phone for the prologue and stage 1; the others support.
+  await expect(cai.getByTestId('prologue-heading')).toBeVisible();
+  for (const p of [ann, ben]) {
     await expect(p.getByTestId('support-screen')).toHaveAttribute('data-stage', '0');
-    await expect(p.getByTestId('supporting')).toContainText("You're supporting Ann");
+    await expect(p.getByTestId('supporting')).toContainText("You're supporting Cai");
   }
-  await ann.getByRole('button', { name: 'Start the mission' }).click();
-  for (const p of [ben, cai]) await expect(p.getByTestId('support-screen')).toHaveAttribute('data-stage', '1');
+  await cai.getByRole('button', { name: 'Start the mission' }).click();
+  for (const p of [ann, ben]) await expect(p.getByTestId('support-screen')).toHaveAttribute('data-stage', '1');
   // Stage 1's three support cards are dealt between the two support phones (§3.5.2).
   const cards = [];
-  for (const p of [ben, cai]) cards.push(...(await p.getByTestId('support-cards').getAttribute('data-cards'))!.split(','));
+  for (const p of [ann, ben]) cards.push(...(await p.getByTestId('support-cards').getAttribute('data-cards'))!.split(','));
   expect(cards.sort()).toEqual(['duplicates', 'fixKit', 'rulebook']);
 
-  // Debug jump to the finale on the main phone: the run moves to Cai (rotation[4 % 3]).
-  await debugJump(ann, 'F');
+  // Debug jump to the finale: the IC (Cai, P1) keeps the main phone; the leader's phone still submits.
+  await debugJump(cai, 'F');
   await expect(cai.getByRole('heading', { name: 'Mission live' })).toBeVisible();
   for (const p of [ann, ben]) {
     await expect(p.getByTestId('support-screen')).toHaveAttribute('data-stage', '5');

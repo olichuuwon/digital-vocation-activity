@@ -120,6 +120,12 @@ export function GroupLobby() {
                   <span className="visually-hidden">{i + 1}. </span>
                   {m.nick}
                   {m.isMe && ` (${t.you})`}
+                  {i === 0 && (
+                    <>
+                      {' · '}
+                      <strong data-testid="ic-tag">{t.icTag}</strong>
+                    </>
+                  )}
                   {m.isLeader && ` · ${t.leaderTag}`}
                 </span>
                 <span className={s.memberMeta}>{m.present ? ledLine(i, g.members.length) : t.reconnecting}</span>

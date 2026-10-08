@@ -47,7 +47,7 @@
     "scanHint": "Teammates scan this, or tap Join group and type the code.",
     "qrAlt": "QR code to join {name}, code {code}",
     "playersHeading": "Players ({n} of 4)",
-    "rotationNote": "The order sets who holds the main phone in each stage.",
+    "rotationNote": "The order sets who holds the main phone in each stage. Player 1 is the IC and always plays the finale.",
     "you": "you",
     "leaderTag": "leader",
     "playerN": "Player {n}",
@@ -65,7 +65,8 @@
     "leave": "Leave group",
     "close": "Close group",
     "joinedSay": "{name} joined.",
-    "awaySay": "{name} is reconnecting."
+    "awaySay": "{name} is reconnecting.",
+    "icTag": "IC"
   },
   "support": {
     "supporting": "You're supporting {name}",

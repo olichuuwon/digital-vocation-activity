@@ -22,7 +22,7 @@
  *   internal state (cards, timers, sims) stays on the main phone unless stage code publishes it
  *   as a topic. Stage-local progress stores (e.g. stage1For) are per device.
  * - Rotation (§3.5.2): main for stage 0 (prologue) = rotation[0]; stage k (1–4) =
- *   rotation[(k-1) % n]; finale (5) = rotation[4 % n] (the cycle continues). The leader orders
+ *   rotation[(k-1) % n]; finale (5) = rotation[0] (player 1, the IC). The leader orders
  *   the rotation in the lobby. A run update is accepted only from the main phone of the stage
  *   the receiver is on, so the old main's final update (the hand-off: stage k → k+1) is what
  *   hands the game to the next main phone, which then takes over from the mirrored run.

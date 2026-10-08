@@ -66,7 +66,7 @@ describe('group view', () => {
   it('names the next main phone for the hand-off, skipping someone missing 20 s+', () => {
     const v = deriveView(snap({}));
     expect(nextMain(v, 2)).toEqual({ nextName: 'Cai', nextId: 'member-c', nextIsMe: true });
-    expect(nextMain(v, 4).nextName).toBe('Ben'); // finale = rotation[4 % 3]
+    expect(nextMain(v, 4).nextName).toBe('Ann'); // finale = rotation[0], the IC
     const lost = deriveView(
       snap({ people: { ...snap({}).people, 'member-a': { id: 'member-a', nick: 'Ann', present: false, lostSince: 0 } } }),
     );

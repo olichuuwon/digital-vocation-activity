@@ -70,7 +70,7 @@ Try it: open the site on 2–3 phones, Create group on one, scan its QR with the
 
 - [ ] **34. Profanity list:** `src/content/blocklist.json` has English plus common Singlish, Hokkien and Malay swear words and slurs. Please check it covers what students at your event would try, and that nothing innocent is blocked. Names like "Kan" and "Lan" are allowed on purpose (common names). *Default: as drafted.*
 - [ ] **35. Generated group names:** 30 adjectives × 30 Singapore animals and places in `src/content/groupNames.json` (e.g. "Swift Kingfisher", "Bold Merlion", "Lucky Changi"). Remove any you don't like. *Default: keep.*
-- [ ] **36. Who plays the finale:** the main-phone turn keeps rotating into the finale. With 4 players, player 1 plays it; with 3, player 2 gets a second turn; with 2, they alternate. Alternative: the leader always plays the finale. *Default: keep rotating.*
+- [x] **36. Who plays the finale:** ✅ Decided 2026-10-08: player 1 is the IC and always plays the finale (done).
 - [ ] **37. Live group names on `/host`:** groups playing now (name, size, stage) appear on the booth screen. A custom name shows there before a facilitator could hide it from the board. Show only generated names there, or hide the list? *Default: show all names.*
 - [ ] **38. Joining replaces a solo run:** a phone that creates or joins a group drops any unfinished solo run on it. *Default: keep (booth phones play one run at a time).*
 - [ ] **39. Quiet support cards:** in some booth levels a support card has little to do (e.g. Reveal has only 2 charges; Manifest matters mostly in full mode). Play a 3–4 phone group and note any phone that sat idle for a whole level. *Default: re-balance after playtests (M8).*
