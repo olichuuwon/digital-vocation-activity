@@ -24,12 +24,14 @@ const DevComponents = lazy(() => import('./screens/DevComponents'));
 // Everything past Home loads on demand too (M7 perf: Lighthouse mobile ≥ 90). Stage 1 is
 // prefetched once Home has painted, so Play starts without a wait.
 const loadDataStage = () => import('../stages/data/DataStage');
+const loadGroupLobby = () => import('./screens/GroupLobby');
+const loadSupportScreen = () => import('./screens/SupportScreen');
 const DataStage = lazy(() => loadDataStage().then((m) => ({ default: m.DataStage })));
 const GroupCreate = lazy(() => import('./screens/GroupCreate').then((m) => ({ default: m.GroupCreate })));
 const GroupJoin = lazy(() => import('./screens/GroupJoin').then((m) => ({ default: m.GroupJoin })));
-const GroupLobby = lazy(() => import('./screens/GroupLobby').then((m) => ({ default: m.GroupLobby })));
+const GroupLobby = lazy(() => loadGroupLobby().then((m) => ({ default: m.GroupLobby })));
 const Leaderboard = lazy(() => import('./screens/Leaderboard').then((m) => ({ default: m.Leaderboard })));
-const SupportScreen = lazy(() => import('./screens/SupportScreen').then((m) => ({ default: m.SupportScreen })));
+const SupportScreen = lazy(() => loadSupportScreen().then((m) => ({ default: m.SupportScreen })));
 // Stages after the first load on demand, keeping the first load small (§11 perf budget).
 const AiStage = lazy(() => import('../stages/ai/AiStage'));
 const LogicStage = lazy(() => import('../stages/logic/LogicStage'));
@@ -90,7 +92,8 @@ function GameApp() {
   useTeamRelaxedSync();
   useEffect(() => {
     const idle = window.requestIdleCallback ?? ((fn: () => void) => window.setTimeout(fn, 1500));
-    idle(() => void loadDataStage().catch(() => {}));
+    // Stage 1 and the group screens most players reach next, fetched while Home sits idle.
+    idle(() => void Promise.all([loadDataStage(), loadGroupLobby(), loadSupportScreen()]).catch(() => {}));
   }, []);
   // Reopening with a saved run lands on Home so the player can choose Resume (§3.1).
   // A ?join=CODE link (the lobby QR) opens Join with the code filled in.

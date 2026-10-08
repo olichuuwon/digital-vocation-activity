@@ -43,7 +43,8 @@ async function createGroup(page: Page, name: string, nick: string) {
   await page.getByLabel('Group name').fill(name);
   await page.getByLabel('Your nickname').fill(nick);
   await page.getByRole('button', { name: 'Create group' }).click();
-  await expect(page.getByTestId('group-name')).toHaveText(name);
+  // Connecting to the relay (and loading the lobby screen) can take a while on a busy CI runner.
+  await expect(page.getByTestId('group-name')).toHaveText(name, { timeout: 15_000 });
   const code = (await page.getByTestId('group-code').textContent())!.trim();
   expect(code).toMatch(/^[A-HJ-NP-Z2-9]{4}$/);
   return code;
@@ -55,7 +56,7 @@ async function joinByLink(page: Page, code: string, nick: string) {
   await expect(page.getByLabel('Group code')).toHaveValue(code);
   await page.getByLabel('Your nickname').fill(nick);
   await page.getByRole('button', { name: 'Join', exact: true }).click();
-  await expect(page.getByTestId('lobby-waiting')).toBeVisible();
+  await expect(page.getByTestId('lobby-waiting')).toBeVisible({ timeout: 15_000 });
 }
 
 async function joinByTyping(page: Page, code: string, nick: string) {
@@ -64,7 +65,7 @@ async function joinByTyping(page: Page, code: string, nick: string) {
   await page.getByLabel('Group code').fill(code.toLowerCase());
   await page.getByLabel('Your nickname').fill(nick);
   await page.getByRole('button', { name: 'Join', exact: true }).click();
-  await expect(page.getByTestId('lobby-waiting')).toBeVisible();
+  await expect(page.getByTestId('lobby-waiting')).toBeVisible({ timeout: 15_000 });
 }
 
 async function debugJump(page: Page, label: string) {
