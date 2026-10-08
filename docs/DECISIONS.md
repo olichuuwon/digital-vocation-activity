@@ -119,6 +119,7 @@
 | 2026-10-07 | M7 a11y polish | Pipeline header wraps 2 per row at large text (no split words); Draw the Box picture is focusable (arrows move, Shift + arrows resize); lobby code read letter by letter (visually hidden spaced text); "You're up next" sticks to the bottom of the support screen. Toasts may cover the Stage 2 top row briefly but never block taps (pointer-events: none). | No |
 | 2026-10-07 | Offline after first visit (M7) | Not required by D16, but booth Wi-Fi drops: the service worker now precaches every built file (`precache.json` from vite.config.ts) and its cache name changes with each build, so a redeploy installs fresh files and drops old ones. A lazy screen that still fails to load shows "Reload" instead of a white screen; slow loads show "Loading…". | No |
 | 2026-10-07 | Hand-off in groups (M7 QA) | The hand-off card names the next main player and their own phone shows "You're up next" + Ready (either Ready continues). e2e covers it. | No |
+| 2026-10-08 | Lobby Start while someone is connecting | Live 3-phone test found that tapping Start within ~2 s of a join dropped the new player (their presence hadn't landed yet). Now the first Start tap says "{names} still connecting. Tap Start again to go without them."; a second tap starts without them (for phones that really dropped). | No |
 
 ## Copy needing owner approval
 <!-- NEEDS OWNER APPROVAL --> Reality Check cards in `src/content/realityChecks.json` with `needsApproval: true` (career-facing, D14). Preview them at `/dev/components`.

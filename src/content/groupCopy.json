@@ -68,7 +68,8 @@
     "close": "Close group",
     "joinedSay": "{name} joined.",
     "awaySay": "{name} is reconnecting.",
-    "icTag": "Leader"
+    "icTag": "Leader",
+    "stillConnecting": "{names} still connecting. Tap Start again to go without them."
   },
   "support": {
     "supporting": "You're supporting {name}",

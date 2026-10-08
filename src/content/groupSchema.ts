@@ -26,7 +26,7 @@ export const groupCopySchema = z.object({
   ]),
   lobby: section([
     'codeLabel', 'scanHint', 'qrAlt', 'playersHeading', 'rotationNote', 'you', 'leaderTag', 'playerN', 'reconnecting', 'joinedSay', 'awaySay', 'icTag',
-    'leadsStages', 'leadsFinale', 'moveUp', 'moveDown', 'shuffle', 'start', 'needTwo', 'waiting',
+    'leadsStages', 'leadsFinale', 'moveUp', 'moveDown', 'shuffle', 'start', 'needTwo', 'stillConnecting', 'waiting',
     'lengthLine', 'closesIn', 'leave', 'close',
   ]),
   // Support-phone text must be readable at a glance (§3.5.2: ≤15 words).

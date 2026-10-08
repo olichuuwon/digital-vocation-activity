@@ -37,6 +37,8 @@ export function GroupLobby() {
   const headingRef = useScreenHeading<HTMLHeadingElement>(session?.name ?? '');
   const [qr, setQr] = useState<string | null>(null);
   const [startMsg, setStartMsg] = useState('');
+  // Ids that were still connecting when the leader first tapped Start (second tap goes without them).
+  const [confirmMissing, setConfirmMissing] = useState<string | null>(null);
   const now = useNow(15_000);
   const code = session?.code ?? '';
   const url = code ? joinUrl(window.location.origin, import.meta.env.BASE_URL, code) : '';
@@ -74,6 +76,11 @@ export function GroupLobby() {
   if (!session) return null;
   const present = g.members.filter((m) => m.present).length;
   const canStart = present >= 2;
+  // A player who joined a moment ago shows as "reconnecting" until their phone's presence lands
+  // (~1–2 s on Supabase Realtime). Starting then would leave them out, so ask for a second tap.
+  const missing = g.members.filter((m) => !m.present);
+  const missingKey = missing.map((m) => m.id).join(',');
+  const missingNames = missing.map((m) => m.nick ?? fill(t.playerN, { n: g.members.indexOf(m) + 1 })).join(', ');
   const minsLeft = Math.max(1, Math.ceil((session.createdAt + LOBBY_TTL_MS - now) / 60_000));
   const leaderName = g.members.find((m) => m.isLeader)?.nick ?? '';
 
@@ -166,7 +173,7 @@ export function GroupLobby() {
               </button>
             )}
             <p className={canStart ? ui.muted : s.hint} id="start-note" role="status">
-              {canStart ? '' : t.needTwo}
+              {!canStart ? t.needTwo : confirmMissing !== null && missingKey ? fill(t.stillConnecting, { names: missingNames }) : ''}
             </p>
             <button
               type="button"
@@ -174,7 +181,10 @@ export function GroupLobby() {
               aria-disabled={!canStart || undefined}
               aria-describedby="start-note"
               onClick={() => {
-                if (!canStart || !groupActions.start()) setStartMsg(t.needTwo);
+                if (!canStart) return setStartMsg(t.needTwo);
+                // First tap with someone still connecting: warn instead of dropping them.
+                if (missingKey && confirmMissing !== missingKey) return setConfirmMissing(missingKey);
+                if (!groupActions.start()) setStartMsg(t.needTwo);
               }}
             >
               {t.start} <span aria-hidden="true">🚀</span>
