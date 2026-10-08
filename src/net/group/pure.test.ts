@@ -95,24 +95,26 @@ describe('moderation', () => {
 describe('rotation', () => {
   const r = ['a', 'b', 'c', 'd'];
   it('rotates the main phone each stage and wraps (§3.5.2)', () => {
-    expect([1, 2, 3, 4, 5].map((s) => mainFor(s as 1, r))).toEqual(['a', 'b', 'c', 'd', 'a']);
-    // Player 1 (the IC) always plays the finale.
-    expect([0, 1, 2, 3, 4, 5].map((s) => mainFor(s as 1, ['a', 'b', 'c']))).toEqual(['a', 'a', 'b', 'c', 'a', 'a']);
-    expect([1, 2, 3, 4, 5].map((s) => mainFor(s as 1, ['a', 'b']))).toEqual(['a', 'b', 'a', 'b', 'a']);
+    // Player 1 (the IC) opens with the prologue and plays the finale; stages 1–4 start from P2.
+    expect([0, 1, 2, 3, 4, 5].map((s) => mainFor(s as 1, r))).toEqual(['a', 'b', 'c', 'd', 'a', 'a']);
+    expect([0, 1, 2, 3, 4, 5].map((s) => mainFor(s as 1, ['a', 'b', 'c']))).toEqual(['a', 'b', 'c', 'a', 'b', 'a']);
+    expect([0, 1, 2, 3, 4, 5].map((s) => mainFor(s as 1, ['a', 'b']))).toEqual(['a', 'b', 'a', 'b', 'a', 'a']);
     expect(nominalMainIndex(0, 3)).toBe(0);
   });
 
   it('a takeover beats the rotation for that stage only', () => {
-    expect(mainFor(2, r, { 2: 'c' })).toBe('c');
-    expect(mainFor(3, r, { 2: 'c' })).toBe('c');
-    expect(mainFor(4, r, { 2: 'c' })).toBe('d');
+    expect(mainFor(2, r, { 2: 'd' })).toBe('d');
+    expect(mainFor(3, r, { 2: 'd' })).toBe('d');
+    expect(mainFor(1, r, { 2: 'd' })).toBe('b');
   });
 
   it('lists the stages each member leads (lobby)', () => {
-    expect(stagesLedBy(0, 3)).toEqual([1, 4, 5]);
-    expect(stagesLedBy(1, 3)).toEqual([2]);
-    expect(stagesLedBy(1, 2)).toEqual([2, 4]);
-    expect(stagesLedBy(0, 4)).toEqual([1, 5]);
+    expect(stagesLedBy(0, 3)).toEqual([3, 5]);
+    expect(stagesLedBy(1, 3)).toEqual([1, 4]);
+    expect(stagesLedBy(2, 3)).toEqual([2]);
+    expect(stagesLedBy(0, 2)).toEqual([2, 4, 5]);
+    expect(stagesLedBy(1, 2)).toEqual([1, 3]);
+    expect([0, 1, 2, 3].map((i) => stagesLedBy(i, 4))).toEqual([[4, 5], [1], [2], [3]]);
   });
 
   it('orders supports after the main phone and skips the gone', () => {

@@ -187,30 +187,32 @@ describe('run', () => {
     const { leader, members, all } = await lobbyOf(3);
     leader.engine.start();
     await flush();
-    const [a, b] = leader.snap().session!.rotation;
-    expect(leader.engine.amMain()).toBe(true); // stage 0 + stage 1: rotation[0]
+    const [a, b, c] = leader.snap().session!.rotation;
+    expect(leader.engine.amMain()).toBe(true); // prologue: rotation[0], the IC
+    // Prologue done → stage 1 belongs to rotation[1].
     leader.game.local((r) => ({ ...r, stage: 1 }));
     await flush();
-    expect(members[0]!.game.run?.stage).toBe(1);
+    for (const d of all) expect(d.snap().mainId).toBe(b);
+    expect(members[0]!.engine.amMain()).toBe(true);
     // Supports can't move the run on.
     members[1]!.game.local((r) => ({ ...r, stage: 4 }));
     await flush();
     expect(leader.game.run?.stage).toBe(1);
-    // Stage 1 done → stage 2 belongs to rotation[1].
-    leader.game.local((r) => ({ ...r, stage: 2, stars: { ...r.stars, data: 3 } }));
+    // Stage 1 done → stage 2 belongs to rotation[2].
+    members[0]!.game.local((r) => ({ ...r, stage: 2, stars: { ...r.stars, data: 3 } }));
     await flush();
     for (const d of all) {
       expect(d.snap().stage).toBe(2);
-      expect(d.snap().mainId).toBe(b);
+      expect(d.snap().mainId).toBe(c);
     }
-    expect(members[0]!.game.run?.stars.data).toBe(3);
-    expect(leader.engine.amMain()).toBe(false);
-    expect(members[0]!.engine.amMain()).toBe(true);
+    expect(leader.game.run?.stars.data).toBe(3);
+    expect(members[0]!.engine.amMain()).toBe(false);
+    expect(members[1]!.engine.amMain()).toBe(true);
     // The old main's late updates are ignored now.
-    leader.game.local((r) => ({ ...r, levelIndex: 5 }));
-    members[0]!.game.local((r) => ({ ...r, levelIndex: 1 }));
+    members[0]!.game.local((r) => ({ ...r, levelIndex: 5 }));
+    members[1]!.game.local((r) => ({ ...r, levelIndex: 1 }));
     await flush();
-    expect(members[1]!.game.run?.levelIndex).toBe(1);
+    expect(leader.game.run?.levelIndex).toBe(1);
     expect(a).toBe(leader.snap().meId);
   });
 
@@ -269,28 +271,32 @@ describe('run', () => {
     const { leader, members } = await lobbyOf(3);
     leader.engine.start();
     await flush();
-    leader.game.local((r) => ({ ...r, stage: 1, levelIndex: 1 }));
+    // Prologue done: stage 1 belongs to rotation[1] (members[0]).
+    leader.game.local((r) => ({ ...r, stage: 1 }));
     await flush();
-    hub.setOnline(leader.client(), false);
+    const main = members[0]!;
+    main.game.local((r) => ({ ...r, levelIndex: 1 }));
+    await flush();
+    hub.setOnline(main.client(), false);
     await vi.advanceTimersByTimeAsync(2_000);
-    expect(members[0]!.snap().mainLostSince).not.toBeNull();
-    expect(members[0]!.engine.amMain()).toBe(false);
+    expect(members[1]!.snap().mainLostSince).not.toBeNull();
+    expect(members[1]!.engine.amMain()).toBe(false);
     await vi.advanceTimersByTimeAsync(PROMOTE_AFTER_MS);
-    const b = members[0]!;
+    const b = members[1]!;
     expect(b.engine.amMain()).toBe(true);
-    expect(members[1]!.snap().mainId).toBe(b.snap().meId);
-    expect(members[1]!.snap().promoted?.id).toBe(b.snap().meId);
+    expect(leader.snap().mainId).toBe(b.snap().meId);
+    expect(leader.snap().promoted?.id).toBe(b.snap().meId);
     // Resumes from the last broadcast state.
     expect(b.game.run?.stage).toBe(1);
     expect(b.game.run?.levelIndex).toBe(1);
     // The old main comes back: it's a support now and mirrors the new main.
-    hub.setOnline(leader.client(), true);
+    hub.setOnline(main.client(), true);
     await flush();
     await flush();
-    expect(leader.engine.amMain()).toBe(false);
+    expect(main.engine.amMain()).toBe(false);
     b.game.local((r) => ({ ...r, levelIndex: 2 }));
     await flush();
-    expect(leader.game.run?.levelIndex).toBe(2);
+    expect(main.game.run?.levelIndex).toBe(2);
   });
 
   it('a main phone back within 20 s keeps its role', async () => {

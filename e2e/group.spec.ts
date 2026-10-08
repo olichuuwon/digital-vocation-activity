@@ -148,15 +148,18 @@ test('3 phones: create, join by QR link and by code, reorder, play a group run, 
   // Nicknames reach teammates through presence only.
   await expect(ben.getByTestId('member').nth(0)).toContainText('Ann');
 
-  // Leader reorders: Cai moves to the top, so Cai is P1, the IC: stages 1 and 4 and the finale.
+  // The host reorders: Cai moves to the top, so Cai is P1, the IC (team leader): the prologue,
+  // stage 3 and the finale. Stages 1–4 rotate from P2: Ann 1 and 4, Ben 2.
   await ann.getByRole('button', { name: 'Move Cai up' }).click();
   await ann.getByRole('button', { name: 'Move Cai up' }).click();
-  await expect(ben.getByTestId('member').nth(0)).toContainText('Cai');
-  await expect(ben.getByTestId('member').nth(0)).toContainText('IC');
-  await expect(ben.getByTestId('member').nth(0)).toContainText('stage 1, 4 and the finale');
-  await expect(ben.getByTestId('member').nth(1)).toContainText('Ann');
-  await expect(ben.getByTestId('member').nth(1)).toContainText('stage 2');
-  await expect(ben.getByTestId('member').nth(1)).not.toContainText('finale');
+  const list = ben.getByTestId('member');
+  await expect(list.nth(0)).toContainText('Cai');
+  await expect(list.nth(0)).toContainText('IC (team leader)');
+  await expect(list.nth(0)).toContainText('stage 3 and the finale');
+  await expect(list.nth(1)).toContainText('Ann');
+  await expect(list.nth(1)).toContainText('host');
+  await expect(list.nth(1)).toContainText('stage 1, 4');
+  await expect(list.nth(2)).toContainText('stage 2');
   // Members have no reorder or start controls.
   await expect(ben.getByRole('button', { name: /Move .* up/ })).toHaveCount(0);
   await expect(ben.getByRole('button', { name: 'Start' })).toHaveCount(0);
@@ -170,14 +173,16 @@ test('3 phones: create, join by QR link and by code, reorder, play a group run, 
     await expect(p.getByTestId('supporting')).toContainText("You're supporting Cai");
   }
   await cai.getByRole('button', { name: 'Start the mission' }).click();
-  for (const p of [ann, ben]) await expect(p.getByTestId('support-screen')).toHaveAttribute('data-stage', '1');
+  // Stage 1 belongs to Ann (P2); Cai and Ben support.
+  await expect(ann.getByTestId('support-screen')).toHaveCount(0);
+  for (const p of [cai, ben]) await expect(p.getByTestId('support-screen')).toHaveAttribute('data-stage', '1');
   // Stage 1's three support cards are dealt between the two support phones (§3.5.2).
   const cards = [];
-  for (const p of [ann, ben]) cards.push(...(await p.getByTestId('support-cards').getAttribute('data-cards'))!.split(','));
+  for (const p of [cai, ben]) cards.push(...(await p.getByTestId('support-cards').getAttribute('data-cards'))!.split(','));
   expect(cards.sort()).toEqual(['duplicates', 'fixKit', 'rulebook']);
 
-  // Debug jump to the finale: the IC (Cai, P1) keeps the main phone; the leader's phone still submits.
-  await debugJump(cai, 'F');
+  // Debug jump to the finale: it goes to the IC (Cai); the host's phone (Ann) still submits.
+  await debugJump(ann, 'F');
   await expect(cai.getByRole('heading', { name: 'Mission live' })).toBeVisible();
   for (const p of [ann, ben]) {
     await expect(p.getByTestId('support-screen')).toHaveAttribute('data-stage', '5');
@@ -262,24 +267,26 @@ test('rejoin after a reload lands on the current stage; joining closes at START'
   await ben.reload();
   await ben.getByRole('button', { name: `Back to ${name}` }).click();
   await expect(ben.getByTestId('support-screen')).toHaveAttribute('data-stage', '0');
+  // The IC (Ann) starts the mission; stage 1 belongs to Ben (P2).
   await ann.getByRole('button', { name: 'Start the mission' }).click();
-  await expect(ben.getByTestId('support-screen')).toHaveAttribute('data-stage', '1');
+  await expect(ann.getByTestId('support-screen')).toHaveAttribute('data-stage', '1');
+  await expect(ann.getByTestId('supporting')).toContainText("You're supporting Ben");
 
   // The main phone reloads too and carries on as the main phone, at stage 1.
-  await ann.reload();
-  await ann.getByRole('button', { name: `Back to ${name}` }).click();
-  await expect(ann.getByTestId('support-screen')).toHaveCount(0);
-  await expect(ann.locator('.debug-panel')).toContainText('stage 1');
-  await debugJump(ann, '2');
-  // Stage 2 belongs to Ben (rotation[1]).
-  await expect(ann.getByTestId('support-screen')).toHaveAttribute('data-stage', '2');
-  await expect(ann.getByTestId('supporting')).toContainText("You're supporting Ben");
+  await ben.reload();
+  await ben.getByRole('button', { name: `Back to ${name}` }).click();
   await expect(ben.getByTestId('support-screen')).toHaveCount(0);
+  await expect(ben.locator('.debug-panel')).toContainText('stage 1');
+  await debugJump(ben, '2');
+  // Stage 2 belongs to Ann (rotation[2 % 2]).
+  await expect(ben.getByTestId('support-screen')).toHaveAttribute('data-stage', '2');
+  await expect(ben.getByTestId('supporting')).toContainText("You're supporting Ann");
+  await expect(ann.getByTestId('support-screen')).toHaveCount(0);
 
   // Leaving from Home ends the group on this phone.
-  await ann.goto('/?debug=1');
-  await ann.getByRole('button', { name: 'Leave group' }).click();
-  await expect(ann.getByRole('button', { name: 'Create group' })).toBeVisible();
+  await ben.goto('/?debug=1');
+  await ben.getByRole('button', { name: 'Leave group' }).click();
+  await expect(ben.getByRole('button', { name: 'Create group' })).toBeVisible();
   for (const p of [ann, ben, late, host]) await p.context().close();
 });
 
@@ -294,14 +301,15 @@ test('main phone drops: teammates pause, then the next player takes over after 2
   await joinByLink(ben, code, 'Ben');
   await ann.getByRole('button', { name: 'Start' }).click();
   await ann.getByRole('button', { name: 'Start the mission' }).click();
-  await expect(ben.getByTestId('support-screen')).toHaveAttribute('data-stage', '1');
+  // Stage 1 belongs to Ben (P2); Ann supports.
+  await expect(ann.getByTestId('support-screen')).toHaveAttribute('data-stage', '1');
 
-  await ann.context().close();
-  await expect(ben.getByTestId('paused')).toContainText("Waiting for Ann's phone");
-  // Ben is next in the rotation: he takes the main phone and resumes stage 1.
-  await expect(ben.getByTestId('support-screen')).toHaveCount(0, { timeout: 30_000 });
-  await expect(ben.locator('.debug-panel')).toContainText('stage 1');
   await ben.context().close();
+  await expect(ann.getByTestId('paused')).toContainText("Waiting for Ben's phone");
+  // Ann is next in the rotation: she takes the main phone and resumes stage 1.
+  await expect(ann.getByTestId('support-screen')).toHaveCount(0, { timeout: 30_000 });
+  await expect(ann.locator('.debug-panel')).toContainText('stage 1');
+  await ann.context().close();
 });
 
 test('?fakePeers=2: bots join the lobby, this phone plays main and can preview a support view', async ({ page }) => {
@@ -336,23 +344,24 @@ test('hand-off: the next main player is named and taps Ready on their own phone'
   await joinByLink(ben, code, 'Ben');
   await ann.getByRole('button', { name: 'Start' }).click();
   await ann.getByRole('button', { name: 'Start the mission' }).click();
-  await ann.getByRole('button', { name: 'Start sorting' }).click();
+  // Stage 1 belongs to Ben (P2).
+  await ben.getByRole('button', { name: 'Start sorting' }).click();
   for (const level of ['Tutorial', 'Keep or Trash', 'Keep, Fix or Trash']) {
-    await expect(ann.getByRole('heading', { name: level, level: 1 })).toBeVisible();
-    await ann.getByRole('button', { name: 'Start', exact: true }).click();
-    await playCards(ann);
+    await expect(ben.getByRole('heading', { name: level, level: 1 })).toBeVisible();
+    await ben.getByRole('button', { name: 'Start', exact: true }).click();
+    await playCards(ben);
   }
-  await ann.getByRole('button', { name: 'Continue' }).click();
-  await ann.getByRole('button', { name: /already/i }).click();
-  await ann.getByRole('button', { name: 'Continue' }).click();
-  await ann.getByRole('button', { name: 'Continue' }).click();
-  // Ann's hand-off card names Ben; Ben's phone offers Ready.
-  await expect(ann.getByText(/Ben/).first()).toBeVisible();
-  await expect(ben.getByTestId('up-next')).toBeVisible();
-  await ben.getByTestId('up-next').getByRole('button').click();
-  // Ben now holds the main phone for stage 2; Ann supports.
-  await expect(ben.getByTestId('support-screen')).toHaveCount(0);
-  await expect(ann.getByTestId('support-screen')).toHaveAttribute('data-stage', '2');
+  await ben.getByRole('button', { name: 'Continue' }).click();
+  await ben.getByRole('button', { name: /already/i }).click();
+  await ben.getByRole('button', { name: 'Continue' }).click();
+  await ben.getByRole('button', { name: 'Continue' }).click();
+  // Ben's hand-off card names Ann; Ann's phone offers Ready.
+  await expect(ben.getByText(/Ann/).first()).toBeVisible();
+  await expect(ann.getByTestId('up-next')).toBeVisible();
+  await ann.getByTestId('up-next').getByRole('button').click();
+  // Ann now holds the main phone for stage 2; Ben supports.
+  await expect(ann.getByTestId('support-screen')).toHaveCount(0);
+  await expect(ben.getByTestId('support-screen')).toHaveAttribute('data-stage', '2');
   for (const p of [ann, ben]) await p.context().close();
 });
 

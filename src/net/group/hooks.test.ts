@@ -65,12 +65,12 @@ describe('group view', () => {
 
   it('names the next main phone for the hand-off, skipping someone missing 20 s+', () => {
     const v = deriveView(snap({}));
-    expect(nextMain(v, 2)).toEqual({ nextName: 'Cai', nextId: 'member-c', nextIsMe: true });
+    expect(nextMain(v, 1)).toEqual({ nextName: 'Cai', nextId: 'member-c', nextIsMe: true });
     expect(nextMain(v, 4).nextName).toBe('Ann'); // finale = rotation[0], the IC
     const lost = deriveView(
       snap({ people: { ...snap({}).people, 'member-a': { id: 'member-a', nick: 'Ann', present: false, lostSince: 0 } } }),
     );
-    expect(nextMain(lost, 3, 60_000).nextName).toBe('Ben');
+    expect(nextMain(lost, 2, 60_000).nextName).toBe('Ben'); // stage 3 is Ann's, but she's gone
     expect(nextMain(deriveView({ ...IDLE }), 1)).toEqual({ nextId: null, nextIsMe: false });
   });
 });

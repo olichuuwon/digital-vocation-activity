@@ -22,7 +22,7 @@
   "join": {
     "heading": "Join a group",
     "codeLabel": "Group code",
-    "codeHint": "4 characters, shown on the leader's phone",
+    "codeHint": "4 characters, shown on the host's phone",
     "nicknameLabel": "Your nickname",
     "nicknameHint": "Only your group sees it. It never leaves your group's phones.",
     "join": "Join",
@@ -37,7 +37,7 @@
     "nickTooLong": "Use 16 characters or fewer.",
     "nickBlocked": "Please pick a different nickname.",
     "badCode": "Codes are 4 letters and numbers, like K7QM.",
-    "notFound": "Can't find that group. Check the code with your leader.",
+    "notFound": "Can't find that group. Check the code with your host.",
     "full": "That group is full. Groups have up to 4 players.",
     "started": "That group has already started.",
     "noNetwork": "Can't reach the game server. Check the internet and try again."
@@ -47,9 +47,9 @@
     "scanHint": "Teammates scan this, or tap Join group and type the code.",
     "qrAlt": "QR code to join {name}, code {code}",
     "playersHeading": "Players ({n} of 4)",
-    "rotationNote": "The order sets who holds the main phone in each stage. Player 1 is the IC and always plays the finale.",
+    "rotationNote": "Player 1 is the IC (team leader): starts the mission and plays the finale. The order sets who holds the main phone each stage.",
     "you": "you",
-    "leaderTag": "leader",
+    "leaderTag": "host",
     "playerN": "Player {n}",
     "reconnecting": "reconnecting…",
     "leadsStages": "Main phone: stage {stages}",
@@ -66,7 +66,7 @@
     "close": "Close group",
     "joinedSay": "{name} joined.",
     "awaySay": "{name} is reconnecting.",
-    "icTag": "IC"
+    "icTag": "IC (team leader)"
   },
   "support": {
     "supporting": "You're supporting {name}",
@@ -85,7 +85,7 @@
     "sending": "Score saved. Sending when you're back online."
   },
   "ended": {
-    "closed": "The leader closed the group.",
+    "closed": "The host closed the group.",
     "lobbyExpired": "The lobby closed after 15 minutes without a start.",
     "runExpired": "This group run has ended (60-minute limit).",
     "left": "You left the group.",
