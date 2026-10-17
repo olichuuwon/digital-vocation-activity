@@ -34,7 +34,7 @@ import type { Channel, ChannelStatus, GroupTransport } from './transport';
  *   run      the shared GameState, written by the main phone
  *   ov:<n>   takeover for stage n (the main phone dropped; the next in the rotation claims it)
  *   result   the leaderboard result (row id + today's rank), written by the submitting device
- *   t:<name> topics published by the main phone for support phones
+ *   t:<name> small topics published by the main phone (e.g. the hand-off)
  */
 
 export interface GameAdapter {
@@ -93,7 +93,7 @@ export interface GroupSnapshot {
   mainLostSince: number | null;
   /** Latest takeover this device saw, for a "{name} now has the main phone" notice. */
   promoted: { stage: number; id: string; at: number } | null;
-  /** Members missing for 30 s+ (left out of support dealing). */
+  /** Members missing for 30 s+. */
   gone: string[];
   /** Is a leaderboard submission queued on this device? */
   submitting: boolean;
@@ -294,7 +294,7 @@ export class GroupEngine {
     else t.timer = setTimeout(go, wait);
   }
 
-  /** Support → main phone. Queued for a few seconds while offline. */
+  /** Teammate → main phone. Queued for a few seconds while offline. */
   sendAction(type: string, payload?: unknown) {
     if (!this.me) return;
     const id = `${this.me.slice(0, 8)}-${Math.floor(this.random() * 1e9).toString(36)}`;
@@ -306,7 +306,7 @@ export class GroupEngine {
     this.send({ t: 'act', id, type, d: payload });
   }
 
-  /** Main phone: receive support actions. Returns an unsubscribe function. */
+  /** Main phone: receive teammates' actions. Returns an unsubscribe function. */
   onAction(fn: (a: ActionEvent) => void) {
     this.handlers.add(fn);
     return () => void this.handlers.delete(fn);

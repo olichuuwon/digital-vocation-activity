@@ -180,6 +180,16 @@
   color: var(--text-muted);
 }
 
+/* "There's more!" callout above the debrief buttons (replays unlock bonus levels). */
+.more {
+  margin: 0;
+  padding: 12px 14px;
+  border: 2px solid var(--logic-ink);
+  border-radius: var(--radius);
+  background: var(--surface-2);
+  font-weight: 800;
+}
+
 .block {
   display: flex;
   flex-direction: column;

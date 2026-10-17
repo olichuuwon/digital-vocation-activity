@@ -87,13 +87,10 @@ export const finaleCopySchema = z.object({
     soloNote: words(15),
     date: txt,
     playAgain: words(3),
-    replayStage: words(4),
-    chapterHeading: words(4),
-    chapterIntro: words(15),
     leaderboard: words(3),
     home: words(3),
     back: words(4),
-    /** "What you learned" for a stage skipped with stage select (never invent numbers). */
+    /** "What you learned" for a stage skipped by a ?debug jump (never invent numbers). */
     skipped: words(10),
   }),
 });

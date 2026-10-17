@@ -9,7 +9,7 @@ import { Timer } from '../../components/Timer';
 import { toast } from '../../components/toastStore';
 import { TutorialOverlay } from '../../components/TutorialOverlay';
 import ui from '../../components/components.module.css';
-import { briefingFor, fill, levelsFor, realityCheck, stageContent } from '../../content';
+import { briefingFor, fill, hasBonus, levelsFor, realityCheck, stageContent } from '../../content';
 import type { AiImage, Box, Label } from '../../content/stage2Schema';
 import { useGame } from '../../state/store';
 import type { GameState } from '../../state/types';
@@ -20,6 +20,7 @@ import {
   auditReducer,
   auditWrongDealt,
   boxHintLevel,
+  boxScore,
   buildAuditSet,
   buildBoxDeck,
   buildLabelDeck,
@@ -104,7 +105,7 @@ function useOptions(deck: readonly AiImage[], n: number, rng: Rng): Label[][] {
  */
 export default function AiStage({ run, debug }: { run: GameState; debug: boolean }) {
   const stage = stageContent(2)!;
-  const levels = levelsFor(stage);
+  const levels = levelsFor(stage, hasBonus(run));
   const levelId = (levels[run.levelIndex]?.id ?? 'ai-tutorial') as LevelId;
   const isLast = run.levelIndex === levels.length - 1;
   const saved = stage2For(run.startedAt);
@@ -164,7 +165,7 @@ export default function AiStage({ run, debug }: { run: GameState; debug: boolean
       (l4?.kinds ?? []).map((kind, i) => ({ kind: kind as AuditKind, assist: (l4?.assists?.[i] ?? 'none') as HintLevel })),
       l4?.wrongDealt ?? 0,
     );
-    const box = null;
+    const box = hasBonus(run) ? boxScore(l3?.points ?? [], l3?.dealt ?? 0, stage2.box.perfect) : null;
     const stars = aiStars(stageScore({ labelAccuracy: label, early, audit, box }), stage2.stars);
     const scores = toAiScores({ labelAccuracy: label, early, audit }, run.scores.data.accuracy);
     const heading = [c.result.heading0, c.result.heading1, c.result.heading2, c.result.heading3][stars]!;
@@ -192,7 +193,7 @@ export default function AiStage({ run, debug }: { run: GameState; debug: boolean
     <HandOff
       stage={stageContent(3)!}
       onReady={() => {
-        // Stage done: a later replay (chapter select, M6) starts fresh, not at this hand-off.
+        // Stage done: a later replay starts fresh, not at this hand-off.
         useStage2Progress.getState().setEnd(run.startedAt, null);
         completeLevel();
       }}

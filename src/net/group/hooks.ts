@@ -137,7 +137,7 @@ export function nextMain(view: GroupView, fromStage: Stage, now = Date.now()): H
   return { nextName: m?.nick, nextId: id, nextIsMe: !!m?.isMe };
 }
 
-/** Next main player for the hand-off card after `fromStage` (default: the current stage). */
+/** Next player for the hand-off card after `fromStage` (default: the current stage). */
 export function useHandOff(fromStage?: Stage): HandOffInfo {
   const view = useGroup();
   const stage = fromStage ?? view.stage ?? 0;

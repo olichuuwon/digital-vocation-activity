@@ -1,4 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
+import { startReplay } from './replay';
 
 const block = (page: Page, name: string) => page.getByRole('group', { name: 'Blocks' }).getByRole('button', { name, exact: false });
 
@@ -88,4 +89,29 @@ test('Stage 3: blocks can be selected, moved and removed; the limit blocks extra
   await program.getByRole('button', { name: /Turn left/ }).click();
   await page.getByTestId('remove-block').click();
   await expect(page.getByTestId('block-count')).toContainText('1');
+});
+
+test('Stage 3 replay: Bonus: Debug It swaps a block, and Bonus: Ask the AI runs', async ({ page }) => {
+  test.setTimeout(150_000); // six levels of animated truck runs
+  await startReplay(page, 3);
+  await page.getByRole('button', { name: 'Start building' }).click();
+  await page.getByRole('button', { name: 'Start', exact: true }).click();
+  await page.getByRole('button', { name: 'Got it' }).click();
+  await solveWithAnswer(page);
+  for (let i = 0; i < 3; i++) {
+    await page.getByRole('button', { name: 'Start', exact: true }).click();
+    await solveWithAnswer(page);
+  }
+  await expect(page.getByRole('heading', { name: 'Bonus: Debug It', level: 1 })).toBeVisible();
+  await page.getByRole('button', { name: 'Start', exact: true }).click();
+  await expect(page.getByTestId('block-count')).toContainText('9');
+  const program = page.getByTestId('program');
+  await program.locator('[data-op]').nth(2).click();
+  await block(page, 'Turn left').click();
+  await expect(page.getByText('Swaps left: 1')).toBeVisible();
+  await solveWithAnswer(page);
+  await expect(page.getByRole('heading', { name: 'Bonus: Ask the AI', level: 1 })).toBeVisible();
+  await page.getByRole('button', { name: 'Start', exact: true }).click();
+  await solveWithAnswer(page);
+  await expect(page.getByRole('heading', { name: 'That was programming' })).toBeVisible();
 });

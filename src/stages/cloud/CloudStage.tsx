@@ -9,7 +9,7 @@ import { Timer } from '../../components/Timer';
 import { toast, useToast } from '../../components/toastStore';
 import { TutorialOverlay } from '../../components/TutorialOverlay';
 import ui from '../../components/components.module.css';
-import { briefingFor, fill, levelsFor, realityCheck, stageContent } from '../../content';
+import { briefingFor, fill, hasBonus, levelsFor, realityCheck, stageContent } from '../../content';
 import {
   BASE_RPS,
   CPU_MAX,
@@ -79,7 +79,7 @@ function useTraffic(run: GameState): Traffic {
  */
 export default function CloudStage({ run, debug }: { run: GameState; debug: boolean }) {
   const stage = stageContent(4)!;
-  const levels = levelsFor(stage);
+  const levels = levelsFor(stage, hasBonus(run));
   const levelId = (levels[run.levelIndex]?.id ?? 'cloud-manual') as LevelId;
   const saved = stage4For(run.startedAt);
   const isLast = levelId === 'cloud-replay';
@@ -173,7 +173,7 @@ export default function CloudStage({ run, debug }: { run: GameState; debug: bool
       ]}
       onContinue={() => {
         useGame.getState().recordStage('cloud', scores, stars);
-        // Stage done: a later replay (chapter select, M6) starts fresh.
+        // Stage done: a later replay starts fresh.
         useStage4Progress.getState().patch(run.startedAt, { endPhase: null });
         completeLevel();
       }}
@@ -775,7 +775,7 @@ function LiveReplay({
   const settingsOpen = useGame((g) => g.settingsOpen);
   const relaxed = useRelaxed();
   const { paused, toggle } = usePause();
-  // Phase C is mostly watching (§7.4): fast-forward ×3 keeps the booth run moving.
+  // Phase C is mostly watching (§7.4): fast-forward ×3 keeps the run moving.
   const [fast, setFast] = useState(false);
   useEffect(() => useToast.getState().clear(), []);
   const step = useMemo(() => (st: SimState, dt: number, a: Action | null) => stepCluster(st, dt, config, a), [config]);

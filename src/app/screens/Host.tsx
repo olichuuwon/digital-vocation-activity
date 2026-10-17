@@ -73,7 +73,7 @@ export default function Host() {
 }
 
 /**
- * Groups playing right now (§3.5.1): each group's main phone shows {name, size, stage} in the
+ * Teams playing right now (§3.5.1): each team's main phone shows {name, size, stage} in the
  * presence of today's host channel. Nothing is stored; a group vanishes when it finishes.
  */
 function PlayingNow() {

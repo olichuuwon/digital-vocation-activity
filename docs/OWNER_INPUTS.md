@@ -17,8 +17,8 @@ Preview these at `/dev/components`, under "Reality Check". The text lives in `sr
 ## B. Stage 1 gameplay (play it first)
 Try it: https://digital-vocation-activity.vercel.app/?debug=1&stage=1
 
-- [ ] **5. Level sizes:** the tutorial has 3 cards. Level 1 is 10 cards in 40s. Level 2 is 10 cards in 60s. *Default: keep as is.*
-- [ ] **6. Rules per level:** the spec says one new rule per level, but levels 1 and 2 each show two (2+3, then 4+5). *Default: two.*
+- [x] **5. Level sizes:** *Closed 2026-10-17 (Stage 1 hook): tutorial 3 cards, Level 1 is 8 cards in 45 s, Level 2 is 10 cards in 60 s.*
+- [x] **6. Rules per level:** *Closed 2026-10-17 (Stage 1 hook): Level 1 adds rule 2 only; Level 2 adds duplicates and fixes (3, 4); rule 5 is folded into rule 2's card.*
 - [ ] **7. Stars:** 1★ at 30%, 2★ at 65%, 3★ at 88%. A careful player gets about 3★ and a first-timer about 2★. *Default: keep.*
 - [ ] **8. Automate question:** "Which rule would you turn into code first?" The correct answer is "trash repeated household IDs". The wrong answers are "trash households over 12 people" and "trash every typo". *Default: keep.*
 - [x] **9. Full mode is short:** Stage 1 takes about 2.6 min against the 5–6 min budget. *Default: add content after the M8 playtests.* *Closed 2026-10-17: Solo/Team simplification (no full mode / no support cards).*
@@ -40,21 +40,21 @@ Try it: https://digital-vocation-activity.vercel.app/?debug=1&stage=1
 - [ ] **19. Rate limit:** at most 30 group scores per minute across all players. Is that OK for your event size? *Default: 30.*
 
 ## F. Stage 2 gameplay (play it first)
-Try it: https://digital-vocation-activity.vercel.app/?debug=1&stage=2 (add `&mode=full` for Draw the Box)
+Try it: https://digital-vocation-activity.vercel.app/?debug=1&stage=2 (Draw the Box is a bonus level: finish a run, then replay Stage 2)
 
 - [ ] **20. Draw the Box pictures:** the spec asks for real open-dataset photos. M3 uses the game's own drawings (no licence risk, boxes exact). Want real photos? If so, send ~5–8 you like (no faces or number plates, reusable with attribution) and Claude adds them with credits. *Default: drawings.*
 - [ ] **21. Level sizes:** tutorial 2 pictures (the spec says 1). Level 1 is 12 pictures in 30s. Covered Up is 8 pictures in 60s, a tile every 0.6s, 2 tiles shown at the start, and 2 Reveal taps. Audit is 8 in 40s with 3 wrong. Draw the Box is 5 in 45s. *Default: keep.*
-- [ ] **22. Stars and scoring:** 55% labels, 15% early-guess bonus, 30% audit, plus 5% box in full mode. Stars at 30% / 62% / 87%. Accurate but always waiting for every tile gives 2★, and 3★ needs some quick guesses and a clean audit. *Default: keep.*
-- [ ] **23. Stage 2 is short:** booth about 2.1 min against 3; full about 2.9 min against 5–6. Covered Up plays in 10–25s against "~60s". *Default: tune after the M8 playtests (e.g. slower tiles, more pictures in full mode).*
+- [ ] **22. Stars and scoring:** 55% labels, 15% early-guess bonus, 30% audit, plus 5% box on replays (bonus Draw the Box). Stars at 30% / 62% / 87%. Accurate but always waiting for every tile gives 2★, and 3★ needs some quick guesses and a clean audit. *Default: keep.*
+- [ ] **23. Stage 2 is short:** about 2.1 min against 3. Covered Up plays in 10–25s against "~60s". *Default: tune after the M8 playtests (e.g. slower tiles, more pictures in full mode).*
 - [ ] **24. The 64 pictures:** review them all at `/dev/components` → "Stage 2 pictures". *Default: keep.*
 
 ## G. Stage 3 gameplay (play it first)
-Try it: https://digital-vocation-activity.vercel.app/?debug=1&stage=3 (add `&mode=full` for Debug It and Ask the AI)
+Try it: https://digital-vocation-activity.vercel.app/?debug=1&stage=3 (Debug It and Ask the AI are bonus levels: finish a run, then replay Stage 3)
 
 - [ ] **25. Choose the Road block limit:** the spec says 7. The solver proved no 7-block answer a 12-year-old would write exists, so the limit is 9 (the best answer uses 8). *Default: 9.*
 - [ ] **26. Stars and scoring:** all puzzles solved with no help gives 3★ at any block count within the limit, and each hint costs about a star. Stars at 20% / 60% / 90%. *Default: keep.*
-- [ ] **27. "AI misread" link (§3.2):** the spec puts it in "Level 3". It's built into the full-mode bonus Ask the AI, where a weaker Stage 2 model makes wrong drops. Booth players don't play that level. Should booth players see it too, for example as a note in the Stage 3 Reality Check? *Default: full mode only.*
-- [ ] **28. Stage 3 length:** at a first-timer's pace QA measured about 4 min for booth (budget 3) and 5.8 min for full (budget 5–6). An expert takes about 1 min. *Default: tune in M8 (e.g. shorter intros, or fold the tutorial into Level 1).*
+- [ ] **27. "AI misread" link (§3.2):** the spec puts it in "Level 3". It's built into the bonus Ask the AI level (replays only), where a weaker Stage 2 model makes wrong drops. Booth players don't play that level. Should booth players see it too, for example as a note in the Stage 3 Reality Check? *Default: full mode only.*
+- [ ] **28. Stage 3 length:** at a first-timer's pace QA measured about 4 min (budget 3). An expert takes about 1 min. *Default: tune in M8 (e.g. shorter intros, or fold the tutorial into Level 1).*
 
 ## H. Stage 4 and the finale
 Try them with stage select (Play solo → pick a length → pick a stage).
@@ -63,7 +63,7 @@ Try them with stage select (Play solo → pick a length → pick a stage).
 - [ ] **30. Stage 4 scoring:** 3★ means at least 99% uptime and under budget. A hardware fault at 32 s (the peak of the 45 s storm) makes self-healing matter. "Around 60–70%" is the sweet spot, and the hint says so. *Default: keep.*
 - [ ] **31. Finale text (D14):** the C4X match one-liners, the three "Why digital matters to DIS" cards and the rank titles ("Ops commander" sounds slightly military; swap it if you prefer) in `src/content/finaleCopy.json`. *Default: shown as drafted.*
 - [ ] **32. Live Ops balance:** 8 incidents, 8 s each, +15 families for a right answer and −12 for a wrong one or time-out. Live Ops can move you about one rank. *Default: keep.*
-- [ ] **33. Stage select flag:** on for development (`src/content/flags.json`). *Default: switch off before the event, unless you want it.*
+- [x] **33. Stage select flag:** *Closed 2026-10-17: removed. Players replay any stage after finishing instead (with bonus levels).*
 
 ## J. Group play (M6.5)
 Try it: open the site on 2–3 phones, Create group on one, scan its QR with the others.

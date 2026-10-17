@@ -2,8 +2,7 @@
 //
 // The image sits under a grid×grid tile grid. One tile uncovers every `revealEveryMs`. Guessing
 // early earns an early bonus. A wrong guess uncovers `wrongGuessTiles` extra tiles and costs
-// `wrongGuessPenalty` points. A per-level stock of Reveal charges (solo stand-in for the support
-// phone's Reveal power, §3.5.2) uncovers one extra tile each. Hint ladder per image: hint after
+// `wrongGuessPenalty` points. A per-level stock of Reveal charges uncovers one extra tile each. Hint ladder per image: hint after
 // 2 wrong guesses, answer after 3 (src/state/hints.ts), so there is never a dead end.
 import type { Label, Stage2Content } from '../content/stage2Schema';
 import { hintLevel, type HintLevel } from '../state/hints';

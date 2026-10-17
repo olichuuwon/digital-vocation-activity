@@ -43,8 +43,8 @@
   text-align: left;
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 12px;
+  justify-content: flex-start;
+  gap: 8px;
 }
 
 .btn:disabled,
@@ -79,6 +79,8 @@
 }
 
 .detail {
+  /* The small grey extra on a button ("+1 bonus level", "About 16 minutes") sits on the right. */
+  margin-left: auto;
   font-weight: 400;
   font-size: 0.9375rem;
   opacity: 0.85;

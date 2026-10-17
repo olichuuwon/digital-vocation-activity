@@ -5,7 +5,8 @@ import { Timer } from '../../components/Timer';
 import { toastMs } from '../../components/toastStore';
 import { buzz } from '../../app/haptics';
 import ui from '../../components/components.module.css';
-import { fill, stageContent, stages } from '../../content';
+import { ReplayPicker } from '../../components/ReplayPicker';
+import { copy, fill, stageContent, stages } from '../../content';
 import { TEAMS, type Team } from '../../content/finaleSchema';
 import { GroupRank } from '../../app/screens/GroupRank';
 import { useGroup } from '../../net/group';
@@ -278,7 +279,7 @@ function LiveOps({ run, base, onDone }: { run: GameState; base: number; onDone: 
   );
 }
 
-/** Which stages this run actually played (stage select can skip some). */
+/** Which stages this run actually played (a ?debug jump can skip some). */
 function played(run: GameState): Record<Team, boolean> {
   const s1 = stage1For(run.startedAt).outcomes.filter((o) => o.levelId !== 'data-tutorial');
   const o2 = stage2For(run.startedAt).outcomes;
@@ -298,8 +299,9 @@ function learnedLines(run: GameState): string[] {
   const o2 = stage2For(run.startedAt).outcomes;
   const labelled = (o2['ai-l1']?.points.length ?? 0) + (o2['ai-l2']?.points.filter((x) => x > 0).length ?? 0);
   return [
-    p.data ? fill(dataCopy.learned, { count: cleaned }) : c.debrief.skipped,
-    p.ai ? fill(aiCopy.learned, { count: labelled }) : c.debrief.skipped,
+    // A teammate's phone has no local counts for a stage someone else played.
+    p.data ? (cleaned ? fill(dataCopy.learned, { count: cleaned }) : dataCopy.learnedTeam) : c.debrief.skipped,
+    p.ai ? (labelled ? fill(aiCopy.learned, { count: labelled }) : aiCopy.learnedTeam) : c.debrief.skipped,
     p.logic ? fill(logicCopy.learned, { count: run.scores.logic.puzzlesSolved }) : c.debrief.skipped,
     p.cloud ? stage4Learned(run.scores.cloud.manualUptime, run.scores.cloud.autoUptime) : c.debrief.skipped,
   ];
@@ -326,14 +328,16 @@ function Debrief({
   // finishedAt is set when Live Ops ends; fall back to the run start for old saves.
   const date = formatBoardDate(sgtDate(run.finishedAt ?? run.startedAt));
   const group = useGroup();
+  const canReplay = !group.active || !!group.snap.result;
 
   if (chapters)
     return (
-      <ChapterSelect
+      <ReplayPicker
         onPick={onReplay}
+        backLabel={c.debrief.back}
         onBack={() => {
           setChapters(false);
-          // Back on the results: put focus on the button that opened chapter select (2.4.3).
+          // Back on the results: put focus on the button that opened the picker (2.4.3).
           requestAnimationFrame(() => document.querySelector<HTMLElement>('[data-testid="replay-stage"]')?.focus());
         }}
       />
@@ -416,49 +420,25 @@ function Debrief({
         ))}
       </section>
 
+      {/* Free play: every phone, solo or team. A team waits for its leaderboard result first,
+          since picking a stage leaves the team. */}
+      {canReplay && (
+        <p className={s.more} data-testid="more-teaser">
+          <span aria-hidden="true">🔓 </span>
+          {copy.replay.teaser}
+        </p>
+      )}
       <div className={s.buttons}>
         <button type="button" className={`${ui.btn} ${ui.primary}`} onClick={onHome}>
           {c.debrief.playAgain}
         </button>
-        {/* Free play: every phone, solo or team. A team waits for its leaderboard result first,
-            since picking a stage leaves the team. */}
-        {(!group.active || !!group.snap.result) && (
+        {canReplay && (
           <button type="button" className={ui.btn} data-testid="replay-stage" onClick={() => setChapters(true)}>
-            {c.debrief.replayStage}
+            {copy.home.replayStage}
           </button>
         )}
         <button type="button" className={ui.btn} onClick={onLeaderboard}>
           {c.debrief.leaderboard}
-        </button>
-      </div>
-    </section>
-  );
-}
-
-/** Chapter select (§8.3): replay from any stage; the run continues from there to the finale. */
-function ChapterSelect({ onPick, onBack }: { onPick: (stage: Stage) => void; onBack: () => void }) {
-  const headingRef = useScreenHeading<HTMLHeadingElement>(c.debrief.chapterHeading);
-  return (
-    <section className={ui.screen}>
-      <h1 ref={headingRef} tabIndex={-1}>
-        {c.debrief.chapterHeading}
-      </h1>
-      <p className={ui.muted}>{c.debrief.chapterIntro}</p>
-      <div className={ui.actions}>
-        {stages.map((st) => (
-          <button
-            key={st.stage}
-            type="button"
-            className={ui.btn}
-            onClick={() => onPick(st.stage as Stage)}
-          >
-            <span aria-hidden="true">{st.icon} </span>
-            {st.title}
-          </button>
-        ))}
-        <button type="button" className={ui.btn} onClick={onBack}>
-          <span aria-hidden="true">← </span>
-          {c.debrief.back}
         </button>
       </div>
     </section>

@@ -80,7 +80,7 @@ interface GroupStore {
   transport: GroupTransport['kind'] | null;
   /** ?fakePeers: member ids this device plays for. */
   puppets: string[];
-  /** Debug (?fakePeers): preview the support screen as support #n instead of playing main. */
+  /** Debug (?fakePeers): non-null previews the waiting screen instead of playing. */
   viewAs: number | null;
 }
 
@@ -227,12 +227,12 @@ export function publish(topic: string, payload: unknown) {
   engine?.publish(topic, payload);
 }
 
-/** Support phone → main phone (e.g. `reveal_tile`, `boost_server`). */
+/** Teammate → main phone (e.g. the hand-off Ready, relaxed timers). */
 export function sendAction(type: string, payload?: unknown) {
   engine?.sendAction(type, payload);
 }
 
-/** Main phone: listen for support actions. Returns an unsubscribe function. */
+/** Main phone: listen for teammates' actions. Returns an unsubscribe function. */
 export function onAction(fn: (a: ActionEvent) => void): () => void {
   return getEngine()?.onAction(fn) ?? (() => {});
 }

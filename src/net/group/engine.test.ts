@@ -193,7 +193,7 @@ describe('run', () => {
     await flush();
     for (const d of all) expect(d.snap().mainId).toBe(b);
     expect(members[0]!.engine.amMain()).toBe(true);
-    // Supports can't move the run on.
+    // Waiting teammates can't move the run on.
     members[1]!.game.local((r) => ({ ...r, stage: 4 }));
     await flush();
     expect(leader.game.run?.stage).toBe(1);
@@ -215,7 +215,7 @@ describe('run', () => {
     expect(a).toBe(leader.snap().meId);
   });
 
-  it('supports send actions; only the main phone receives them', async () => {
+  it('teammates send actions; only the main phone receives them', async () => {
     const { leader, members } = await lobbyOf(3);
     leader.engine.start();
     await flush();
@@ -288,7 +288,7 @@ describe('run', () => {
     // Resumes from the last broadcast state.
     expect(b.game.run?.stage).toBe(1);
     expect(b.game.run?.levelIndex).toBe(1);
-    // The old main comes back: it's a support now and mirrors the new main.
+    // The old main comes back: it waits now and mirrors the new main.
     hub.setOnline(main.client(), true);
     await flush();
     await flush();

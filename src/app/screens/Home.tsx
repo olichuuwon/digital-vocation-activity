@@ -1,9 +1,9 @@
 import { useState } from 'react';
-import { copy, fill, stages } from '../../content';
+import { ReplayPicker } from '../../components/ReplayPicker';
+import { copy, fill } from '../../content';
 import { groupCopy } from '../../content/groupSchema';
 import { groupActions, groupAvailable, useGroup } from '../../net/group';
 import { useGame } from '../../state/store';
-import type { Stage } from '../../state/types';
 import { useScreenHeading } from '../screenFocus';
 import ui from '../ui.module.css';
 
@@ -26,12 +26,13 @@ export function Home({
   // A finished run isn't resumed: its debrief is done (§3.1).
   const hasRun = useGame((s) => s.run !== null && !s.run.finishedAt);
   const startRun = useGame((s) => s.startRun);
-  // Free play (§8.3): once the main flow is done, replay any stage of the finished run.
+  // Free play (§8.3): once a run is finished, replay any stage of it with the bonus levels.
   const canReplay = useGame((s) => !!s.run?.finishedAt);
   const replayFrom = useGame((s) => s.replayFrom);
   const [screen, setScreen] = useState<'main' | 'replay' | 'team'>('main');
   const headingRef = useScreenHeading<HTMLHeadingElement>(
-    screen === 'replay' ? t.replayStage : screen === 'team' ? t.playTeam : t.title,
+    // The replay picker names its own screen.
+    screen === 'replay' ? '' : screen === 'team' ? t.playTeam : t.title,
   );
 
   const playSolo = () => {
@@ -41,29 +42,15 @@ export function Home({
 
   if (screen === 'replay') {
     return (
-      <main className={ui.screen}>
-        <h1 className={ui.hero} ref={headingRef} tabIndex={-1}>
-          {t.replayStage}
-        </h1>
-        <div className={ui.actions}>
-          {stages.map((st) => (
-            <button
-              key={st.stage}
-              type="button"
-              className={ui.btn}
-              onClick={() => {
-                replayFrom(st.stage as Stage);
-                onEnter();
-              }}
-            >
-              <span aria-hidden="true">{st.icon} </span>
-              {st.stage}. {st.title}
-            </button>
-          ))}
-          <button type="button" className={ui.btn} onClick={() => setScreen('main')}>
-            <span aria-hidden="true">←</span> {t.back}
-          </button>
-        </div>
+      <main style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+        <ReplayPicker
+          backLabel={t.back}
+          onBack={() => setScreen('main')}
+          onPick={(stage) => {
+            replayFrom(stage);
+            onEnter();
+          }}
+        />
       </main>
     );
   }
@@ -131,7 +118,8 @@ export function Home({
             {t.playTeam}
           </button>
           {canReplay && (
-            <button type="button" className={ui.btn} onClick={() => setScreen('replay')}>
+            <button type="button" className={ui.btn} data-testid="home-replay" onClick={() => setScreen('replay')}>
+              <span aria-hidden="true">🔓 </span>
               {t.replayStage}
             </button>
           )}

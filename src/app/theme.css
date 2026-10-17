@@ -94,7 +94,7 @@ html {
   scroll-padding-bottom: calc(96px + (1rem - 16px) * 7);
 }
 
-/* While "You're up next" sits at the bottom of a support screen, focus must clear it too. */
+/* While "You're up next" sits at the bottom of the waiting screen, focus must clear it too. */
 html:has([data-testid='up-next']) {
   scroll-padding-bottom: calc(96px + (1rem - 16px) * 7 + 12rem);
 }

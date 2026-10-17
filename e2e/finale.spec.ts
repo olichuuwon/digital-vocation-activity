@@ -13,7 +13,7 @@ async function playLiveOps(page: Page, correct: boolean) {
   }
 }
 
-test('Finale: reveal, route every incident, debrief card fits one screen, then chapter select', async ({ page }) => {
+test('Finale: reveal, route every incident, debrief card fits one screen, then a replay with bonus levels', async ({ page }) => {
   test.setTimeout(150_000);
   await page.setViewportSize({ width: 360, height: 740 });
   await page.goto('/?debug=1&stage=5');
@@ -40,8 +40,16 @@ test('Finale: reveal, route every incident, debrief card fits one screen, then c
   await page.reload();
   await expect(page.getByTestId('families')).toHaveText(families ?? '');
 
-  await page.getByRole('button', { name: 'Replay a stage' }).click();
+  // There's more: replays unlock bonus levels, and the picker says how many per stage.
+  await expect(page.getByTestId('more-teaser')).toContainText("There's more!");
+  await page.getByRole('button', { name: 'Replay with bonus levels' }).click();
   await expect(page.getByRole('heading', { name: 'Pick a stage' })).toBeVisible();
+  await expect(page.getByRole('button', { name: /Build the Logic/ })).toContainText('+2 bonus levels');
+  await expect(page.getByRole('button', { name: /Keep It Alive/ })).not.toContainText('bonus');
+
+  // Home offers the same picker while the run is finished.
+  await page.goto('/');
+  await page.getByTestId('home-replay').click();
   await page.getByRole('button', { name: /Teach the Machine to See/ }).click();
   await expect(page.getByRole('heading', { name: 'Teach the machine to see' })).toBeVisible();
 });
@@ -75,7 +83,7 @@ test('Finale: a reload right after the last incident still reaches the debrief (
   await page.goto('/');
   await page.getByRole('button', { name: 'Resume run' }).click();
   await expect(page.getByRole('heading', { name: 'Mission complete' })).toBeVisible();
-  // Home now offers chapter select (§8.3).
+  // Home now offers free play with bonus levels (§8.3).
   await page.getByRole('button', { name: 'Play again' }).click();
-  await expect(page.getByRole('button', { name: 'Replay a stage' })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Replay with bonus levels' })).toBeVisible();
 });

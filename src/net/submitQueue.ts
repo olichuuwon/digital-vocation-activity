@@ -1,20 +1,17 @@
 import { z } from 'zod';
-import { safeStorage } from '../state/storage';
 import {
   isRetryable,
   LeaderboardError,
   runPayloadSchema,
-  submitRun,
   type LeaderboardErrorKind,
   type RunPayload,
   type SubmitResult,
 } from './leaderboard';
-import { rememberOwnRun } from './ownRuns';
 
 // Score submission queue (§3.5.6). Persisted in localStorage so a dropped connection or a
 // reload doesn't lose the group's run. Safe to resend: submit_run is idempotent per token.
-// Stored: the run payload (incl. group token) only. No nicknames.
-// Nothing in gameplay calls this yet: group submission arrives in M6.5.
+// Stored: the run payload (incl. group token) only. No nicknames. The team's submitting phone
+// creates its queue in src/net/group/submit.ts.
 
 export interface QueueItem {
   payload: RunPayload;
@@ -174,26 +171,3 @@ export function createSubmitQueue(deps: QueueDeps) {
 }
 
 export type SubmitQueue = ReturnType<typeof createSubmitQueue>;
-
-const STORAGE_KEY = 'ship-it-submit-queue';
-let shared: SubmitQueue | null = null;
-
-/** App-wide queue (for M6.5). Flushes on start and whenever the browser comes back online. */
-export function getSubmitQueue(): SubmitQueue {
-  if (shared) return shared;
-  const q = createSubmitQueue({
-    submit: submitRun,
-    load: () => safeStorage.getItem(STORAGE_KEY) as string | null,
-    save: (raw) => void safeStorage.setItem(STORAGE_KEY, raw),
-    now: () => Date.now(),
-    schedule: (fn, ms) => {
-      const id = window.setTimeout(fn, ms);
-      return () => window.clearTimeout(id);
-    },
-    onSubmitted: (_p, r) => rememberOwnRun(r.id),
-  });
-  window.addEventListener('online', () => void q.retryNow());
-  void q.flush();
-  shared = q;
-  return q;
-}

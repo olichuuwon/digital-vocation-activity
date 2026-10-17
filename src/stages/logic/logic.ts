@@ -1,7 +1,7 @@
 // Stage 3 "Build the Logic" scoring (spec §6.3, §3.2). Pure: no React, no DOM.
 // Engine: src/sim/grid.ts. Content contract: src/content/stage3Schema.ts.
 //
-// SCORING (tutorial excluded; only SCORED_LEVEL_IDS count; L4/L5 are dealt in full mode only):
+// SCORING (tutorial excluded; only SCORED_LEVEL_IDS count; L4/L5 are bonus levels, played on replays only):
 //   hintsUsed   = Σ assist points (hint → 1, answer → 2), solved or not
 //   extraBlocks = Σ over solved of max(0, blocks − par)          (feeds the finale logicScore, §3.2)
 //   efficiency  = mean over solved of min(1, par / blocks)        (0 if none solved)

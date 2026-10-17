@@ -76,6 +76,7 @@
     "automated": "Automation bonus earned"
   },
   "learned": "You cleaned {count} records by hand. Write a rule once as code, and a pipeline (an automatic chain of steps) cleans millions.",
+  "learnedTeam": "Your team cleaned records by hand. Write a rule once as code, and a pipeline (an automatic chain of steps) cleans millions.",
   "hintKeep": "Stuck? Every field filled and sensible? Then keep it.",
   "answerKeep": "Nothing's broken here. Keep it.",
   "nextCard": "Next: household {id}, {n} of {total}.",

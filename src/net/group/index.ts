@@ -1,5 +1,6 @@
 /**
- * Group play (spec §3.5, §11.2): one main phone + support phones. Public API.
+ * Team play (spec §3.5, §11.2): players take turns; one phone plays each stage (the "main"
+ * phone), teammates see the waiting screen. Public API.
  *
  * SYNC MODEL (the contract stage code builds on)
  * ---------------------------------------------
@@ -13,14 +14,13 @@
  *     run      (main phone) the shared GameState (src/state/types.ts), i.e. the one run
  *     ov:<n>   (claimant)   takeover of stage n's main phone after a drop
  *     result   (submitter)  leaderboard row id + today's rank
- *     t:<name> (main phone) topics for support phones (`publish` / `useTopic`)
+ *     t:<name> (main phone) small topics for teammates (`publish` / `useTopic`), e.g. the hand-off
  *   A device that connects (or reconnects) says hello and everyone answers with what they hold,
  *   so late joiners and rejoiners catch up from the last broadcast state.
  * - ONE run per group. The main phone for the current stage is the source of truth: whenever
  *   its GameState changes (level done, stage scores, hand-off, finish) it broadcasts it; other
  *   phones mirror it into their game store (src/state/store.ts) and don't change it. Level-
- *   internal state (cards, timers, sims) stays on the main phone unless stage code publishes it
- *   as a topic. Stage-local progress stores (e.g. stage1For) are per device.
+ *   internal state (cards, timers, sims) stays on the main phone. Stage-local progress stores (e.g. stage1For) are per device.
  * - Rotation (§3.5.2): main for stage 0 (prologue) and the finale (5) =
  *   rotation[0] (player 1, the IC = team leader); stage k (1–4) = rotation[k % n], starting
  *   from player 2 so turns are as even as possible. The host orders
@@ -30,10 +30,10 @@
  * - Drops (§3.5.6): the main phone sends a heartbeat when quiet. If it is missing (presence
  *   gone or 15 s silent) everyone shows a pause; after 20 s the next connected member in the
  *   rotation claims `ov:<stage>` and carries on from the last broadcast run (from the start
- *   of the level it was on). A teammate missing 30 s+ is left out of support dealing; rejoin
+ *   of the level it was on). A teammate missing 30 s+ is marked gone (freeing a lobby slot); rejoin
  *   uses the token in localStorage and lands on the current stage.
- * - Actions: support phones `sendAction(type, payload)`; only the main phone's `useActions`
- *   handlers receive them (de-duplicated; queued up to 10 s while offline).
+ * - Actions: teammates `sendAction(type, payload)` (hand-off Ready, relaxed timers); only the main
+ *   phone's `useActions` handlers receive them (de-duplicated; queued up to 10 s while offline).
  * - Submission (§3.5.3): when the run reaches the debrief, the leader's phone (or, if the leader
  *   is gone, the finale's main phone) queues one submit_run (retrying, idempotent per token).
  *   The result (rank today) is broadcast so every phone shows "You're #3 today!".

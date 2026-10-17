@@ -26,7 +26,7 @@
         },
         {
           "id": "data-l3",
-          "name": "Spot the Outlier",
+          "name": "Bonus: Spot the Outlier",
           "bonus": true
         }
       ]
@@ -57,7 +57,7 @@
         },
         {
           "id": "ai-l3",
-          "name": "Draw the Box",
+          "name": "Bonus: Draw the Box",
           "bonus": true
         },
         {
@@ -98,12 +98,12 @@
         },
         {
           "id": "logic-l4",
-          "name": "Debug It",
+          "name": "Bonus: Debug It",
           "bonus": true
         },
         {
           "id": "logic-l5",
-          "name": "Ask the AI",
+          "name": "Bonus: Ask the AI",
           "bonus": true
         }
       ]

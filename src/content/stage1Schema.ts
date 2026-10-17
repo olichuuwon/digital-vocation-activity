@@ -172,6 +172,8 @@ export const stage1CopySchema = z.object({
     automated: txt,
   }),
   learned: words(25),
+  /** Debrief on a teammate's phone: the counts live on the phone that played the stage. */
+  learnedTeam: words(25),
 });
 
 export type Stage1Copy = z.infer<typeof stage1CopySchema>;

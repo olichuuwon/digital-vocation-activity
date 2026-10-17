@@ -34,6 +34,8 @@ export const copySchema = z.object({
     title: text, tagline: text, playSolo: text, playTeam: text, teamBody: text, createGroup: text, joinGroup: text,
     leaderboard: text, resume: text, newRun: text, replayStage: text, back: text,
   }),
+  /** Free play after a finished run: replays unlock the bonus levels. */
+  replay: z.object({ heading: text, intro: text, teaser: text, bonusOne: text, bonusMany: text }),
   settings: z.object({
     heading: text, theme: text, themeSystem: text, themeLight: text, themeDark: text,
     sound: text, relaxed: text, quit: text, close: text, teamRelaxed: text,

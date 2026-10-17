@@ -61,7 +61,7 @@
 
 ## 2. Session structure & timing
 
-One length for everyone: **≈ 16 min of play** (core levels). It fits the 20-min rotation with about 2 min to join and 2 min of debrief and leaderboard. Two ways to play: **Solo** (one phone, plays everything, not ranked) and **Team** (2–4 phones, take turns, ranked; §3.5). Levels flagged `bonus` in content are not played.
+One length for everyone: **≈ 16 min of play** (core levels). It fits the 20-min rotation with about 2 min to join and 2 min of debrief and leaderboard. Two ways to play: **Solo** (one phone, plays everything, not ranked) and **Team** (2–4 phones, take turns, ranked; §3.5). Levels flagged `bonus` in content are not part of the first play-through: they unlock on **replays** (free play after the debrief, never ranked), and the game says so clearly ("There's more!").
 
 **Team timing:** the player's phone owns the level timer. Hand-off cards (where the turn passes) are short, about 10s, with a "Ready" tap from the next player's phone.
 
@@ -78,7 +78,7 @@ One length for everyone: **≈ 16 min of play** (core levels). It fits the 20-mi
 Each stage follows the same rhythm, so players learn the pattern:
 
 ```
-Briefing card (≤25 words) → Tutorial (interactive, 20–30s) → Level 1 → Level 2
+Briefing card (≤25 words) → Tutorial (interactive, 20–30s) → Level 1 → Level 2 → [Bonus level: replays only]
 → REALITY CHECK (animated reveal, ≤40s, tap to advance) → Stage result (stars) → Hand-off card to next team
 ```
 
@@ -152,7 +152,7 @@ Simple on purpose. Teammates stand together, so the talking happens in person.
 - **Rotation:** player 1 (the leader) plays the prologue and the finale; stages 1–4 rotate from player 2, so turns are as even as possible.
 - **Hand-off:** at the end of a stage, the next player's phone shows "You're up next!" with an **I'm ready** button.
 - **Drops:** if the player's phone goes quiet for 20 s, the next connected member takes over from the start of that level.
-- **Free play:** once the team is on the board, every member can pick any stage to replay solo on their own phone (not ranked).
+- **Free play:** once the team is on the board, every member can pick any stage to replay solo on their own phone, with the bonus levels (not ranked).
 
 #### 3.5.3 Team score & ranking
 - The team shares one score per stage (the player's result), then §3.2 for `groupFamilies`.
@@ -354,7 +354,7 @@ Use the specialisation names on the routing buttons: Data Science · AI Engineer
 - **What you learned** (one line per stage, based on what they actually did), e.g. *"You cleaned 20 records by hand and saw how one rule cleans millions."*
 - **Why digital matters to DIS**: 2–3 short cards on how data, AI, software and cloud work *together* to support defence and missions like disaster relief. Drafted by `content-writer` and **approved by the project owner (D14)** before release.
 - Team mode: a leaderboard rank reveal ("You're #3 today!") on every phone.
-- "Play again" and "Replay a stage" (chapter select unlocked after the first finish).
+- "Play again" and **"Replay with bonus levels"**: a "🔓 There's more!" callout, then a stage picker that shows how many bonus levels each stage adds. Also on Home while the last run is finished.
 - End card designed to be **screenshot-friendly** (fits one screen, shows name-free score, rank, date).
 
 ---

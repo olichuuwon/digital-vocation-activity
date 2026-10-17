@@ -83,7 +83,7 @@ export const messageSchema = z.discriminatedUnion('t', [
   z.object({ ...base, t: z.literal('hello'), join: z.boolean() }),
   z.object({ ...base, t: z.literal('put'), e: entrySchema }),
   z.object({ ...base, t: z.literal('sync'), es: z.array(entrySchema).max(64) }),
-  /** Support → main phone. `id` de-duplicates resends. */
+  /** Teammate → main phone. `id` de-duplicates resends. */
   z.object({ ...base, t: z.literal('act'), id: z.string().min(1).max(40), type: actionType, d: z.unknown().optional() }),
   z.object({ ...base, t: z.literal('beat') }),
   z.object({ ...base, t: z.literal('bye') }),

@@ -8,7 +8,7 @@ import s from './Group.module.css';
 const t = groupCopy.debrief;
 
 /**
- * Debrief in group mode (§8.3): replaces the solo note with the leaderboard rank reveal. The
+ * Debrief in team mode (§8.3): replaces the solo note with the leaderboard rank reveal. The
  * leader's phone submits; the result is shared, so every phone shows "You're #3 today!".
  */
 export function GroupRank() {

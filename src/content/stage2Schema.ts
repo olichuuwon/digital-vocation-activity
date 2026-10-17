@@ -119,7 +119,7 @@ export const stage2FileSchema = z.object({
     wrongGuessTiles: z.number().int().min(0).max(4),
     /** Points lost per wrong guess (0–1 scale per image). */
     wrongGuessPenalty: z.number().min(0).max(0.5),
-    /** Solo stand-in for the support's Reveal power (§3.5.2): uncover-one-tile taps per level. */
+    /** Reveal power: uncover-one-tile taps per level. */
     revealCharges: z.number().int().min(0).max(5),
   }),
   box: z.object({
@@ -178,7 +178,7 @@ export const stage2CopySchema = z.object({
   tutorialHint: words(12),
   /** Short label names on buttons ("Medical kit"). */
   labels: perLabel(words(3)),
-  /** Field guide (§3.5.2 support card, solo as a sheet): what each class looks like. */
+  /** Field guide (a sheet): what each class looks like. */
   fieldGuide: z.object({
     button: words(3),
     heading: words(4),
@@ -254,6 +254,8 @@ export const stage2CopySchema = z.object({
     box: txt,
   }),
   learned: words(25),
+  /** Debrief on a teammate's phone: the counts live on the phone that played the stage. */
+  learnedTeam: words(25),
   /** Screen-reader-only text (§10). */
   a11y: z.object({
     suggested: txt,

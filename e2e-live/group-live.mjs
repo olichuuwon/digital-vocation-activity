@@ -1,5 +1,6 @@
-// Live multi-phone group test: real site + real Supabase Realtime. submit_run is intercepted so
-// nothing is written to the real leaderboard. Usage: node group-live.mjs <players 2-4> <outdir>
+// Live multi-phone team test: real site (or LIVE_URL) + real Supabase Realtime. submit_run is
+// intercepted so nothing is written to the real leaderboard.
+// Usage: node e2e-live/group-live.mjs <players 2-4> <outdir>
 import { createRequire } from 'node:module';
 const require = createRequire(new URL('../package.json', import.meta.url));
 const { chromium, devices, expect } = require('@playwright/test');
@@ -33,21 +34,19 @@ for (let i = 0; i < N; i++) {
 }
 const [host] = phones;
 const T = { timeout: 20_000 };
+/** Names of phones playing (not on the waiting screen): exactly one once a stage has synced. */
 const mainOf = async () => {
   const mains = [];
-  for (let i = 0; i < N; i++) if ((await phones[i].getByTestId('support-screen').count()) === 0) mains.push(NAMES[i]);
+  for (let i = 0; i < N; i++) if ((await phones[i].getByTestId('waiting-screen').count()) === 0) mains.push(NAMES[i]);
   return mains;
 };
-// A support phone "has a job" if it shows a support card or any control button.
-const hasJob = async (p) =>
-  (await p.getByTestId('support-cards').count()) > 0 || (await p.getByTestId('support-screen').getByRole('button').count()) > 0;
 const waitStage = async (s) => {
-  // Every phone either shows the main view or a support screen for stage s.
+  // Every phone either plays or shows the waiting screen for stage s.
   await expect.poll(async () => {
     let ok = 0;
     for (const p of phones) {
-      const sup = p.getByTestId('support-screen');
-      if ((await sup.count()) === 0 || (await sup.getAttribute('data-stage')) === String(s)) ok++;
+      const w = p.getByTestId('waiting-screen');
+      if ((await w.count()) === 0 || (await w.getAttribute('data-stage')) === String(s)) ok++;
     }
     return ok;
   }, { timeout: 20_000 }).toBe(N);
@@ -64,23 +63,29 @@ const jump = async (label) => {
 let result = 'PASS';
 try {
   let code, groupName;
-  await check('host creates a group (generated name)', async () => {
+  await check('host creates a team (generated name)', async () => {
     await host.goto(SITE + '/?debug=1');
-    await host.getByRole('button', { name: 'Create group' }).click();
+    await host.getByRole('button', { name: 'Play as a team' }).click();
+    await host.getByRole('button', { name: 'Create a team' }).click();
     await host.getByTestId('name-options').getByRole('radio').first().check();
     await host.getByLabel('Your nickname').fill(NAMES[0]);
-    await host.getByRole('button', { name: 'Create group' }).click();
+    await host.getByRole('button', { name: 'Create team' }).click();
     await host.getByTestId('group-code').waitFor(T);
     code = (await host.getByTestId('group-code').textContent()).trim();
     groupName = (await host.getByTestId('group-name').textContent()).trim();
-    log(`group "${groupName}" code ${code}`);
+    log(`team "${groupName}" code ${code}`);
   });
 
   await check(`${N - 1} teammates join (QR link and typed code)`, async () => {
     for (let i = 1; i < N; i++) {
       const p = phones[i];
       if (i % 2) await p.goto(`${SITE}/?debug=1&join=${code}`);
-      else { await p.goto(SITE + '/?debug=1'); await p.getByRole('button', { name: 'Join group' }).click(); await p.getByLabel('Group code').fill(code.toLowerCase()); }
+      else {
+        await p.goto(SITE + '/?debug=1');
+        await p.getByRole('button', { name: 'Play as a team' }).click();
+        await p.getByRole('button', { name: 'Join a team' }).click();
+        await p.getByLabel('Team code').fill(code.toLowerCase());
+      }
       await p.getByLabel('Your nickname').fill(NAMES[i]);
       await p.getByRole('button', { name: 'Join', exact: true }).click();
       await p.getByTestId('lobby-waiting').waitFor(T);
@@ -98,23 +103,27 @@ try {
   // Watch the lobby settle for a few seconds before Start, as a real host would.
   for (let k = 0; k < 4; k++) {
     for (let i = 0; i < N; i++) {
-      const t = (await phones[i].getByTestId('member').allInnerTexts()).map((x) => x.replace(/\s+/g, ' ').replace(/Main phone:.*/, '').trim());
+      const t = (await phones[i].getByTestId('member').allInnerTexts()).map((x) => x.replace(/\s+/g, ' ').replace(/Plays stage.*/, '').trim());
       log(`  t+${k}s ${NAMES[i]} sees: ${t.join(' | ')}`);
     }
     await host.waitForTimeout(1000);
   }
 
-  await host.getByRole('button', { name: 'Start' }).click();
+  // A teammate still connecting makes the lobby ask for a second tap: never drop anyone silently.
+  for (let k = 0; k < 4 && !(await host.getByTestId('prologue-heading').count()); k++) {
+    await host.getByRole('button', { name: 'Start' }).click();
+    await host.getByTestId('prologue-heading').waitFor({ timeout: 6_000 }).catch(() => {});
+  }
 
   const mainBy = {};
-  await check('prologue: one main phone, the rest support', async () => {
+  await check('prologue: the leader plays, everyone else sees the waiting screen', async () => {
     await waitStage(0);
     mainBy.P = (await mainOf())[0];
   });
 
-  // Walk every stage via the host's debug panel: exactly one main phone; every support phone holds a card.
+  // Walk every stage: exactly one phone plays; every other phone's waiting screen names that player.
   for (const [label, s] of [['1', 1], ['2', 2], ['3', 3], ['4', 4]]) {
-    await check(`stage ${s}: one main, every support phone has a card (nobody idle)`, async () => {
+    await check(`stage ${s}: one player, the rest wait and see who is playing`, async () => {
       if (s === 1) {
         const mainP = phones[NAMES.indexOf(mainBy.P)];
         const startBtn = mainP.getByRole('button', { name: 'Start the mission' });
@@ -124,41 +133,27 @@ try {
       await waitStage(s);
       const syncMs = Date.now() - ts;
       mainBy[s] = (await mainOf())[0];
-      // Some stages deal cards only once play starts (Stage 4's storm): tap through the main phone's intro.
-      const mainP = phones[NAMES.indexOf(mainBy[s])];
-      for (let k = 0; k < 6; k++) {
-        let missing = 0;
-        for (let i = 0; i < N; i++) if (NAMES[i] !== mainBy[s] && !(await hasJob(phones[i]))) missing++;
-        if (!missing) break;
-        const btn = mainP.getByRole('button', { name: /^(Go live|Start|Start storm|Next|Got it|Continue|Ready)$/ }).first();
-        if (await btn.count()) await btn.click();
-        await mainP.waitForTimeout(800);
-      }
-      const dealt = [];
       for (let i = 0; i < N; i++) {
         if (NAMES[i] === mainBy[s]) continue;
-        if (!(await hasJob(phones[i]))) throw new Error(`${NAMES[i]} has nothing to do in stage ${s}`);
-        const cards = await phones[i].getByTestId('support-cards').getAttribute('data-cards').catch(() => null);
-        const controls = await phones[i].getByTestId('support-screen').getByRole('button').count();
-        dealt.push(`${NAMES[i]}=[${cards ?? controls + ' controls'}]`);
+        await expect(phones[i].getByTestId('now-playing')).toContainText(`${mainBy[s]} is playing`, T);
       }
-      log(`  main ${mainBy[s]}; synced in ${syncMs} ms; ${dealt.join(' ')}`);
+      log(`  player ${mainBy[s]}; synced in ${syncMs} ms`);
     });
   }
 
-  await check('rotation: main phone changes between stages', async () => {
+  await check('rotation: the player changes between stages', async () => {
     const seq = [1, 2, 3, 4].map((s) => mainBy[s]);
     for (let i = 1; i < seq.length; i++) if (seq[i] === seq[i - 1]) throw new Error(`same main in a row: ${seq.join(',')}`);
     if (N === 4 && new Set(seq).size !== 4) throw new Error(`with 4 players each should lead one stage: ${seq.join(',')}`);
-    log('  main per stage 1–4:', seq.join(', '));
+    log('  player per stage 1–4:', seq.join(', '));
   });
 
-  await check('a support phone reloads mid-game and rejoins the current stage', async () => {
+  await check('a waiting phone reloads mid-game and rejoins the current stage', async () => {
     const i = NAMES.findIndex((n) => n !== mainBy[4]);
     await phones[i].reload();
     // Reopening lands on Home with a one-tap "Back to <group>" (like Resume).
     await phones[i].getByRole('button', { name: /^Back to / }).click(T);
-    await expect(phones[i].getByTestId('support-screen')).toHaveAttribute('data-stage', '4', T);
+    await expect(phones[i].getByTestId('waiting-screen')).toHaveAttribute('data-stage', '4', T);
   });
 
   await check('a late joiner is refused after Start', async () => {
@@ -174,48 +169,31 @@ try {
   });
 
   let ic;
-  await check('finale goes to the IC (player 1); everyone else supports', async () => {
+  await check('finale goes to the leader (player 1); everyone else waits', async () => {
     await jump('F');
     await waitStage(5);
     ic = phones[NAMES.indexOf((await mainOf())[0])];
     await expect(ic.getByRole('heading', { name: 'Mission live' })).toBeVisible(T);
-    log('  IC:', (await mainOf())[0]);
+    log('  leader:', (await mainOf())[0]);
   });
 
-  const supports = phones.filter((p) => p !== ic);
-  await check('Live Ops: each specialisation dealt to exactly one support phone', async () => {
+  await check('Live Ops: the leader routes every incident', async () => {
     await ic.getByRole('button', { name: 'Go live' }).click();
     await ic.getByRole('button', { name: 'Start shift' }).click();
-    const teams = [];
-    for (const p of supports) teams.push(...(await p.getByTestId('support-routing').getAttribute('data-teams', T)).split(','));
-    if (teams.sort().join() !== 'ai,cloud,data,logic') throw new Error('teams dealt: ' + teams.join());
-  });
-
-  await check('Live Ops: every incident routed from the right support phone, plus all-hands calls', async () => {
-    let routed = 0, allHands = 0;
+    let routed = 0;
     for (let g = 0; g < 20; g++) {
       const card = ic.getByTestId('incident');
       if (!(await card.count())) break;
       const text = await card.textContent();
-      if (await card.getAttribute('data-all-hands')) {
-        allHands++;
-        for (const p of supports) await p.getByTestId('support-all-hands').click();
-        await ic.getByTestId('all-hands-ready').click();
-      } else {
-        const team = await card.getAttribute('data-team');
-        let holder = null;
-        for (const p of supports) if ((await p.getByTestId('support-routing').getAttribute('data-teams')).split(',').includes(team)) holder = p;
-        await holder.locator(`button[data-team="${team}"]`).click();
-        routed++;
-      }
+      await ic.locator(`button[data-team="${await card.getAttribute('data-team')}"]`).click();
+      routed++;
       await expect(ic.getByTestId('feedback')).toContainText('✓', T);
       await expect(ic.getByTestId('incident').filter({ hasText: text ?? '' })).toHaveCount(0, T);
     }
-    log(`  routed ${routed}, all-hands ${allHands}`);
-    if (allHands !== 2) throw new Error(`expected 2 all-hands calls, got ${allHands}`);
+    log(`  routed ${routed}`);
   });
 
-  await check('every phone reaches the debrief with the shared group rank', async () => {
+  await check('every phone reaches the debrief with the shared team rank', async () => {
     for (const p of phones) {
       await expect(p.getByRole('heading', { name: 'Mission complete' })).toBeVisible(T);
       await expect(p.getByTestId('group-rank')).toContainText(`${N} players`, T);
@@ -226,8 +204,19 @@ try {
     await expect.poll(() => submits, { timeout: 10_000 }).toBe(1);
   });
 
+  await check('free play: a teammate replays a stage solo, with bonus levels', async () => {
+    const p = phones.find((x) => x !== ic);
+    await expect(p.getByTestId('more-teaser')).toBeVisible(T);
+    await p.getByTestId('replay-stage').click();
+    await expect(p.getByTestId('replay-picker')).toContainText('+2 bonus levels');
+    await p.getByRole('button', { name: /Build the Logic/ }).click();
+    await expect(p.getByRole('button', { name: 'Start building' })).toBeVisible(T);
+    await expect(p.getByTestId('waiting-screen')).toHaveCount(0);
+  });
+
   await check('no third-party requests', async () => {
-    const bad = [...hosts].filter((h) => !h.endsWith('vercel.app') && !h.endsWith('supabase.co'));
+    const site = new URL(SITE).host;
+    const bad = [...hosts].filter((h) => h !== site && !h.endsWith('vercel.app') && !h.endsWith('supabase.co'));
     if (bad.length) throw new Error(bad.join(', '));
   });
   for (let i = 0; i < N; i++) await phones[i].screenshot({ path: `${OUT}/${N}p-end-${NAMES[i]}.png` });

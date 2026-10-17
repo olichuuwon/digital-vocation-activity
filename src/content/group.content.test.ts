@@ -4,7 +4,7 @@ import groupNamesJson from './groupNames.json';
 import { blocklistSchema, groupCopySchema, groupNamesSchema } from './groupSchema';
 
 describe('group content', () => {
-  it('groupCopy.json matches its schema (support text ≤ 15 words)', () => {
+  it('groupCopy.json matches its schema (waiting-screen text ≤ 15 words)', () => {
     const r = groupCopySchema.safeParse(groupCopyJson);
     if (!r.success) console.error(r.error.issues);
     expect(r.success).toBe(true);

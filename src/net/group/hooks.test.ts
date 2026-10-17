@@ -6,7 +6,6 @@ const session = {
   sid: '00000000-0000-4000-8000-000000000001',
   code: 'K7QM',
   name: 'Bold Merlion',
-  mode: 'booth' as const,
   leaderId: 'member-a',
   rotation: ['member-a', 'member-b', 'member-c'],
   status: 'playing' as const,

@@ -22,10 +22,9 @@ No coding knowledge needed. No account, no app to install, and no personal data 
 ## How to play
 
 1. Open the link (or scan the QR code at the booth) on your phone. Hold it upright.
-2. Tap **Play solo** and pick a length (during development you can then pick which stage to start from):
-   - **Booth run**, about 16 minutes (main levels only)
-   - **Full run**, about 25–30 minutes (adds bonus levels)
+2. Tap **Play solo** to start straight away, or **Play as a team** to play with 2–4 friends (see below). A run takes about 16 minutes.
 3. Each stage follows the same pattern: a short briefing, a quick tutorial, two or three timed levels, then a **Reality Check** that shows how professionals do the same job, and finally your stars (0–3).
+4. **There's more!** After the debrief, tap **Replay with bonus levels** to replay any stage. Replays add bonus levels you haven't seen (they aren't ranked).
 
 **Stuck?** You can't get stuck for long. After 2 wrong answers the game gives you a hint, and after 3 it shows you the answer.
 
@@ -33,23 +32,25 @@ No coding knowledge needed. No account, no app to install, and no personal data 
 
 ### The stages
 
-**📊 Stage 1: Clean the Data.** Swipe each relief request: right to keep, left to trash, up to fix. Swiping is optional, because every swipe also has a button. Open the 📘 Rulebook any time to see the rules.
+**📊 Stage 1: Clean the Data.** Swipe each relief request: right to keep, left to trash, up to fix. Swiping is optional, because every swipe also has a button. Every good card adds to your 💧 *people reached* counter. Open the 📘 Rulebook any time to see the rules. *Bonus on replay: Spot the Outlier.*
 
-**🧠 Stage 2: Teach the Machine to See.** Label pictures of relief supplies to train your AI. Then guess pictures hidden under tiles (guess early for more points), draw boxes around items (full run only), and audit your AI's answers. Being *sure* isn't the same as being *right*! The 📖 Field guide shows what each item looks like.
+**🧠 Stage 2: Teach the Machine to See.** Label pictures of relief supplies to train your AI. Then guess pictures hidden under tiles (guess early for more points) and audit your AI's answers. Being *sure* isn't the same as being *right*! The 📖 Field guide shows what each item looks like. *Bonus on replay: Draw the Box.*
 
-**🧩 Stage 3: Build the Logic.** Tap blocks (Move forward, Turn, Drop supplies, Repeat, If the road ahead is flooded…) to program a supply truck, then press Run and watch it go. Step runs one block at a time. In a full run you also debug a broken program and use your Stage 2 AI to work out what each house needs. At the end you see your blocks turned into real Python.
+**🧩 Stage 3: Build the Logic.** Tap blocks (Move forward, Turn, Drop supplies, Repeat, If the road ahead is flooded…) to program a supply truck, then press Run and watch it go. Step runs one block at a time. At the end you see your blocks turned into real Python. *Bonus on replay: Debug It (fix a broken program) and Ask the AI (your Stage 2 AI works out what each house needs).*
 
 **☁️ Stage 4: Keep It Alive.** Keep three servers alive by hand through a traffic storm: boost, restart, roll back a bad update. Then meet Kubernetes, choose its settings within a budget, and watch it handle the same storm.
 
-**🚚 Finale: Mission Live.** See how your data, AI, logic and uptime add up to families reached, then route live incidents to the right team. The debrief shows your C4X Digital match and what you learned, with a card that's easy to screenshot. After your first finish you can replay any stage.
+**🚚 Finale: Mission Live.** See how your data, AI, logic and uptime add up to families reached, then route live incidents to the right team. The debrief shows your C4X Digital match and what you learned, with a card that's easy to screenshot. Then replay any stage with its bonus levels.
 
-### Playing as a group
+### Playing as a team
 
-Groups of 2–4 each use their own phone. One person taps **Create group** and picks a group name; the others scan the QR code on that screen (or tap **Join group** and type the 4-letter code). Everyone adds a nickname, which stays on their own phone.
+Teams of 2–4 each use their own phone. One person taps **Play as a team → Create a team** and picks a team name; the others scan the QR code on that screen (or tap **Join a team** and type the 4-letter code). Everyone adds a nickname, which stays on their own phone.
 
-One person plays on the **main phone** while the others hold **support cards**: the rulebook, the Reveal button, the flood scout, server controls and more. The main player can't see that info, so you'll have to talk to each other. Player 1 in the lobby list is the group's **Leader**: they start the mission and always play the finale. Stages 1–4 rotate through everyone starting from player 2, so turns are shared as evenly as possible. Whoever created the group (the host) can reorder the list before starting. In the finale, each incident can only be sent from the phone holding that specialisation, and "all hands" calls need everyone to tap Ready within 5 seconds.
+**Take turns.** Each stage, one player plays on their own phone, exactly like solo. Everyone else sees a **Waiting screen** ("Ben is playing", the level, the team's stars and when their own turn comes), so crowd round, watch and call out answers together. When a stage ends, the next player's phone says **You're up next!** and they tap **I'm ready**.
 
-If a phone drops, the others wait 20 seconds, then the next player takes over. Reload the page and tap **Back to** your group name to rejoin. Group runs go on the daily **leaderboard**, which resets at midnight Singapore time.
+Player 1 in the lobby list is the team **Leader**: they start the mission and play the finale. Stages 1–4 rotate through everyone from player 2, so turns are as even as possible. Whoever created the team (the host) can reorder the list before starting.
+
+If the player's phone drops, the others wait 20 seconds, then the next player takes over. Reload the page and tap **Back to** your team name to rejoin. Team runs go on the daily **leaderboard**, which resets at midnight Singapore time. After the debrief, everyone can replay any stage solo on their own phone, with the bonus levels.
 
 ---
 
@@ -72,10 +73,9 @@ The game also supports:
 
 ## For facilitators
 
-- **Booth screen:** open `/host` on a laptop or TV (for example https://digital-vocation-activity.vercel.app/host). It shows a join QR code and the live leaderboard. Hiding a group name needs the facilitator PIN.
-- **Set the run length for everyone:** add `?mode=booth` or `?mode=full` to the link.
+- **Booth screen:** open `/host` on a laptop or TV (for example https://digital-vocation-activity.vercel.app/host). It shows a join QR code, the teams playing now and the live leaderboard. Hiding a team name needs the facilitator PIN.
 - **Relaxed timers for a session:** add `?relaxed=1`. This lasts for one page load only, so a shared phone doesn't stay relaxed for the next player.
-- **Timing:** a booth run is designed for a 20-minute rotation, with about 2 minutes to join and 2 minutes to debrief.
+- **Timing:** a run is designed for a 20-minute rotation, with about 2 minutes to join and 2 minutes to debrief.
 
 ## Privacy
 
@@ -84,7 +84,7 @@ Many players are under 18, so the game collects as little as possible:
 - There are no accounts, cookies, ads or trackers.
 - Your progress and settings stay **on your phone** (browser storage).
 - Nicknames are **never** sent to a server.
-- The only thing stored online is a group's leaderboard entry: group name, group size, families reached, finishing time and date. Solo runs are never uploaded.
+- The only thing stored online is a team's leaderboard entry: team name, team size, families reached, finishing time and date. Solo runs and replays are never uploaded.
 
 ## Credits
 
@@ -95,7 +95,7 @@ Stage 2 pictures are simple drawings made for this game. Real AI teams train on 
 <details>
 <summary><strong>For developers</strong></summary>
 
-Vite + React + TypeScript, Zustand, Framer Motion, Supabase (leaderboard), Vitest and Playwright. The design spec is `docs/GAME_SPEC.md`, decisions are logged in `docs/DECISIONS.md`, and items waiting on the project owner are in `docs/OWNER_INPUTS.md`.
+Vite + React + TypeScript, Zustand, Framer Motion, Supabase (leaderboard), Vitest and Playwright. The design spec is `docs/GAME_SPEC.md`, a picture walkthrough of every flow is `docs/GAME_FLOWS.md`, decisions are logged in `docs/DECISIONS.md`, and items waiting on the project owner are in `docs/OWNER_INPUTS.md`.
 
 ```bash
 npm ci
@@ -106,4 +106,18 @@ npm run build
 ```
 
 All game text and level data live in `src/content/` (JSON, checked by zod), so you can edit them without touching components.
+
+Where things live:
+
+| Folder | What's in it |
+|---|---|
+| `src/content/` | All text, levels, records, puzzles (JSON + zod schemas) |
+| `src/stages/` | One folder per stage (`data`, `ai`, `logic`, `cloud`, `finale`): the screen plus its pure logic |
+| `src/sim/` | Pure simulations: truck grid, cluster, image reveal, IoU |
+| `src/state/` | The run (`GameState`), saving, scoring formulas |
+| `src/net/group/` | Team play: lobby, turn rotation, sync, hand-off, drop takeover |
+| `src/net/leaderboard.ts` | The only server calls (Supabase RPCs) |
+| `src/app/` | App shell, Home, team screens (lobby, Waiting screen), `/host` |
+| `e2e/` | Playwright tests (local relay, mocked Supabase) |
+| `e2e-live/` | Checks and screenshot capture against a real build and Supabase |
 </details>

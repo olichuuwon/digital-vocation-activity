@@ -31,9 +31,19 @@ export function realityCheck(id: RealityCheckContent['id']): RealityCheckContent
   return c;
 }
 
-export function levelsFor(stage: StageContent) {
-  return stage.levels.filter((l) => !l.bonus);
+/**
+ * The levels a run plays in a stage. The first play-through is the core levels only; replays
+ * (free play after the debrief) unlock the levels flagged `bonus`.
+ */
+export function levelsFor(stage: StageContent, bonus = false) {
+  return bonus ? stage.levels : stage.levels.filter((l) => !l.bonus);
 }
+
+/** Bonus levels are unlocked once a finished run is replayed (`replays` counts replays). */
+export const hasBonus = (run: { replays?: number }) => (run.replays ?? 0) > 0;
+
+/** How many bonus levels a stage adds on a replay (the replay picker's tag). */
+export const bonusCount = (stage: StageContent) => stage.levels.filter((l) => l.bonus).length;
 
 export function stageContent(stage: number): StageContent | undefined {
   return stages.find((s) => s.stage === stage);

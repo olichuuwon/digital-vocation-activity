@@ -8,10 +8,17 @@
     "leaderboard": "Leaderboard",
     "resume": "Resume run",
     "newRun": "New run",
-    "replayStage": "Replay a stage",
+    "replayStage": "Replay with bonus levels",
     "playTeam": "Play as a team",
     "teamBody": "Take turns: one of you plays each stage while the rest watch and help. 2–4 players.",
     "back": "Back"
+  },
+  "replay": {
+    "heading": "Pick a stage",
+    "intro": "There's more! Replays add bonus levels you haven't seen yet. Replays aren't ranked.",
+    "teaser": "There's more! Replay any stage to unlock bonus levels.",
+    "bonusOne": "+1 bonus level",
+    "bonusMany": "+{n} bonus levels"
   },
   "settings": {
     "heading": "Settings",
@@ -102,9 +109,9 @@
     "cardOf": "Card {n} of {total}",
     "gotIt": "Got it",
     "tutorialLabel": "How to play",
-    "handoffHeading": "Pass the phone",
+    "handoffHeading": "Nice work! Next turn",
     "handoffSoloHeading": "Next up",
-    "handoffBody": "{name}, you're the main player for {stage}.",
+    "handoffBody": "{name}, it's your turn: {stage}. Tap I'm ready on your phone.",
     "handoffSoloBody": "Next team: {stage}.",
     "ready": "Ready",
     "rulebook": "Rulebook",

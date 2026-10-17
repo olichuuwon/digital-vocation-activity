@@ -1,7 +1,7 @@
 import stagesJson from './stages.json';
 import copyJson from './copy.json';
 import { copySchema, stagesFileSchema } from './schemas';
-import { fill, levelsFor, stages } from './index';
+import { bonusCount, fill, hasBonus, levelsFor, stages } from './index';
 import briefingsJson from './briefings.json';
 import rulebookJson from './rulebook.json';
 import realityChecksJson from './realityChecks.json';
@@ -22,11 +22,19 @@ describe('content', () => {
     expect(new Set(ids).size).toBe(ids.length);
   });
 
-  it('plays the non-bonus levels of every stage', () => {
+  it('plays the core levels first, and every level (bonus too) on a replay', () => {
     for (const s of stages) {
       expect(levelsFor(s).every((l) => !l.bonus)).toBe(true);
       expect(levelsFor(s).length).toBeGreaterThan(0);
+      expect(levelsFor(s, true)).toHaveLength(s.levels.length);
+      expect(bonusCount(s)).toBe(s.levels.length - levelsFor(s).length);
     }
+    expect(hasBonus({})).toBe(false);
+    expect(hasBonus({ replays: 1 })).toBe(true);
+  });
+
+  it('names bonus levels "Bonus: …" so players can tell', () => {
+    for (const s of stages) for (const l of s.levels) expect(l.name.startsWith('Bonus: ')).toBe(!!l.bonus);
   });
 });
 

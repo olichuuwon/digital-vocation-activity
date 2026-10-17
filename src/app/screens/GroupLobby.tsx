@@ -20,7 +20,7 @@ function useNow(ms: number) {
   return now;
 }
 
-/** "Main phone: stage 1, 4 and the finale" for a rotation slot. */
+/** "Plays stage 1, 4 and the finale" for a rotation slot. */
 function ledLine(index: number, n: number): string {
   const led = stagesLedBy(index, n);
   const stages = led.filter((x) => x <= 4);

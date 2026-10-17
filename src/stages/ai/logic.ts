@@ -7,7 +7,7 @@
 //                     L2 image: 1 − penalty·wrongGuesses, capped 0.75 (hint) / 0.5 (answer), ≥ 0
 //   earlyGuessBonus = Σ L2 earlyBonus / L2 dealt   (earlyBonus = share of tiles still covered)
 //   auditCatch      = clamp((caught − 0.5·falseFlags) / wrong predictions dealt, 0, 1)
-//   boxScore        = mean over dealt boxes of min(1, iou / perfect)   (bonus L3, full mode)
+//   boxScore        = mean over dealt boxes of min(1, iou / perfect)   (bonus L3, replays only)
 //   stageScore      = min(1, 0.55·label + 0.15·early + 0.30·audit + 0.05·(box ?? 0))
 //   stars           = stage2.json `stars` thresholds on stageScore
 //   modelAccuracy   = state/scoring.ts modelAccuracy(label, data.accuracy, audit) (§3.2)
@@ -452,7 +452,7 @@ export interface AiStageScoreInput {
   labelAccuracy: number;
   early: number;
   audit: number;
-  /** boxScore in full mode; null in booth mode (L3 not played). */
+  /** boxScore on a replay; null on the first play-through (bonus L3 not played). */
   box: number | null;
 }
 

@@ -126,7 +126,7 @@ describe('HandOff', () => {
   it('names the next main player in a group, and the next team when solo', () => {
     const stage = stageContent(3)!;
     const { rerender } = render(<HandOff stage={stage} nextName="Sam" onReady={() => {}} />);
-    expect(screen.getByText(/Sam, you're the main player for Software Development/)).toBeInTheDocument();
+    expect(screen.getByText(/Sam, it's your turn: Software Development/)).toBeInTheDocument();
     rerender(<HandOff stage={stage} onReady={() => {}} />);
     expect(screen.getByText(/Next team: Software Development/)).toBeInTheDocument();
   });

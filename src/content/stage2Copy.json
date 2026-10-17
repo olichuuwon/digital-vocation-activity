@@ -100,6 +100,7 @@
     "box": "Box overlap {pct}%"
   },
   "learned": "You labelled {count} pictures. AI learns from labelled examples like yours, but it still makes mistakes, so humans must check it.",
+  "learnedTeam": "Your team labelled pictures. AI learns from labelled examples like yours, but it still makes mistakes, so humans must check it.",
   "a11y": {
     "suggested": "(suggested)",
     "ruledOut": "(ruled out)",

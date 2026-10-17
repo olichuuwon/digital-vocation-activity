@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
-import { levelsFor, stageContent } from '../content';
+import { hasBonus, levelsFor, stageContent } from '../content';
 import { nextPosition } from './progress';
 import { gameStateSchema, settingsSchema } from './schema';
 import { safeStorage } from './storage';
@@ -21,7 +21,7 @@ export function sanitisePersisted(raw: unknown): Persisted {
   let run: GameState | null = parsed.success ? parsed.data : null;
   if (run) {
     const content = stageContent(run.stage);
-    const max = content ? levelsFor(content).length - 1 : 0;
+    const max = content ? levelsFor(content, hasBonus(run)).length - 1 : 0;
     run = { ...run, levelIndex: Math.min(run.levelIndex, max) };
   }
   return {
@@ -66,7 +66,10 @@ interface Store {
   jumpToStage: (stage: Stage) => void;
   /** Debrief reached: record families and best score. Idempotent per run. */
   finishRun: (families: number, incidentsRouted?: number) => void;
-  /** Free play after a finished run: replay from a stage (keeps earlier scores; the run continues from there). */
+  /**
+   * Free play after a finished run: replay from a stage, with the bonus levels unlocked (keeps
+   * earlier scores; the run continues from there to a new debrief). Never ranked.
+   */
   replayFrom: (stage: Stage) => void;
   quitRun: () => void;
   updateSettings: (patch: Partial<Settings>) => void;

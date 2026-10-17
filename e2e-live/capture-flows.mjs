@@ -1,16 +1,22 @@
-// Captures screenshots for docs/GAME_FLOWS.md from the live site (real Supabase Realtime).
-// submit_run is intercepted, so nothing reaches the real leaderboard.
-// Usage: node e2e-live/capture-flows.mjs [solo|2|3|4 ...]   (default: all)
+// Captures the screenshots in docs/GAME_FLOWS.md: solo, replays with bonus levels, and teams
+// of 2, 3 and 4 phones. Uses real Supabase Realtime for teams; submit_run is intercepted, so
+// nothing reaches the real leaderboard.
+//
+// Usage (against a local build that has .env.local):
+//   npm run build && npx vite preview --port 4173 &
+//   LIVE_URL=http://localhost:4173 node e2e-live/capture-flows.mjs [solo|replay|board|2|3|4 ...]
+// Without LIVE_URL it runs against the deployed site.
 import { createRequire } from 'node:module';
 import fs from 'node:fs';
+import os from 'node:os';
+import path from 'node:path';
 const require = createRequire(new URL('../package.json', import.meta.url));
 const { chromium, expect } = require('@playwright/test');
 
 const SITE = process.env.LIVE_URL ?? 'https://digital-vocation-activity.vercel.app';
 const OUT = new URL('../docs/flows/', import.meta.url).pathname;
-const RAW = '/tmp/ship-it-flows';
+const RAW = fs.mkdtempSync(path.join(os.tmpdir(), 'ship-it-flows-'));
 fs.mkdirSync(OUT, { recursive: true });
-fs.mkdirSync(RAW, { recursive: true });
 const only = process.argv.slice(2);
 const want = (k) => !only.length || only.includes(k);
 const log = (...a) => console.log(...a);
@@ -25,13 +31,13 @@ async function newPhone() {
   return p;
 }
 
-/** Screenshot one phone (debug panel and toasts hidden). */
+/** Screenshot one phone (debug panel and toasts hidden, so they never cover the screen). */
 async function shot(p, name) {
   await p.waitForTimeout(500);
-  await p.evaluate(() => document.querySelectorAll('.debug-panel').forEach((e) => (e.style.visibility = 'hidden')));
+  const css = await p.addStyleTag({ content: '.debug-panel, [class*="toastHost"] { display: none !important; }' });
   const file = `${RAW}/${name}.png`;
   await p.screenshot({ path: file });
-  await p.evaluate(() => document.querySelectorAll('.debug-panel').forEach((e) => (e.style.visibility = '')));
+  await css.evaluate((el) => el.remove());
   return file;
 }
 
@@ -48,248 +54,335 @@ async function strip(name, items) {
   log('  saved', `docs/flows/${name}.png`);
 }
 
-const BTN = /^(Start|Start sorting|Start labelling|Start building|Go live|Start shift|Start the mission|Got it|Next|Continue|Ready|Done|Skip)$/;
-async function tap(p, re = BTN) {
-  const b = p.getByRole('button', { name: re }).first();
-  if (await b.count()) { await b.click(); await p.waitForTimeout(400); return true; }
-  return false;
-}
+const click = async (p, name) => {
+  await p.getByRole('button', { name, exact: typeof name === 'string' }).first().click();
+  await p.waitForTimeout(400);
+};
+const gotIt = async (p) => {
+  const b = p.getByRole('button', { name: 'Got it' });
+  if (await b.count()) await b.click();
+};
+/** Debug panel jump (stage number, or F for the finale). */
 async function jump(p, label) {
   await p.locator('.debug-panel summary').click();
   await p.locator('.debug-panel').getByRole('button', { name: label, exact: true }).click();
   await p.locator('.debug-panel summary').click();
-  await p.waitForTimeout(600);
+  await p.waitForTimeout(800);
+}
+
+/** Plays Stage 1 cards right with the debug answer attributes; optional mistakes and a capture. */
+async function playCards(p, { wrong = 0, onCard } = {}) {
+  for (let g = 0; g < 20; g++) {
+    const card = p.getByTestId('record-card');
+    if (!(await card.count())) return;
+    await gotIt(p);
+    const st = await card.getAttribute('data-status');
+    const id = await card.getAttribute('data-id');
+    if (onCard) await onCard(g);
+    if (wrong > 0) {
+      wrong--;
+      await p.getByRole('button', { name: st === 'valid' ? 'Trash' : 'Keep', exact: true }).click();
+    } else if (st === 'fixable') {
+      const fix = Number(await card.getAttribute('data-fix'));
+      await p.getByRole('button', { name: 'Fix', exact: true }).click();
+      await p.locator('section[aria-labelledby="fix-heading"] button').nth(fix).click();
+    } else await p.getByRole('button', { name: st === 'valid' ? 'Keep' : 'Trash', exact: true }).click();
+    await expect(p.locator(`[data-testid="record-card"][data-id="${id}"]`)).toHaveCount(0);
+  }
+}
+
+/** Live Ops routed right with the debug data-team attribute. */
+async function playLiveOps(p) {
+  for (let g = 0; g < 20; g++) {
+    const card = p.getByTestId('incident');
+    if (!(await card.count())) return;
+    const text = await card.textContent();
+    await p.locator(`button[data-team="${await card.getAttribute('data-team')}"]`).click();
+    await expect(p.getByTestId('incident').filter({ hasText: text ?? '' })).toHaveCount(0, { timeout: 10_000 });
+  }
+}
+
+/** Stage 1 end: Reality Check → automate → stars → hand-off. Captures into `out` if given. */
+async function finishStage1(p, out) {
+  if (out) out.push({ file: await shot(p, 's1-reality'), label: 'Reality Check' });
+  await click(p, 'Continue');
+  if (out) out.push({ file: await shot(p, 's1-automate'), label: 'Pick a rule to automate' });
+  await p.getByRole('button', { name: /already/i }).click();
+  await click(p, 'Continue');
+  if (out) out.push({ file: await shot(p, 's1-stars'), label: 'Stars + people reached' });
+  await click(p, 'Continue');
 }
 
 // ------------------------------------------------------------------------------------------
-// SOLO
+// SOLO: the whole run on one phone
 // ------------------------------------------------------------------------------------------
 async function solo() {
   log('solo');
   const p = await newPhone();
-  const s = [];
   await p.goto(SITE + '/?debug=1');
-  s.push({ file: await shot(p, 'solo-home'), label: '1. Home' });
-  await p.getByRole('button', { name: 'Play solo' }).click();
-  s.push({ file: await shot(p, 'solo-length'), label: '2. Pick a length' });
-  await p.getByRole('button', { name: /Booth run/ }).click();
-  await p.waitForTimeout(600);
-  // Optional stage select (feature flag) may appear.
-  if (await p.getByRole('button', { name: 'From the beginning' }).count()) {
-    s.push({ file: await shot(p, 'solo-select'), label: '3. Stage select (testing flag, off for the event)' });
-    await p.getByRole('button', { name: 'From the beginning' }).click();
-    await p.waitForTimeout(600);
-  }
-  s.push({ file: await shot(p, 'solo-prologue'), label: '4. Prologue (the mission)' });
-  await strip('solo-start', s);
+  await p.evaluate(() => localStorage.clear());
+  await p.reload();
+  const start = [{ file: await shot(p, 'solo-home'), label: '1. Home' }];
+  await click(p, 'Play solo');
+  start.push({ file: await shot(p, 'solo-prologue'), label: '2. Prologue (straight in)' });
+  await click(p, 'Start the mission');
+  start.push({ file: await shot(p, 's1-briefing'), label: '3. Stage 1 briefing (the hook)' });
+  await click(p, 'Start sorting');
+  start.push({ file: await shot(p, 's1-first'), label: '4. First card within seconds' });
+  await strip('solo-start', start);
 
-  // Stage 1 (played with the debug answer attributes, plus 2 deliberate mistakes for the hint).
   const s1 = [];
-  await tap(p);
-  s1.push({ file: await shot(p, 's1-briefing'), label: 'Briefing' });
-  await tap(p);
-  s1.push({ file: await shot(p, 's1-intro'), label: 'Level intro + new rule' });
-  await tap(p);
-  s1.push({ file: await shot(p, 's1-tutorial'), label: 'Tutorial (hand hint)' });
-  const play = async (wrong = 0, capture) => {
-    for (let g = 0; g < 20; g++) {
-      const card = p.getByTestId('record-card');
-      if (!(await card.count())) return;
-      await tap(p, /^Got it$/);
-      const st = await card.getAttribute('data-status');
-      const id = await card.getAttribute('data-id');
-      if (capture && g === 1) await capture();
-      if (wrong > 0) {
-        wrong--;
-        await p.getByRole('button', { name: st === 'valid' ? 'Trash' : 'Keep', exact: true }).click();
-        if (wrong === 0 && capture) {
-          await expect(p.locator(`[data-testid="record-card"][data-id="${id}"]`)).toHaveCount(0);
-          await expect(p.getByTestId('hint')).not.toBeEmpty();
-          await p.waitForTimeout(2600); // let the toast fade so the hint is visible
-          s1.push({ file: await shot(p, 's1-hint'), label: 'Hint after 2 mistakes' });
-          continue;
-        }
-      }
-      else if (st === 'fixable') {
-        const fix = Number(await card.getAttribute('data-fix'));
-        await p.getByRole('button', { name: 'Fix', exact: true }).click();
-        if (capture && !s1.some((x) => x.label.startsWith('Fix'))) s1.push({ file: await shot(p, 's1-fix'), label: 'Fix picker (level 2)' });
-        await p.locator('section[aria-labelledby="fix-heading"] button').nth(fix).click();
-      } else await p.getByRole('button', { name: st === 'valid' ? 'Keep' : 'Trash', exact: true }).click();
-      await expect(p.locator(`[data-testid="record-card"][data-id="${id}"]`)).toHaveCount(0);
-    }
-  };
-  await play();
-  await tap(p); // L1 intro → start
-  await play(2, async () => s1.push({ file: await shot(p, 's1-card'), label: 'Keep or Trash (40 s)' }));
-  await tap(p);
-  await play(0, async () => {});
-  s1.push({ file: await shot(p, 's1-reality'), label: 'Reality Check' });
-  await tap(p, /^(Continue|Next)$/);
-  await tap(p, /^(Continue|Next)$/);
-  s1.push({ file: await shot(p, 's1-automate'), label: 'Automate a rule' });
-  await p.getByRole('button', { name: /already/i }).click().catch(() => {});
-  await tap(p, /^Continue$/);
-  s1.push({ file: await shot(p, 's1-stars'), label: 'Stars' });
-  await tap(p, /^Continue$/);
-  s1.push({ file: await shot(p, 's1-handoff'), label: 'Hand-off to Stage 2' });
-  await strip('solo-stage1', s1.slice(0, 4));
-  await strip('solo-stage1-end', s1.slice(4));
+  await playCards(p);
+  s1.push({ file: await shot(p, 's1-intro'), label: 'Level 1 intro: one new rule' });
+  await click(p, 'Start');
+  await playCards(p, { wrong: 2, onCard: async (g) => g === 3 && s1.push({ file: await shot(p, 's1-counter'), label: 'Level 1: 💧 people reached' }) });
+  await click(p, 'Start');
+  await playCards(p, { onCard: async (g) => g === 1 && s1.push({ file: await shot(p, 's1-l2'), label: 'Level 2: Keep, Fix or Trash' }) });
+  await strip('solo-stage1', s1);
+  const end = [];
+  await finishStage1(p, end);
+  end.push({ file: await shot(p, 's1-handoff'), label: 'Hand-off to Stage 2' });
+  await strip('solo-stage1-end', end);
 
-  // Stages 2–4: briefing, level intro, first play screen.
-  for (const [stage, label] of [[2, 'Stage 2 AI'], [3, 'Stage 3 Software'], [4, 'Stage 4 Cloud']]) {
-    await jump(p, String(stage));
-    const st = [];
-    st.push({ file: await shot(p, `s${stage}-briefing`), label: `${label}: briefing` });
-    await tap(p);
+  const steps = {
+    2: ['Start labelling', 'Stage 2: Teach the Machine to See'],
+    3: ['Start building', 'Stage 3: Build the Logic'],
+    4: ['Go live', 'Stage 4: Keep It Alive'],
+  };
+  for (const [stage, [go, title]] of Object.entries(steps)) {
+    await jump(p, stage);
+    const st = [{ file: await shot(p, `s${stage}-briefing`), label: `${title}: briefing` }];
+    await click(p, go);
     st.push({ file: await shot(p, `s${stage}-intro`), label: 'Level intro' });
-    await tap(p);
-    await p.waitForTimeout(1200);
+    await click(p, 'Start');
+    await gotIt(p);
     st.push({ file: await shot(p, `s${stage}-play`), label: 'Playing' });
-    await tap(p, /^(Got it|Start|Start storm|Next)$/);
-    await p.waitForTimeout(stage === 4 ? 6000 : 1500);
-    st.push({ file: await shot(p, `s${stage}-play2`), label: stage === 4 ? 'Manual mode, mid-storm' : 'Playing (a moment later)' });
     await strip(`solo-stage${stage}`, st);
   }
 
-  // Finale.
-  await jump(p, 'F');
-  const f = [];
-  f.push({ file: await shot(p, 'f-reveal'), label: 'Finale: pipeline reveal' });
-  await tap(p, /^Go live$/);
-  await tap(p, /^Start shift$/);
-  await p.waitForTimeout(800);
-  f.push({ file: await shot(p, 'f-liveops'), label: 'Live Ops: route incidents' });
-  for (let g = 0; g < 20; g++) {
-    const card = p.getByTestId('incident');
-    if (!(await card.count())) break;
-    const text = await card.textContent();
-    if (await card.getAttribute('data-all-hands')) await p.getByTestId('all-hands-ready').click().catch(() => {});
-    else await p.locator(`button[data-team="${await card.getAttribute('data-team')}"]`).first().click();
-    await expect(p.getByTestId('incident').filter({ hasText: text ?? '' })).toHaveCount(0, { timeout: 12000 }).catch(() => {});
-  }
-  await p.waitForTimeout(1500);
-  f.push({ file: await shot(p, 'f-debrief'), label: 'Debrief: score card (solo: not ranked)' });
-  await p.evaluate(() => window.scrollBy(0, 640));
-  f.push({ file: await shot(p, 'f-debrief2'), label: 'Debrief: C4X match + what you learned' });
-  await p.evaluate(() => window.scrollBy(0, 640));
-  f.push({ file: await shot(p, 'f-debrief3'), label: 'Debrief: why digital matters to DIS' });
+  // The demo skipped most of stages 2–4, so give the finale a typical run's scores.
+  await p.evaluate(() => {
+    const saved = JSON.parse(localStorage.getItem('ship-it'));
+    const r = saved.state.run;
+    r.stage = 5;
+    r.levelIndex = 0;
+    r.scores.ai = { labelAccuracy: 0.85, earlyGuessBonus: 0.4, auditCatch: 0.6, modelAccuracy: 0.86 };
+    r.scores.logic = { puzzlesSolved: 3, hintsUsed: 1, efficiency: 0.9, extraBlocks: 1 };
+    r.scores.cloud = { manualUptime: 0.72, autoUptime: 0.98, costEfficiency: 0.9 };
+    r.stars = { ...r.stars, ai: 2, logic: 2, cloud: 3 };
+    localStorage.setItem('ship-it', JSON.stringify(saved));
+  });
+  await p.goto(SITE + '/?debug=1&stage=5');
+  const f = [{ file: await shot(p, 'f-reveal'), label: 'Finale: your pipeline' }];
+  await click(p, 'Go live');
+  await click(p, 'Start shift');
+  f.push({ file: await shot(p, 'f-live'), label: 'Live Ops: route each incident' });
+  await playLiveOps(p);
+  await expect(p.getByRole('heading', { name: 'Mission complete' })).toBeVisible();
+  f.push({ file: await shot(p, 'f-debrief'), label: 'Debrief card' });
+  await p.getByTestId('more-teaser').scrollIntoViewIfNeeded();
+  f.push({ file: await shot(p, 'f-more'), label: "🔓 There's more! (replays)" });
   await strip('solo-finale', f);
   await p.context().close();
-
-  // Leaderboard + host.
-  const q = await newPhone();
-  await q.goto(SITE + '/');
-  await q.getByRole('button', { name: 'Leaderboard' }).click();
-  const lb = await shot(q, 'leaderboard');
-  await q.goto(SITE + '/host');
-  await q.setViewportSize({ width: 360, height: 1100 });
-  const host = await shot(q, 'host');
-  await strip('leaderboard-host', [{ file: lb, label: 'Leaderboard (Today / View all)' }, { file: host, label: '/host booth screen (phone width)' }]);
-  await q.context().close();
 }
 
 // ------------------------------------------------------------------------------------------
-// GROUPS
+// REPLAY: free play unlocks the bonus levels
 // ------------------------------------------------------------------------------------------
-const NAMES = ['Ann', 'Ben', 'Cai', 'Dee'];
-async function group(n) {
-  log(`${n} players`);
+async function replay() {
+  log('replay');
+  const p = await newPhone();
+  // A finished run, as after the debrief.
+  await p.goto(SITE + '/?debug=1');
+  await p.evaluate(() => {
+    const scores = {
+      data: { accuracy: 0.9, fixedCount: 2, ruleChosen: true },
+      ai: { labelAccuracy: 0.9, earlyGuessBonus: 0.5, auditCatch: 0.5, modelAccuracy: 0.85 },
+      logic: { puzzlesSolved: 3, hintsUsed: 0, efficiency: 1, extraBlocks: 0 },
+      cloud: { manualUptime: 0.7, autoUptime: 0.99, costEfficiency: 1 },
+      finale: { familiesReached: 900, incidentsRouted: 8 },
+    };
+    const run = { stage: 5, levelIndex: 0, scores, stars: { data: 3, ai: 2, logic: 3, cloud: 2 }, bestFamilies: 900, startedAt: Date.now() - 900_000, finishedAt: Date.now() };
+    localStorage.setItem('ship-it', JSON.stringify({ state: { run, bestFamilies: 900, settings: { theme: 'system', sound: false, relaxed: false } }, version: 1 }));
+  });
+  await p.goto(SITE + '/?debug=1');
+  const r = [{ file: await shot(p, 'r-home'), label: 'Home after a finished run' }];
+  await p.getByTestId('home-replay').click();
+  r.push({ file: await shot(p, 'r-picker'), label: 'Pick a stage: bonus levels per stage' });
+  await click(p, /Clean the Data/);
+  await click(p, 'Start sorting');
+  await playCards(p);
+  for (let i = 0; i < 2; i++) {
+    await click(p, 'Start');
+    await playCards(p);
+  }
+  await expect(p.getByRole('heading', { name: 'Bonus: Spot the Outlier' })).toBeVisible();
+  r.push({ file: await shot(p, 'r-bonus-intro'), label: 'Bonus level unlocked' });
+  await click(p, 'Start');
+  r.push({ file: await shot(p, 'r-bonus-play'), label: 'Bonus: Spot the Outlier' });
+  await strip('solo-replay', r);
+  await p.context().close();
+}
+
+// ------------------------------------------------------------------------------------------
+// LEADERBOARD + /host
+// ------------------------------------------------------------------------------------------
+async function board() {
+  log('board');
+  const p = await newPhone();
+  await p.goto(SITE + '/');
+  await click(p, 'Leaderboard');
+  await p.waitForTimeout(1500);
+  const lb = await shot(p, 'leaderboard');
+  await p.goto(SITE + '/host');
+  await p.waitForTimeout(1500);
+  const host = await shot(p, 'host');
+  await strip('leaderboard-host', [
+    { file: lb, label: 'Leaderboard (Today / View all)' },
+    { file: host, label: '/host booth screen (phone width)' },
+  ]);
+  await p.context().close();
+}
+
+// ------------------------------------------------------------------------------------------
+// TEAMS: one player per stage, everyone else on the waiting screen
+// ------------------------------------------------------------------------------------------
+const NAMES = ['Ann', 'Ben', 'Cai', 'Dev'];
+const TEAM = { 2: 'Demo Kiwi', 3: 'Demo Mango', 4: 'Demo Lychee' };
+/** Who plays stage `s` (0–5) in an `n`-player team (src/net/group/rotation.ts). */
+const mainIndex = (s, n) => (s === 0 || s === 5 ? 0 : s % n);
+
+async function team(n) {
+  log(`team of ${n}`);
   const ps = [];
   for (let i = 0; i < n; i++) ps.push(await newPhone());
-  const names = NAMES.slice(0, n);
-  const [host] = ps;
-  await host.goto(SITE + '/?debug=1');
-  await host.getByRole('button', { name: 'Create group' }).click();
-  const create = await shot(host, `g${n}-create`);
-  await host.getByTestId('name-options').getByRole('radio').first().check();
-  await host.getByLabel('Your nickname').fill('Ann');
-  await host.getByRole('button', { name: 'Create group' }).click();
-  await host.getByTestId('group-code').waitFor({ timeout: 20000 });
-  const code = (await host.getByTestId('group-code').textContent()).trim();
+  const [ann] = ps;
+  const lbl = (i, what) => `${NAMES[i]}: ${what}`;
+  const all = async (name, what) => Promise.all(ps.map(async (p, i) => ({ file: await shot(p, `t${n}-${name}-${i}`), label: lbl(i, what(i)) })));
+
+  await ann.goto(SITE + '/?debug=1');
+  await click(ann, 'Play as a team');
+  const intro = [{ file: await shot(ann, `t${n}-team`), label: 'Play as a team' }];
+  await click(ann, 'Create a team');
+  await ann.getByRole('button', { name: /Type our own name/ }).click();
+  await ann.getByLabel('Team name').fill(TEAM[n]);
+  await ann.getByLabel('Your nickname').fill('Ann');
+  intro.push({ file: await shot(ann, `t${n}-create`), label: 'Create a team' });
+  await click(ann, 'Create team');
+  await ann.getByTestId('group-code').waitFor({ timeout: 20_000 });
+  const code = (await ann.getByTestId('group-code').textContent()).trim();
   for (let i = 1; i < n; i++) {
     await ps[i].goto(`${SITE}/?debug=1&join=${code}`);
-    if (i === 1) var joinShot = await shot(ps[i], `g${n}-join`);
-    await ps[i].getByLabel('Your nickname').fill(names[i]);
-    await ps[i].getByRole('button', { name: 'Join', exact: true }).click();
-    await ps[i].getByTestId('lobby-waiting').waitFor({ timeout: 20000 });
+    await ps[i].getByLabel('Your nickname').fill(NAMES[i]);
+    await click(ps[i], 'Join');
+    await ps[i].getByTestId('lobby-waiting').waitFor({ timeout: 20_000 });
   }
-  for (const p of ps) await expect(p.getByTestId('member')).toHaveCount(n, { timeout: 20000 });
-  await host.waitForTimeout(2500); // let presence settle
-  await strip(`group${n}-lobby`, [
-    { file: create, label: 'Host: create group' },
-    { file: await shot(host, `g${n}-lobby-host`), label: 'Host lobby (QR, code, order)' },
-    { file: joinShot, label: 'Teammate: join screen' },
-    { file: await shot(ps[1], `g${n}-lobby-member`), label: 'Teammate lobby' },
-  ]);
-  await host.getByRole('button', { name: 'Start' }).click();
-  await tap(host, /^Start$/); // second tap if someone is still connecting
+  await expect(ann.getByTestId('member')).toHaveCount(n, { timeout: 20_000 });
+  intro.push({ file: await shot(ann, `t${n}-lobby`), label: 'Lobby (leader): QR, code, turn order' });
+  intro.push({ file: await shot(ps[1], `t${n}-lobby-b`), label: 'Lobby (teammate)' });
+  await strip(`team${n}-lobby`, intro);
 
-  const mainIdx = async () => {
-    for (let k = 0; k < 40; k++) {
-      const m = [];
-      for (let i = 0; i < n; i++) if (!(await ps[i].getByTestId('support-screen').count())) m.push(i);
-      if (m.length === 1) return m[0];
-      await host.waitForTimeout(300);
-    }
-    throw new Error('no single main phone');
-  };
-  const all = async (stage, title, prep) => {
-    await host.waitForTimeout(900);
-    const m = await mainIdx();
-    if (prep) await prep(ps[m]);
-    const items = [];
-    for (let i = 0; i < n; i++) items.push({ file: await shot(ps[i], `g${n}-${stage}-${names[i]}`), label: `${names[i]}: ${i === m ? '🎮 MAIN' : 'support'}` });
-    await strip(`group${n}-${stage}`, items);
-    return m;
-  };
-  let m = await all('prologue', 'Prologue');
-  await tap(ps[m], /^Start the mission$/);
-  m = await all('stage1', 'Stage 1', async (mp) => { await tap(mp); await tap(mp); });
-  for (const st of ['2', '3', '4']) {
-    await jump(ps[m], st);
-    m = await all(`stage${st}`, `Stage ${st}`, async (mp) => {
-      await tap(mp);
-      await tap(mp);
-      if (st === '4') { await tap(mp, /^(Got it|Start|Start storm|Next)$/); await mp.waitForTimeout(4000); }
-    });
+  // If a phone is still connecting, the lobby asks for a second tap (no one dropped by accident).
+  for (let tries = 0; tries < 4 && !(await ann.getByTestId('prologue-heading').count()); tries++) {
+    await click(ann, 'Start');
+    await ann.getByTestId('prologue-heading').waitFor({ timeout: 6_000 }).catch(() => {});
   }
-  await jump(ps[m], 'F');
-  await host.waitForTimeout(800);
-  m = await mainIdx();
-  await tap(ps[m], /^Go live$/);
-  await tap(ps[m], /^Start shift$/);
-  m = await all('finale', 'Finale');
-  const ic = ps[m];
-  const supports = ps.filter((_, i) => i !== m);
-  for (let g = 0; g < 20; g++) {
-    const card = ic.getByTestId('incident');
-    if (!(await card.count())) break;
-    const text = await card.textContent();
-    if (await card.getAttribute('data-all-hands')) {
-      if (g < 9 && !fs.existsSync(`${OUT}group${n}-allhands.png`)) {
-        const items = [];
-        for (let i = 0; i < n; i++) items.push({ file: await shot(ps[i], `g${n}-ah-${names[i]}`), label: `${names[i]}: ${i === m ? '🎮 IC' : 'support'}` });
-        await strip(`group${n}-allhands`, items);
+  await ann.getByTestId('prologue-heading').waitFor({ timeout: 20_000 });
+  await strip(`team${n}-prologue`, await all('prologue', (i) => (i === 0 ? 'plays the prologue' : 'waiting screen')));
+  await click(ann, 'Start the mission');
+
+  // Stage 1 played for real in a team of 3 (hand-off + "You're up next"); debug jumps elsewhere,
+  // always from the phone playing the current stage.
+  let cur = 1;
+  for (let stage = 1; stage <= 4; stage++) {
+    const m = mainIndex(stage, n);
+    const main = ps[m];
+    if (cur !== stage) await jump(ps[mainIndex(cur, n)], String(stage));
+    cur = stage;
+    await main.getByTestId('waiting-screen').waitFor({ state: 'detached', timeout: 20_000 });
+    await expect(ps[(m + 1) % n].getByTestId('waiting-screen')).toHaveAttribute('data-stage', String(stage), { timeout: 20_000 });
+    const go = { 1: 'Start sorting', 2: 'Start labelling', 3: 'Start building', 4: 'Go live' }[stage];
+    await click(main, go);
+    if (stage > 1) await click(main, 'Start'); // Stage 1's tutorial starts from the briefing
+    await gotIt(main);
+    await strip(`team${n}-stage${stage}`, await all(`s${stage}`, (i) => (i === m ? `plays Stage ${stage}` : 'watches + helps')));
+    if (stage === 1 && n === 3) {
+      await playCards(main);
+      for (let k = 0; k < 2; k++) {
+        await click(main, 'Start');
+        await playCards(main);
       }
-      for (const p of supports) await p.getByTestId('support-all-hands').click();
-      await ic.getByTestId('all-hands-ready').click();
-    } else {
-      const team = await card.getAttribute('data-team');
-      for (const p of supports) if ((await p.getByTestId('support-routing').getAttribute('data-teams')).split(',').includes(team)) await p.locator(`button[data-team="${team}"]`).click();
+      await finishStage1(main);
+      const next = ps[mainIndex(2, n)];
+      await next.getByTestId('up-next').waitFor({ timeout: 20_000 });
+      await strip(`team${n}-handoff`, [
+        { file: await shot(main, `t${n}-handoff-main`), label: lbl(m, 'hand-off card') },
+        { file: await shot(next, `t${n}-handoff-next`), label: lbl(mainIndex(2, n), "You're up next!") },
+      ]);
+      await next.getByTestId('up-next').getByRole('button').click();
+      await next.waitForTimeout(1500);
+      cur = 2;
     }
-    await expect(ic.getByTestId('incident').filter({ hasText: text ?? '' })).toHaveCount(0, { timeout: 12000 }).catch(() => {});
   }
-  await host.waitForTimeout(2000);
-  const items = [];
-  for (let i = 0; i < n; i++) items.push({ file: await shot(ps[i], `g${n}-debrief-${names[i]}`), label: `${names[i]}: debrief` });
-  await strip(`group${n}-debrief`, items);
+
+  await jump(ps[mainIndex(cur, n)], 'F');
+  await ann.getByRole('heading', { name: 'Mission live' }).waitFor({ timeout: 20_000 });
+  await click(ann, 'Go live');
+  await click(ann, 'Start shift');
+  await strip(`team${n}-finale`, await all('finale', (i) => (i === 0 ? 'Live Ops (leader)' : 'watches + calls out teams')));
+  await playLiveOps(ann);
+  for (const p of ps) await expect(p.getByTestId('group-rank')).toContainText('#2', { timeout: 30_000 });
+  await strip(`team${n}-debrief`, await all('debrief', () => 'debrief + team rank'));
+
+  if (n === 3) {
+    // Free play on a teammate's own phone, with the bonus levels.
+    const ben = ps[1];
+    await ben.getByTestId('more-teaser').scrollIntoViewIfNeeded();
+    const fp = [{ file: await shot(ben, 't3-more'), label: "Ben: There's more!" }];
+    await ben.getByTestId('replay-stage').click();
+    fp.push({ file: await shot(ben, 't3-picker'), label: 'Ben picks a stage' });
+    await click(ben, /Build the Logic/);
+    fp.push({ file: await shot(ben, 't3-solo'), label: 'Ben replays it solo' });
+    await strip('team3-freeplay', fp);
+  }
   for (const p of ps) await p.context().close();
 }
 
+/** A team of 2 where the player's phone drops mid-stage: pause, then the other phone takes over. */
+async function drop() {
+  log('drop');
+  const ann = await newPhone();
+  const ben = await newPhone();
+  await ann.goto(SITE + '/?debug=1');
+  await click(ann, 'Play as a team');
+  await click(ann, 'Create a team');
+  await ann.getByLabel('Your nickname').fill('Ann');
+  await click(ann, 'Create team');
+  await ann.getByTestId('group-code').waitFor({ timeout: 20_000 });
+  const code = (await ann.getByTestId('group-code').textContent()).trim();
+  await ben.goto(`${SITE}/?debug=1&join=${code}`);
+  await ben.getByLabel('Your nickname').fill('Ben');
+  await click(ben, 'Join');
+  await expect(ann.getByTestId('member')).toHaveCount(2, { timeout: 20_000 });
+  await click(ann, 'Start');
+  await click(ann, 'Start the mission');
+  await ann.getByTestId('waiting-screen').waitFor({ timeout: 20_000 });
+  await ben.context().close();
+  await ann.getByTestId('paused').waitFor({ timeout: 30_000 });
+  const d = [{ file: await shot(ann, 'd-paused'), label: "Ben's phone drops: pause" }];
+  await ann.getByTestId('waiting-screen').waitFor({ state: 'detached', timeout: 40_000 });
+  d.push({ file: await shot(ann, 'd-takeover'), label: 'After 20 s Ann takes over' });
+  await strip('team2-drop', d);
+  await ann.context().close();
+}
+
 try {
-  if (want('solo')) await solo().catch((e) => log('solo error:', e.message.split('\n')[0], '\n', e.stack.split('\n').find((l) => l.includes('capture-flows'))));
-  for (const n of [2, 3, 4]) if (want(String(n))) await group(n).catch((e) => log(`${n}p error:`, e.message.split('\n')[0]));
+  if (want('solo')) await solo();
+  if (want('replay')) await replay();
+  if (want('board')) await board();
+  for (const n of [2, 3, 4]) if (want(String(n))) await team(n);
+  if (want('drop')) await drop();
 } finally {
   await browser.close();
+  fs.rmSync(RAW, { recursive: true, force: true });
 }

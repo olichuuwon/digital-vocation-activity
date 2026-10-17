@@ -11,7 +11,7 @@ import { Timer } from '../../components/Timer';
 import { toast } from '../../components/toastStore';
 import { TutorialOverlay } from '../../components/TutorialOverlay';
 import ui from '../../components/components.module.css';
-import { briefingFor, fill, levelsFor, realityCheck, stageContent } from '../../content';
+import { briefingFor, fill, hasBonus, levelsFor, realityCheck, stageContent } from '../../content';
 import type { CardLevel, DataRecord } from '../../content/stage1Schema';
 import { useGame } from '../../state/store';
 import type { GameState } from '../../state/types';
@@ -63,7 +63,7 @@ const ruleShort = (r: number) => c.ruleShort[String(r) as keyof typeof c.ruleSho
  */
 export function DataStage({ run, debug }: { run: GameState; debug: boolean }) {
   const stage = stageContent(1)!;
-  const levels = levelsFor(stage);
+  const levels = levelsFor(stage, hasBonus(run));
   const levelId = levels[run.levelIndex]?.id ?? 'data-tutorial';
   const isLast = run.levelIndex === levels.length - 1;
   const saved = stage1For(run.startedAt);
@@ -125,7 +125,7 @@ export function DataStage({ run, debug }: { run: GameState; debug: boolean }) {
 
   if (phase === 'result') {
     const accuracy = dataAccuracy(progress.outcomes);
-    const score = stageScore({ accuracy, ruleChosen, outlier: null });
+    const score = stageScore({ accuracy, ruleChosen, outlier: hasBonus(run) ? (progress.outlier ?? 0) : null });
     const stars = dataStars(score, stage1.stars);
     const scores = toDataScores(progress.outcomes, ruleChosen);
     const heading = [c.result.heading0, c.result.heading1, c.result.heading2, c.result.heading3][stars]!;
@@ -152,7 +152,7 @@ export function DataStage({ run, debug }: { run: GameState; debug: boolean }) {
     <HandOff
       stage={stageContent(2)!}
       onReady={() => {
-        // Stage done: a later replay (chapter select, M6) starts fresh, not at this hand-off.
+        // Stage done: a later replay starts fresh, not at this hand-off.
         useStage1Progress.getState().setEnd(run.startedAt, null);
         completeLevel();
       }}

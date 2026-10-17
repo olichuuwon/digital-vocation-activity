@@ -1,4 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
+import { startReplay } from './replay';
 
 /** Labels every picture correctly using the debug-only data attribute. */
 async function playLabels(page: Page) {
@@ -115,4 +116,27 @@ test('Stage 2: Settings pauses the level timer, and a reload after the last leve
   await page.goto('/');
   await page.getByRole('button', { name: 'Resume run' }).click();
   await expect(page.getByRole('heading', { name: 'Confidence, not certainty' })).toBeVisible();
+});
+
+test('Stage 2 replay: Bonus: Draw the Box with buttons only, then the answer outline after 3 misses', async ({ page }) => {
+  await startReplay(page, 2);
+  await page.getByRole('button', { name: 'Start labelling' }).click();
+  for (let i = 0; i < 2; i++) {
+    await page.getByRole('button', { name: 'Start', exact: true }).click();
+    await playLabels(page);
+  }
+  await page.getByRole('button', { name: 'Start', exact: true }).click();
+  await playCovered(page);
+  await expect(page.getByRole('heading', { name: 'Bonus: Draw the Box', level: 1 })).toBeVisible();
+  await page.getByRole('button', { name: 'Start', exact: true }).click();
+  // Shrink the box into a corner so it misses, three times.
+  for (let i = 0; i < 3; i++) {
+    for (let k = 0; k < 6; k++) await page.getByRole('button', { name: 'Narrower' }).click();
+    for (let k = 0; k < 6; k++) await page.getByRole('button', { name: 'Shorter' }).click();
+    for (let k = 0; k < 8; k++) await page.getByRole('button', { name: 'Move left' }).click();
+    for (let k = 0; k < 8; k++) await page.getByRole('button', { name: 'Move up' }).click();
+    await page.getByRole('button', { name: 'Lock it in' }).click();
+  }
+  await expect(page.getByTestId('truth-box')).toBeAttached();
+  await expect(page.getByTestId('hint')).toContainText('dashed outline');
 });

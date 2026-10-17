@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { fill, levelsFor, stageContent, stages } from '../../content';
+import { fill, hasBonus, levelsFor, stageContent, stages } from '../../content';
 import { groupCopy } from '../../content/groupSchema';
 import { HANDOFF_READY, HANDOFF_TOPIC, sendAction, stagesLedBy, useGroup, useTopic } from '../../net/group';
 import { PROMOTE_AFTER_MS } from '../../net/group/protocol';
@@ -57,7 +57,7 @@ export function WaitingScreen() {
   const recent = useRecent(promoted?.at ?? null, 8_000);
   const showPromoted = !!promoted && promoted.stage === stage && recent && !g.paused;
   const promotedName = g.members.find((m) => m.id === promoted?.id)?.nick ?? '';
-  const levels = content ? levelsFor(content) : [];
+  const levels = content ? levelsFor(content, !!run && hasBonus(run)) : [];
   const levelIndex = run && run.stage === stage ? run.levelIndex : 0;
   // Each notice is spoken once when it appears (the visible ones aren't live regions: the pause
   // countdown would be re-read every second).

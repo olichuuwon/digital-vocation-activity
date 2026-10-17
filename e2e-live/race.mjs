@@ -10,10 +10,11 @@ for (let round = 1; round <= 5; round++) {
   for (let i = 0; i < 3; i++) ps.push(await (await browser.newContext({ ...devices['Pixel 5'], serviceWorkers: 'block' })).newPage());
   const [a, b, c] = ps;
   await a.goto(SITE + '/');
-  await a.getByRole('button', { name: 'Create group' }).click();
+  await a.getByRole('button', { name: 'Play as a team' }).click();
+  await a.getByRole('button', { name: 'Create a team' }).click();
   await a.getByTestId('name-options').getByRole('radio').first().check();
   await a.getByLabel('Your nickname').fill('Ann');
-  await a.getByRole('button', { name: 'Create group' }).click();
+  await a.getByRole('button', { name: 'Create team' }).click();
   await a.getByTestId('group-code').waitFor({ timeout: 20000 });
   const code = (await a.getByTestId('group-code').textContent()).trim();
   for (const [p, n] of [[b, 'Ben'], [c, 'Cai']]) {
@@ -28,8 +29,8 @@ for (let round = 1; round <= 5; round++) {
   if (/still connecting/.test(note)) { warned++; await a.waitForTimeout(2500); await a.getByRole('button', { name: 'Start' }).click(); }
   await a.waitForTimeout(3000);
   const texts = await Promise.all(ps.map((p) => p.locator('body').innerText()));
-  const dropped = texts.some((t) => /closed the group/.test(t));
-  const inGame = texts.filter((t) => /supporting|Mission: flood relief/.test(t)).length;
+  const dropped = texts.some((t) => /closed the team/.test(t));
+  const inGame = texts.filter((t) => /is starting the mission|Mission: flood relief/.test(t)).length;
   console.log(`round ${round}: warning shown=${/still connecting/.test(note)} | phones in game=${inGame}/3 | anyone dropped=${dropped}`);
   if (!dropped && inGame === 3) ok++;
   for (const p of ps) await p.context().close();

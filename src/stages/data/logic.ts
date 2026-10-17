@@ -389,7 +389,7 @@ export function currentAnswer(state: LevelState): { expected: Expected; rule: nu
 }
 
 // ---------------------------------------------------------------------------
-// Outlier level (L3, full mode only)
+// Outlier level (bonus L3, replays only)
 // ---------------------------------------------------------------------------
 
 export interface OutlierJudgement {
@@ -515,7 +515,7 @@ export interface StageScoreInput {
   /** dataAccuracy (L1 + L2), 0–1. */
   accuracy: number;
   ruleChosen: boolean;
-  /** outlierBonus in full mode; null in booth mode (L3 not played). */
+  /** outlierBonus on a replay; null on the first play-through (bonus L3 not played). */
   outlier: number | null;
 }
 

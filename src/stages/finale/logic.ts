@@ -5,7 +5,7 @@ import { clamp, familiesReached, logicScore, MAX_FAMILIES } from '../../state/sc
 import type { GameState } from '../../state/types';
 import { shuffleInPlace, type Rng } from '../data/logic';
 
-/** Scored Stage 3 levels (L1–L3). */
+/** Scored Stage 3 core levels (L1–L3). Bonus solves on a replay can only help (capped at 1). */
 export const LOGIC_DEALT = 3;
 
 export interface Pipeline {

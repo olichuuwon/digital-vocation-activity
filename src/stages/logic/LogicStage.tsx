@@ -10,7 +10,7 @@ import { Timer } from '../../components/Timer';
 import { toast } from '../../components/toastStore';
 import { TutorialOverlay } from '../../components/TutorialOverlay';
 import ui from '../../components/components.module.css';
-import { briefingFor, fill, levelsFor, realityCheck, stageContent } from '../../content';
+import { briefingFor, fill, hasBonus, levelsFor, realityCheck, stageContent } from '../../content';
 import type { LogicLevel, LogicLevelId, Program } from '../../content/stage3Schema';
 import { parseMap, robustness, runProgram, succeedsAll, type RunResult } from '../../sim/grid';
 import { toPython } from '../../sim/python';
@@ -40,7 +40,7 @@ const STEP_MS = 380;
  */
 export default function LogicStage({ run, debug }: { run: GameState; debug: boolean }) {
   const stage = stageContent(3)!;
-  const levels = levelsFor(stage);
+  const levels = levelsFor(stage, hasBonus(run));
   const levelId = (levels[run.levelIndex]?.id ?? 'logic-tutorial') as LogicLevelId;
   const isLast = run.levelIndex === levels.length - 1;
   const saved = stage3For(run.startedAt);
@@ -118,7 +118,7 @@ export default function LogicStage({ run, debug }: { run: GameState; debug: bool
     <HandOff
       stage={stageContent(4)!}
       onReady={() => {
-        // Stage done: a later replay (chapter select, M6) starts fresh, not at this hand-off.
+        // Stage done: a later replay starts fresh, not at this hand-off.
         useStage3Progress.getState().setEnd(run.startedAt, null);
         completeLevel();
       }}
@@ -127,14 +127,14 @@ export default function LogicStage({ run, debug }: { run: GameState; debug: bool
 }
 
 /**
- * Reality Check test maps (§6.4): the player's L3 program on random floods. In a full run with a
- * solved Ask the AI level, half the maps run that program with the Stage 2 model, so a weaker
+ * Reality Check test maps (§6.4): the player's L3 program on random floods. On a replay with a
+ * solved bonus Ask the AI level, half the maps run that program with the Stage 2 model, so a weaker
  * model shows up as failing maps (§3.2 "the AI misread the request").
  */
 function testMaps(programs: Record<string, Program>, run: GameState): { passed: number; failed: number } {
   const rng = mulberry32(run.startedAt);
   const l3 = levelById('logic-l3');
-  const l5Program: Program | undefined = undefined;
+  const l5Program = hasBonus(run) ? programs['logic-l5'] : undefined;
   if (!l5Program) return robustness(l3, programs['logic-l3'] ?? l3.solution, stage3.testMaps, rng, 1);
   const half = Math.floor(stage3.testMaps / 2);
   const a = robustness(l3, programs['logic-l3'] ?? l3.solution, half, rng, 1);

@@ -501,7 +501,7 @@ describe('scoring', () => {
     expect(dataStars(stageScore({ accuracy: acc, ruleChosen: false, outlier: null }), STARS)).toBe(0);
   });
 
-  it('stage score caps at 1 and outlier adds 0.05 in full mode only', () => {
+  it('stage score caps at 1 and outlier adds 0.05 on replays only', () => {
     expect(stageScore({ accuracy: 1, ruleChosen: true, outlier: 1 })).toBe(1);
     expect(stageScore({ accuracy: 0.8, ruleChosen: false, outlier: 1 })).toBeCloseTo(0.77);
     expect(stageScore({ accuracy: 0.8, ruleChosen: false, outlier: null })).toBeCloseTo(0.72);

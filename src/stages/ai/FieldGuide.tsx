@@ -5,8 +5,7 @@ import { c, t } from './content';
 import s from './ai.module.css';
 
 /**
- * "📖 Field guide" (§3.5.2 support card; solo players get it as a sheet): what each class looks
- * like. Native <dialog> gives focus trapping and Esc. Stages pause their timer while it's open.
+ * "📖 Field guide" (a sheet): what each class looks like. Native <dialog> gives focus trapping and Esc. Stages pause their timer while it's open.
  */
 export function FieldGuideButton({ onOpenChange }: { onOpenChange?: (open: boolean) => void }) {
   const [open, setOpenState] = useState(false);

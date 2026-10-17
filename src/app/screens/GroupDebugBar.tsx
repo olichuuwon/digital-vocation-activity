@@ -2,7 +2,7 @@ import { groupActions, useGroup, useGroupStore } from '../../net/group';
 import s from './Group.module.css';
 
 /**
- * ?debug=1&fakePeers=N: this phone plays the main phone for every stage (the bots can't play).
+ * ?debug=1&fakePeers=N: this phone plays every stage, the bots' turns too (bots can't play).
  * Preview the waiting screen, or cut this phone's connection to see the pill.
  * Developer-only: plain text, not in content files.
  */

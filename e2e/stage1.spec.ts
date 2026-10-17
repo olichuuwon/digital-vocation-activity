@@ -1,4 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
+import { startReplay } from './replay';
 
 /** Plays every card correctly using the debug-only data attributes. */
 async function playCards(page: Page) {
@@ -71,4 +72,18 @@ test('Stage 1: reloading after the last level resumes at the same step, not a re
   await page.goto('/');
   await page.getByRole('button', { name: 'Resume run' }).click();
   await expect(page.getByRole('heading', { name: /turn into code/i })).toBeVisible();
+});
+
+test('Stage 1 replay unlocks the Bonus: Spot the Outlier level', async ({ page }) => {
+  await startReplay(page, 1);
+  await page.getByRole('button', { name: 'Start sorting' }).click();
+  await playCards(page); // tutorial
+  for (let i = 0; i < 2; i++) {
+    await page.getByRole('button', { name: 'Start', exact: true }).click();
+    await playCards(page);
+  }
+  await expect(page.getByRole('heading', { name: 'Bonus: Spot the Outlier', level: 1 })).toBeVisible();
+  await page.getByRole('button', { name: 'Start', exact: true }).click();
+  for (let i = 0; i < 3; i++) await page.getByRole('button', { name: 'Done' }).click();
+  await expect(page.getByRole('heading', { name: 'Clean once, apply everywhere' })).toBeVisible();
 });
