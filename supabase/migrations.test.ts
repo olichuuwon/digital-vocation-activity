@@ -12,7 +12,7 @@ import { pgcrypto } from '@electric-sql/pglite/contrib/pgcrypto';
  */
 const read = (f: string) => readFileSync(fileURLToPath(new URL(`./migrations/${f}`, import.meta.url)), 'utf8');
 /** Every migration, in order (as Supabase applies them). */
-const migration = ['0001_runs.sql', '0002_min_duration.sql'].map(read).join('\n');
+const migration = ['0001_runs.sql', '0002_min_duration.sql', '0003_pin_hardening.sql'].map(read).join('\n');
 
 const SUPABASE_LIKE_SETUP = `
   create role anon nologin;
@@ -293,11 +293,26 @@ describe('facilitator PIN', () => {
     expect(cols.rows.map((c) => c.column_name)).toEqual(['failed_at']);
   });
 
-  it('owner PIN setter validates 4–8 digits', async () => {
+  it('owner PIN setter validates 6–8 digits', async () => {
     expect((await errorOf(db.query(`select private.set_facilitator_pin('12a4')`))).code).toBe('22023');
     expect((await errorOf(db.query(`select private.set_facilitator_pin('1234')`))).code).toBe('22023');
     expect((await errorOf(db.query(`select private.set_facilitator_pin('123')`))).code).toBe('22023');
     expect((await errorOf(db.query(`select private.set_facilitator_pin('123456789')`))).code).toBe('22023');
+  });
+
+  it('0003 re-hardens a project set up from the weak draft (4-digit PINs allowed)', async () => {
+    // Simulate the early draft of the setter, as an older live project might still have.
+    await db.exec(`create or replace function private.set_facilitator_pin(p_pin text) returns void
+      language plpgsql security definer set search_path = '' as $$
+      begin
+        insert into private.settings (key, value)
+        values ('facilitator_pin_hash', extensions.crypt(p_pin, extensions.gen_salt('bf', 8)))
+        on conflict (key) do update set value = excluded.value;
+      end; $$;`);
+    await db.query(`select private.set_facilitator_pin('1234')`);
+    await db.exec(read('0003_pin_hardening.sql'));
+    expect((await errorOf(db.query(`select private.set_facilitator_pin('1234')`))).code).toBe('22023');
+    await db.query('select private.set_facilitator_pin($1)', [PIN]); // back to the suite's PIN
   });
 });
 

@@ -104,6 +104,7 @@ Vite + React + TypeScript, Zustand, Framer Motion, Supabase (leaderboard and tea
 | `docs/DECISIONS.md` | Implementation decisions, content awaiting approval, open questions |
 | `docs/PLAYTEST_NOTES.md` | How to run a playtest and record it |
 | `e2e-live/README.md` | Live checks and screenshot capture against a real build |
+| `supabase/README.md` | Database migrations and how to apply them |
 
 ```bash
 npm ci
