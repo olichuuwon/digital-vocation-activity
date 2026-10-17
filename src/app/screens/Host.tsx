@@ -116,7 +116,11 @@ const statusText: Partial<Record<HostStatus, string>> = {
   not_configured: t.notConfigured,
 };
 
-/** PIN-gated hide/unhide. The PIN lives in memory only and is checked server-side. */
+/**
+ * Passphrase-gated hide/unhide (supabase/migrations/0004). It lives in memory only and is checked
+ * server-side. Six characters is the minimum to try, so an older numeric PIN still unlocks
+ * until the owner sets a passphrase (12–64 characters).
+ */
 function FacilitatorPanel({ onChanged }: { onChanged: () => void }) {
   const [pinInput, setPinInput] = useState('');
   const [pin, setPin] = useState<string | null>(null);
@@ -199,12 +203,12 @@ function FacilitatorPanel({ onChanged }: { onChanged: () => void }) {
               aria-invalid={message ? true : undefined}
               aria-describedby={message ? 'host-pin-message' : undefined}
               type="password"
-              inputMode="numeric"
               autoComplete="off"
-              pattern="[0-9]*"
-              maxLength={8}
+              autoCapitalize="none"
+              spellCheck={false}
+              maxLength={64}
               value={pinInput}
-              onChange={(e) => setPinInput(e.target.value.replace(/\D/g, ''))}
+              onChange={(e) => setPinInput(e.target.value)}
             />
           </label>
           <button type="submit" className={`${ui.btn} ${ui.primary}`} disabled={busy || pinInput.length < 6}>

@@ -12,7 +12,7 @@ import { pgcrypto } from '@electric-sql/pglite/contrib/pgcrypto';
  */
 const read = (f: string) => readFileSync(fileURLToPath(new URL(`./migrations/${f}`, import.meta.url)), 'utf8');
 /** Every migration, in order (as Supabase applies them). */
-const migration = ['0001_runs.sql', '0002_min_duration.sql', '0003_pin_hardening.sql'].map(read).join('\n');
+const migration = ['0001_runs.sql', '0002_min_duration.sql', '0004_passphrase.sql'].map(read).join('\n');
 
 const SUPABASE_LIKE_SETUP = `
   create role anon nologin;
@@ -25,7 +25,8 @@ const SUPABASE_LIKE_SETUP = `
   alter default privileges in schema public grant all on functions to anon, authenticated;
 `;
 
-const PIN = '482913';
+/** The facilitator passphrase (0004); still called PIN in the functions' names. */
+const PIN = 'kingfisher booth 2026';
 let db: PGlite;
 let tokenSeq = 0;
 const token = () => `00000000-0000-4000-8000-${String(++tokenSeq).padStart(12, '0')}`;
@@ -293,14 +294,15 @@ describe('facilitator PIN', () => {
     expect(cols.rows.map((c) => c.column_name)).toEqual(['failed_at']);
   });
 
-  it('owner PIN setter validates 6–8 digits', async () => {
-    expect((await errorOf(db.query(`select private.set_facilitator_pin('12a4')`))).code).toBe('22023');
-    expect((await errorOf(db.query(`select private.set_facilitator_pin('1234')`))).code).toBe('22023');
-    expect((await errorOf(db.query(`select private.set_facilitator_pin('123')`))).code).toBe('22023');
-    expect((await errorOf(db.query(`select private.set_facilitator_pin('123456789')`))).code).toBe('22023');
+  it('owner setter takes a 12–64 character passphrase, and nothing weaker', async () => {
+    const bad = ['1234', '482913', '12345678', 'eleven char', ' padded passphrase ', 'tab\tin the middle', 'x'.repeat(65), '🐦'.repeat(19)];
+    for (const p of bad) expect((await errorOf(db.query('select private.set_facilitator_pin($1)', [p]))).code, p).toBe('22023');
+    await db.query('select private.set_facilitator_pin($1)', ['merlion at the booth!']);
+    expect((await hostList('merlion at the booth!')).status).toBe('ok');
+    await db.query('select private.set_facilitator_pin($1)', [PIN]); // back to the suite's passphrase
   });
 
-  it('0003 re-hardens a project set up from the weak draft (4-digit PINs allowed)', async () => {
+  it('0004 hardens a project set up from the weak draft (4-digit PINs allowed)', async () => {
     // Simulate the early draft of the setter, as an older live project might still have.
     await db.exec(`create or replace function private.set_facilitator_pin(p_pin text) returns void
       language plpgsql security definer set search_path = '' as $$
@@ -310,7 +312,10 @@ describe('facilitator PIN', () => {
         on conflict (key) do update set value = excluded.value;
       end; $$;`);
     await db.query(`select private.set_facilitator_pin('1234')`);
-    await db.exec(read('0003_pin_hardening.sql'));
+    // The old PIN still works until a passphrase is set (no lock-out on upgrade)...
+    await db.exec(read('0004_passphrase.sql'));
+    expect((await hostList('1234')).status).toBe('ok');
+    // ...but only passphrases can be set from now on.
     expect((await errorOf(db.query(`select private.set_facilitator_pin('1234')`))).code).toBe('22023');
     await db.query('select private.set_facilitator_pin($1)', [PIN]); // back to the suite's PIN
   });

@@ -2,8 +2,8 @@
 -- Let's Ship It · team leaderboard (spec §3.5.3–3.5.5, §3.6, §11.2)
 --
 -- Paste this whole file into the Supabase SQL Editor and run it. It is safe to re-run.
--- Then set the facilitator PIN (6–8 digits) in the SQL Editor:
---     select private.set_facilitator_pin('123456');   -- 6 to 8 digits
+-- Then run 0002 and 0004, and set the facilitator passphrase (see supabase/README.md):
+--     select private.set_facilitator_pin('<12 to 64 characters>');
 -- Re-running set_facilitator_pin also clears a PIN lockout.
 --
 -- Privacy (spec §3.5.4): the ONLY player-entered text stored is the group name. No

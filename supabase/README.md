@@ -6,19 +6,22 @@ uses Supabase Realtime channels, which store nothing.
 ## Set up or update a project
 
 Run each migration **in order**, once, in the Supabase dashboard → **SQL Editor** → **New query**
-(paste the file, then **Run**). Every file is safe to run again.
+(paste the file, then **Run**). Every file is safe to run again; if you ever re-run `0001`, re-run
+the later files after it too (they replace some of its functions).
 
 | File | What it does |
 |---|---|
 | `migrations/0001_runs.sql` | The `runs` table, row-level security, `submit_run`, the boards, the facilitator PIN functions |
 | `migrations/0002_min_duration.sql` | Minimum run time 3 minutes (was 8), so quick but genuine team runs count |
-| `migrations/0003_pin_hardening.sql` | Re-applies the hardened PIN rules (6–8 digits; lockout after 20 wrong tries in 10 min) |
+| `migrations/0004_passphrase.sql` | The facilitator secret becomes a passphrase: 12–64 characters, anything allowed (lockout after 20 wrong tries in 10 min) |
 
-Then set the facilitator PIN (also clears a lockout):
+Then set the facilitator passphrase (also clears a lockout):
 
 ```sql
-select private.set_facilitator_pin('<6 to 8 digits>');
+select private.set_facilitator_pin('kingfisher booth 2026');   -- use your own
 ```
+
+Until you do, an older numeric PIN keeps working.
 
 Copy a migration on macOS: `pbcopy < supabase/migrations/0002_min_duration.sql`.
 

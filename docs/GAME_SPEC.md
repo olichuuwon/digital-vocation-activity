@@ -161,7 +161,7 @@ Nicknames, device info, IPs, emails and any personal data are **never stored**. 
 #### 3.5.5 Moderation
 - Generated-name picker by default (adjective + Singapore animal/place, e.g. "Swift Kingfisher", "Bold Merlion").
 - Custom names: max 20 chars, profanity filter (English plus common Singlish/Malay/Hokkien vulgarities, list in `src/content/blocklist.json`).
-- The facilitator can hide a name from `/host` (PIN-protected, PIN checked server-side).
+- The facilitator can hide a name from `/host` (protected by a 12–64 character passphrase, checked server-side).
 
 #### 3.5.6 Weak connection
 - Gameplay runs locally. Only the lobby, team sync, hand-offs and score submission need the network.
@@ -387,7 +387,7 @@ Use the specialisation names on the routing buttons: Data Science · AI Engineer
 
 ### 11.2 Backend (free tier)
 - **Supabase**: a `runs` table (fields in §3.5.4) plus Realtime channels for lobbies, team sync and hand-offs.
-- Row Level Security: anonymous clients may **insert** one run per team token and **select** non-hidden rows only. Hide/unhide goes through a server-side function that checks the facilitator PIN.
+- Row Level Security: anonymous clients may **insert** one run per team token and **select** non-hidden rows only. Hide/unhide goes through a server-side function that checks the facilitator passphrase.
 - Basic anti-cheat: a server-side check rejects families > 1200 or implausibly short runs (< 3 min, migration `0002`). Rate-limit submissions. A rejected run tells the team why (too quick, name not allowed).
 - Daily board = `board_date = (now() at time zone 'Asia/Singapore')::date`.
 - Keys in env vars (`VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`), with a committed `.env.example`. Never commit secrets.

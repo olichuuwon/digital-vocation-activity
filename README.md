@@ -73,7 +73,7 @@ The game also supports:
 
 ## For facilitators
 
-- **Booth screen:** open `/host` on a laptop or TV (for example https://digital-vocation-activity.vercel.app/host). It shows a join QR code, the teams playing now and the live leaderboard. Hiding a team name needs the facilitator PIN.
+- **Booth screen:** open `/host` on a laptop or TV (for example https://digital-vocation-activity.vercel.app/host). It shows a join QR code, the teams playing now and the live leaderboard. Hiding a team name needs the facilitator passphrase.
 - **Relaxed timers for a session:** add `?relaxed=1`. This lasts for one page load only, so a shared phone doesn't stay relaxed for the next player.
 - **Timing:** a run is designed for a 20-minute rotation, with about 2 minutes to join and 2 minutes to debrief.
 

@@ -3,7 +3,7 @@ import { boardRow, mockSupabase } from './supabaseMock';
 
 test.use({ serviceWorkers: 'block' });
 
-const PIN = '482913';
+const PIN = 'kingfisher booth 2026';
 const hostRow = (id: number, name: string, hidden: boolean) => ({
   id,
   group_name: name,
@@ -41,7 +41,7 @@ test('polls the board every 10s while visible', async ({ page }) => {
   await expect(page.getByTestId('board-row')).toContainText('Second Look');
 });
 
-test('facilitator: wrong PIN, then unlock, hide and unhide', async ({ page }) => {
+test('facilitator: wrong passphrase, then unlock, hide and unhide', async ({ page }) => {
   let hidden = false;
   const calls = await mockSupabase(page, {
     leaderboard_today: () => ({ body: hidden ? [] : [boardRow(1, 7, 'Rude Name', 900)] }),
@@ -54,12 +54,12 @@ test('facilitator: wrong PIN, then unlock, hide and unhide', async ({ page }) =>
     },
   });
   await page.goto('/host');
-  const pin = page.getByLabel('Facilitator PIN');
+  const pin = page.getByLabel('Facilitator passphrase');
   await expect(pin).toHaveAttribute('type', 'password');
 
-  await pin.fill('111111');
+  await pin.fill('wrong guess here');
   await page.getByRole('button', { name: 'Unlock' }).click();
-  await expect(page.getByText('Wrong PIN.')).toBeVisible();
+  await expect(page.getByText('Wrong passphrase.')).toBeVisible();
 
   await pin.fill(PIN);
   await page.getByRole('button', { name: 'Unlock' }).click();
@@ -71,21 +71,21 @@ test('facilitator: wrong PIN, then unlock, hide and unhide', async ({ page }) =>
   await page.getByRole('button', { name: 'Unhide Rude Name' }).click();
   await expect(page.getByTestId('board-row')).toContainText('Rude Name');
 
-  // The PIN is never persisted.
+  // The passphrase is never persisted.
   const stored = await page.evaluate(() => JSON.stringify({ ...localStorage }) + JSON.stringify({ ...sessionStorage }));
   expect(stored).not.toContain(PIN);
 
   await page.getByRole('button', { name: 'Lock' }).click();
-  await expect(page.getByLabel('Facilitator PIN')).toHaveValue('');
+  await expect(page.getByLabel('Facilitator passphrase')).toHaveValue('');
 });
 
-test('facilitator: lockout message after too many wrong PINs', async ({ page }) => {
+test('facilitator: lockout message after too many wrong tries', async ({ page }) => {
   await mockSupabase(page, {
     leaderboard_today: () => ({ body: [] }),
     host_list_recent: () => ({ body: { status: 'locked', rows: [] } }),
   });
   await page.goto('/host');
-  await page.getByLabel('Facilitator PIN').fill('123456');
+  await page.getByLabel('Facilitator passphrase').fill('123456');
   await page.getByRole('button', { name: 'Unlock' }).click();
-  await expect(page.getByText('Too many wrong PINs. Try again in 10 minutes.')).toBeVisible();
+  await expect(page.getByText('Too many wrong tries. Try again in 10 minutes.')).toBeVisible();
 });
