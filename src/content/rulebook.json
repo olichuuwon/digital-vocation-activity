@@ -21,7 +21,7 @@
       "id": 2,
       "title": "Numbers must make sense",
       "chip": "People 1–15, water 5–200 L",
-      "body": "People per household: 1 to 15. Water: 5 to 200 litres. Outside that range is trash. Big but inside, like 14 people? Keep.",
+      "body": "People per household: 1 to 15. Water per household: 5 to 200 litres (L). Anything outside that range is trash.",
       "examples": [
         {
           "before": "People: 0",
@@ -30,10 +30,6 @@
         {
           "before": "Water: 900 L",
           "after": "Trash"
-        },
-        {
-          "before": "People: 14",
-          "after": "Keep"
         }
       ]
     },

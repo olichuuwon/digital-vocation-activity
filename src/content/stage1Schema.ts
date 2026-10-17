@@ -157,7 +157,7 @@ export const stage1CopySchema = z.object({
   }),
   automate: z.object({
     question: words(12),
-    options: z.object({ dupes: words(10), 'big-households': words(10), typos: words(10) }),
+    options: z.object({ blanks: words(10), 'big-households': words(10), typos: words(10) }),
     right: words(20),
     wrong: words(20),
   }),

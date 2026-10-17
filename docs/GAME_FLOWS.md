@@ -38,7 +38,7 @@ Home → **Play solo** → the mission → the Stage 1 briefing → the first ca
 ![Solo start](flows/solo-start.png)
 
 ### Stage 1: Clean the Data (the hook)
-The tutorial opens on a clean card, so the first swipe is a win. Level 1 teaches **one** new rule (numbers must make sense). Every good card adds to the **💧 people reached** counter. Level 2 brings in duplicates and the **Fix** button.
+The tutorial opens on a clean card, so the first swipe is a win. Level 1 teaches **one** new rule (numbers must make sense). Every good card adds to the **💧 people reached** counter. Level 2 adds just one thing: the **Fix** button. The rules in play always show as chips above the card.
 ![Stage 1](flows/solo-stage1.png)
 ![Stage 1 end](flows/solo-stage1-end.png)
 

@@ -35,7 +35,7 @@ test('Stage 1: perfect play earns 3 stars and hands off to Stage 2', async ({ pa
   // Reality Check → automate → stars → hand-off.
   await expect(page.getByRole('heading', { name: 'Clean once, apply everywhere' })).toBeVisible();
   await page.getByRole('button', { name: 'Continue' }).click();
-  await page.getByRole('button', { name: /already/i }).click();
+  await page.getByRole('button', { name: /blank field/i }).click();
   await page.getByRole('button', { name: 'Continue' }).click();
   await expect(page.getByText('3 of 3 stars').first()).toBeAttached();
   await page.getByRole('button', { name: 'Continue' }).click();

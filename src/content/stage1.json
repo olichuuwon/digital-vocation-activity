@@ -22,8 +22,8 @@
       "id": "data-l2",
       "count": 8,
       "seconds": 90,
-      "rules": [1, 2, 3, 4, 5],
-      "newRules": [3, 4],
+      "rules": [1, 2, 4],
+      "newRules": [4],
       "allowFix": true,
       "mix": { "valid": 3, "fixable": 3, "invalid": 2 }
     }
@@ -32,7 +32,7 @@
     "id": "data-l3",
     "seconds": 45,
     "rules": [2, 5],
-    "newRules": [],
+    "newRules": [5],
     "charts": [
       {
         "id": "chart-people-1",
@@ -120,7 +120,7 @@
   "automate": {
     "options": [
       { "id": "big-households", "correct": false },
-      { "id": "dupes", "correct": true },
+      { "id": "blanks", "correct": true },
       { "id": "typos", "correct": false }
     ]
   },

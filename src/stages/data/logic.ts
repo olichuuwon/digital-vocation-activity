@@ -506,7 +506,7 @@ export function outlierBonus(judgements: readonly OutlierJudgement[], chartCount
   return clamp(sum / chartCount, 0, 1);
 }
 
-/** Reality Check pick: true iff the picked automate option is the one marked correct ("dupes"). */
+/** Reality Check pick: true iff the picked automate option is the one marked correct ("blanks"). */
 export function isRuleChosen(options: readonly { id: string; correct: boolean }[], pickedId: string | null): boolean {
   return !!pickedId && options.some((o) => o.id === pickedId && o.correct);
 }

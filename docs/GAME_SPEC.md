@@ -65,15 +65,18 @@ One length for everyone: **≈ 16 min of play** (core levels). It fits the 20-mi
 
 **Team timing:** the player's phone owns the level timer. Hand-off cards (where the turn passes) are short, about 10s, with a "Ready" tap from the next player's phone.
 
-| Segment | Time | Content |
-|---|---|---|
-| Prologue | 1 min | Mission briefing, 10-sec "how to play" |
-| Stage 1: Data | 3 min | §4 |
-| Stage 2: AI | 3 min | §5 |
-| Stage 3: Problem solving | 3 min | §6 |
-| Stage 4: Cloud/SRE | 3 min | §7 |
-| Finale: Mission Live | 2 min | §8 |
-| Debrief & roles | 1 min | §8.3 |
+| Segment | Budget | Expected, first-timer (2026-10-17) | Content |
+|---|---|---|---|
+| Prologue | 1 min | ~0.5 min | Mission briefing, 10-sec "how to play" |
+| Stage 1: Data | 3 min | ~2.5–3 min (estimate) | §4 |
+| Stage 2: AI | 3 min | ~2–2.5 min (QA measured 127 s) | §5 |
+| Stage 3: Problem solving | 3 min | ~4 min (QA measured 241 s; the long one) | §6 |
+| Stage 4: Cloud/SRE | 3 min | ~3 min (estimate after the 45 s storms) | §7 |
+| Finale: Mission Live | 2 min | ~2 min | §8 |
+| Debrief & roles | 1 min | ~1 min | §8.3 |
+| **Total** | **16 min** | **~15 min solo** (13–17); a team adds ~1–2 min for the lobby and hand-offs | |
+
+Replays with bonus levels add roughly: Stage 1 +1 min, Stage 2 +1 min, Stage 3 +2 min. These are QA simulations and estimates; confirm in playtests (`docs/PLAYTEST_NOTES.md`).
 
 Each stage follows the same rhythm, so players learn the pattern:
 
@@ -191,23 +194,23 @@ Nicknames, device info, IPs, emails and any personal data are **never stored**. 
 A pinned "📘 Rulebook" button opens a bottom sheet. Show the **one new rule** as a card before each level. Rules:
 1. **Every field must be filled.** Missing sector or people count means Trash.
 2. **Numbers must make sense.** People 1–15, water 5–200 L per household.
-3. **No duplicates.** Same household ID twice means trash the second.
+3. **No duplicates.** Same household ID twice means trash the second. *(Not dealt since 2026-10-17: kept in the rulebook data only.)*
 4. **Fix what's fixable.** Typos (`Sectr B` → `B`), wrong units (`40000 ml` → `40 L`), lowercase (`b` → `B`).
-5. **Outlier ≠ error.** A household of 14 is unusual but possible, so keep it.
+5. **Outlier ≠ error** *(bonus Spot the Outlier only)*. A household of 14 is unusual but possible, so keep it.
 
 ### 4.2 Levels
 | Level | Mechanic | Rules in play | Size / time |
 |---|---|---|---|
 | Tutorial | Swipe 3 obvious cards with an animated hand hint | 1 | 3 cards, untimed |
 | L1 Keep or Trash | Swipe right = keep, left = trash (buttons also available) | 1–2 | 8 cards / 60s |
-| L2 Keep, Fix or Trash | Swipe up (or Fix button) opens a quick-fix picker with 2–3 options. New: duplicates and fixes | 1–5 | 8 cards / 90s |
+| L2 Keep, Fix or Trash | Swipe up (or Fix button) opens a quick-fix picker with 2–3 options. New: fixes only | 1, 2, 4 | 8 cards / 90s |
 | Bonus L3 Spot the Outlier | Bar chart of 20 households; tap bars that are **errors** (not just unusual) | 2, 5 | 3 charts / 45s |
 
 - On an error, show a one-line toast naming the rule broken ("Rule 3: duplicate").
 - **Hook (2026-10-17):** the briefing goes straight into the tutorial, which opens on a clean card, so the first swipe is a win within seconds. A **💧 people reached** counter grows with every record correctly kept or fixed. A **rule strip** above the card shows the rules in play as short chips ("Blank field → Trash", "People 1–15, water 5–200 L"…), so nobody has to memorise them.
 
 ### 4.3 Reality Check: "Clean once, apply everywhere"
-Animation: the player's 16 hand-sorted cards shrink, then a counter shoots up to **2,000,000 records**. Text: *"You cleaned 16 by hand. Data scientists write each rule once as code, and a pipeline applies it to millions of rows in seconds."* The player then gets **one tap** to choose which rule to automate (3 options). The correct choice gives a bonus.
+Animation: the player's 16 hand-sorted cards shrink, then a counter shoots up to **2,000,000 records**. Text: *"You cleaned 16 by hand. Data scientists write each rule once as code, and a pipeline applies it to millions of rows in seconds."* The player then gets **one tap** to choose which rule to automate (3 options): *trash records with a blank field* (correct: a blank can never be guessed), *trash households over 12 people* (bins real data) or *trash every typo* (typos can be fixed). The correct choice gives a bonus.
 
 ### 4.4 Content needed
 - `records.json`: ≥ 40 records (so replays vary), each with `valid | fixable | invalid`, the fix options, and the rule id. **`[FILL]` optional: local place or sector names.**

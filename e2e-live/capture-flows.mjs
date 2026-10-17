@@ -107,7 +107,7 @@ async function finishStage1(p, out) {
   if (out) out.push({ file: await shot(p, 's1-reality'), label: 'Reality Check' });
   await click(p, 'Continue');
   if (out) out.push({ file: await shot(p, 's1-automate'), label: 'Pick a rule to automate' });
-  await p.getByRole('button', { name: /already/i }).click();
+  await p.getByRole('button', { name: /blank field/i }).click();
   await click(p, 'Continue');
   if (out) out.push({ file: await shot(p, 's1-stars'), label: 'Stars + people reached' });
   await click(p, 'Continue');

@@ -466,7 +466,7 @@ describe('scoring', () => {
   });
 
   // Hand-computed runs, one per star band.
-  it('3★ careful player: 19/20, one early miss, picks dupes', () => {
+  it('3★ careful player: 19/20, one early miss, picks blanks', () => {
     // L1 perfect = 10. L2: one wrong at card 1 (w=1, no hint) → 9. 19/20 = 0.95.
     const acc = dataAccuracy([play(l1, 2, 'RRRRRRRRRR'), play(l2, 2, 'WRRRRRRRRR')]);
     expect(acc).toBeCloseTo(0.95);
@@ -476,7 +476,7 @@ describe('scoring', () => {
     expect(dataStars(stageScore({ accuracy: acc, ruleChosen: false, outlier: null }), STARS)).toBe(2); // 0.855
   });
 
-  it('2★ first-timer: 15/20 right with hints, picks dupes', () => {
+  it('2★ first-timer: 15/20 right with hints, picks blanks', () => {
     // L1: wrongs at 2,6 → card 7 hinted (0.75): 7 + 0.75 = 7.75.
     // L2: wrongs at 3,5,8 → card 6 hinted (0.75), card 9 answered (0.5): 5 + 0.75 + 0.5 = 6.25.
     const acc = dataAccuracy([play(l1, 3, 'RWRRRWRRRR'), play(l2, 3, 'RRWRWRRWRR')]);
@@ -510,9 +510,9 @@ describe('scoring', () => {
   it('isRuleChosen', () => {
     const opts = [
       { id: 'big-households', correct: false },
-      { id: 'dupes', correct: true },
+      { id: 'blanks', correct: true },
     ];
-    expect([isRuleChosen(opts, 'dupes'), isRuleChosen(opts, 'big-households'), isRuleChosen(opts, null)]).toEqual([true, false, false]);
+    expect([isRuleChosen(opts, 'blanks'), isRuleChosen(opts, 'big-households'), isRuleChosen(opts, null)]).toEqual([true, false, false]);
   });
 
   it('dataStars maps thresholds at the edges', () => {
@@ -609,7 +609,7 @@ describe.skipIf(!recordsJson)('content: records.json cross-check (skipped: src/c
             if (r.duplicateOf) expect(i - deck.findIndex((o) => o.id === r.duplicateOf), tag).toBeGreaterThanOrEqual(2);
           });
         }
-        if (level.id === 'data-l2') expect(deck.some((r) => r.rule === 5), tag).toBe(true);
+        if (level.id !== 'data-tutorial' && level.rules.includes(5)) expect(deck.some((r) => r.rule === 5), tag).toBe(true);
       }
     }
   });

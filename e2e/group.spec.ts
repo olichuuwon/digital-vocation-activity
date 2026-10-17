@@ -355,7 +355,7 @@ test('hand-off: the next main player is named and taps Ready on their own phone'
     await playCards(ben);
   }
   await ben.getByRole('button', { name: 'Continue' }).click();
-  await ben.getByRole('button', { name: /already/i }).click();
+  await ben.getByRole('button', { name: /blank field/i }).click();
   await ben.getByRole('button', { name: 'Continue' }).click();
   await ben.getByRole('button', { name: 'Continue' }).click();
   // Ben's hand-off card names Ann; Ann's phone offers Ready.

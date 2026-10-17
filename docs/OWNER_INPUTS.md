@@ -20,7 +20,7 @@ Try it: https://digital-vocation-activity.vercel.app/?debug=1&stage=1
 - [x] **5. Level sizes:** *Closed 2026-10-17 (Stage 1 hook): tutorial 3 cards, Level 1 is 8 cards in 60 s, Level 2 is 8 cards in 90 s, with the rules always shown above the card.*
 - [x] **6. Rules per level:** *Closed 2026-10-17 (Stage 1 hook): Level 1 adds rule 2 only; Level 2 adds duplicates and fixes (3, 4); rule 5 is folded into rule 2's card.*
 - [ ] **7. Stars:** 1★ at 30%, 2★ at 65%, 3★ at 88%. A careful player gets about 3★ and a first-timer about 2★. *Default: keep.*
-- [ ] **8. Automate question:** "Which rule would you turn into code first?" The correct answer is "trash repeated household IDs". The wrong answers are "trash households over 12 people" and "trash every typo". *Default: keep.*
+- [ ] **8. Automate question:** "Which rule would you turn into code first?" The correct answer is "trash any record with a blank field" (changed 2026-10-17: duplicates are no longer in Stage 1). The wrong answers are "trash households over 12 people" and "trash every typo". *Default: keep.*
 - [x] **9. Full mode is short:** Stage 1 takes about 2.6 min against the 5–6 min budget. *Default: add content after the M8 playtests.* *Closed 2026-10-17: Solo/Team simplification (no full mode / no support cards).*
 - [ ] **10. Extra Rulebook examples:** these aren't in the spec: "People: 0", "Water: 900 L", "ID 1042 (second time)". *Default: keep.*
 

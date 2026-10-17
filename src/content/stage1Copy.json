@@ -58,12 +58,12 @@
   "automate": {
     "question": "Which rule would you turn into code first?",
     "options": {
-      "dupes": "Trash any household ID that's already appeared",
+      "blanks": "Trash any record with a blank field",
       "big-households": "Trash any household with over 12 people",
       "typos": "Trash every record with a typo"
     },
-    "right": "Spot on. A repeated ID is always an error, so code can trash it safely.",
-    "wrong": "Good thinking, but that bins good data. Unusual isn't wrong, and typos can be fixed. Duplicates are safest."
+    "right": "Spot on. A blank field can never be guessed, so code can trash it safely.",
+    "wrong": "Good thinking, but that bins good data: big households are real, typos are fixable. Blank fields are safest."
   },
   "result": {
     "heading3": "Squeaky clean data!",
