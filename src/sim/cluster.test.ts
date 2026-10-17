@@ -230,7 +230,7 @@ describe('Phase C (auto)', () => {
     }
   });
 
-  it('M5 acceptance: manual < auto uptime for a sensible config', () => {
+  it('acceptance: manual < auto uptime for a sensible config', () => {
     for (const seed of SEEDS) {
       const tr = createTraffic(seed);
       expect(run(tr, null, humanPolicy()).uptime).toBeLessThan(run(tr, SENSIBLE).uptime - 0.15);

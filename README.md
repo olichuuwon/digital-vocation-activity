@@ -95,7 +95,15 @@ Stage 2 pictures are simple drawings made for this game. Real AI teams train on 
 <details>
 <summary><strong>For developers</strong></summary>
 
-Vite + React + TypeScript, Zustand, Framer Motion, Supabase (leaderboard), Vitest and Playwright. The design spec is `docs/GAME_SPEC.md`, a picture walkthrough of every flow is `docs/GAME_FLOWS.md`, decisions are logged in `docs/DECISIONS.md`, and items waiting on the project owner are in `docs/OWNER_INPUTS.md`.
+Vite + React + TypeScript, Zustand, Framer Motion, Supabase (leaderboard and team sync), Vitest and Playwright.
+
+| Doc | What's in it |
+|---|---|
+| `docs/GAME_SPEC.md` | How the game works and why |
+| `docs/GAME_FLOWS.md` | Picture walkthrough of every flow (solo, replays, teams of 2–4, edge cases) and what each test checks |
+| `docs/DECISIONS.md` | Implementation decisions, content awaiting approval, open questions |
+| `docs/PLAYTEST_NOTES.md` | How to run a playtest and record it |
+| `e2e-live/README.md` | Live checks and screenshot capture against a real build |
 
 ```bash
 npm ci

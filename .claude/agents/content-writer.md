@@ -11,5 +11,5 @@ Rules:
 - Encouraging and a little playful, never patronising. No hacker clichés, no combat or weapons.
 - Error messages say what went wrong and how to fix it ("Rule 3: that's a duplicate").
 - Never invent organisation names, job titles, eligibility rules or links. Use `[FILL]` placeholders and list them at the end of your output.
-- Recruitment or career lines must stay factual and low-pressure. Flag them for the human content approver (spec D14).
+- Recruitment or career lines must stay factual and low-pressure. Flag them for the human content approver (see the spec).
 - Write into `src/content/*` string files so they're translatable.

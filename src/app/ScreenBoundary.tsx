@@ -14,7 +14,7 @@ function Loading() {
 }
 
 /**
- * Lazy screens (M7 perf) can fail to load on weak Wi-Fi or after a redeploy removes old chunks:
+ * Lazy-loaded screens can fail to load on weak Wi-Fi or after a redeploy removes old chunks:
  * show a way out (Reload) instead of a white screen. Progress is saved, so Reload resumes.
  */
 class LoadErrorBoundary extends Component<{ children: ReactNode }, { failed: boolean }> {

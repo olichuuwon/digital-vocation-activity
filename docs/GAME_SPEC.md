@@ -1,45 +1,34 @@
-# Ship It: Game Design & Build Spec
+# Let's Ship It: Game Design Spec
 
-> Working title. A 15–30 minute mobile web game, played **solo or in groups of 2–4 on their own phones**. It shows students (ages 12–25, Singapore) how the four **C4X Digital** specialisations in the **Digital and Intelligence Service (DIS)** work and combine into one system: **Software Development, Cloud Engineering, Artificial Intelligence Engineering and Data Science**.
-> Played at a booth in a high-potential students programme. Groups rotate booth to booth in a classroom-like setting.
+> A ~16-minute mobile web game, played **solo or as a team of 2–4 on their own phones**. It shows students (ages 12–25, Singapore) how the four **C4X Digital** specialisations in the **Digital and Intelligence Service (DIS)** work and combine into one system: **Software Development, Cloud Engineering, Artificial Intelligence Engineering and Data Science**.
+> Designed for outreach booths and classrooms, where teams rotate between activities.
 >
-> Items marked **`[FILL]`** are decisions or content the project owner must supply. Claude Code must not invent answers for `[FILL]` items. It should use the stated default (if any) and log the assumption in `docs/DECISIONS.md`.
+> This document describes how the game works and why. Implementation choices and their history are in `docs/DECISIONS.md`; a picture walkthrough is in `docs/GAME_FLOWS.md`.
 
 ---
 
-## 0. Decisions
+## 0. Key choices
 
-### 0.1 Settled
-| # | Decision | Answer |
-|---|----------|--------|
-| D1 | Game name | "Ship It" (working title, final name `[FILL]`) |
-| D3 | Country | Singapore. Times shown in SGT (UTC+8). Spelling: British/Singapore English. |
-| D4 | Audience | Ages 12–25, tech-savvy. Don't talk down to them. The tone must work for a 12-year-old *and* a 23-year-old: smart, quick, light humour. |
-| D5 | Language | English |
-| D6 | Roles | **C4X Digital** specialisations in DIS: Software Development, Cloud Engineering, Artificial Intelligence Engineering, Data Science. Use these exact names in-game. Descriptions are self-explanatory one-liners (§8.3). |
-| D7 | Call to action | No hard sell. The end screen recaps **what they learned** in each specialisation and **why digital matters to DIS** (§8.3). |
-| D8 | Venue | Booth in a high-potential students programme. Groups rotate between booths, classroom-like. |
-| D9 | Leaderboard | Yes, **groups only** (2–4 players). Solo runs are not ranked. The board resets daily (SGT) and has a "View all" history. Shows group name, group size and completion time HH:MM. See §3.6. |
-| D11 | Hosting | Free static hosting, service name `[FILL]`. The leaderboard and realtime need a free backend tier (§11.2). |
-| D12 | Stage 2 images | Hybrid (§5.4): in-repo SVG illustrations for most levels, plus open-dataset photos with attribution for the "Draw the Box" level. |
-| D13 | Scenario | Keep flood relief (humanitarian, no combat). |
-| D14 | Content approver | The project owner (human) approves all DIS/recruitment-facing copy before release. Claude Code flags this copy and does not finalise it. |
-| D15 | Accessibility | WCAG 2.2 AA |
-| D16 | Connectivity | Online web app (internet required). Fail gracefully on a weak connection (§3.5.6). Offline caching is not required. |
-| D17 | Devices | Generalist: current-ish iOS Safari and Android Chrome, 360px+ width |
-| D18 | Booth rotation | **20 min**, including joining and the debrief. There is **one run length, ≈ 16 min of play** (§2). Owner decision 2026-10-17: no booth/full modes. |
-| D19 | Team play | **Take turns** (§3.5.2, owner decision 2026-10-17). Each stage, one player plays on their own phone; teammates' phones show a **Waiting screen** and they help out loud. The turn **rotates each stage**. After the debrief everyone can replay any stage solo on their own phone. |
-| D20 | Leaderboard time | **Clock time finished**, `HH:MM` SGT (e.g. 14:32) |
-
-### 0.2 Still open (use the default until answered)
-| # | Question | Default |
-|---|----------|---------|
-| Q1 | DIS logo / official branding allowed in-game? | No logos; text mention of "DIS" and "C4X Digital" only |
-| Q5 | Ranking order | Families reached (high to low), tie-break shorter run duration (duration is stored but not displayed) |
-| Q6 | Group names | Pick from a generated list (e.g. "Swift Kingfisher") **or** type a custom name that passes a profanity filter and the facilitator can hide |
-| Q7 | Is there a big screen / TV at the booth? | Assume yes: a `/host` view shows the join QR plus a live leaderboard (optional, game works without it) |
-| Q8 | Free backend choice | Supabase free tier (Postgres + Realtime). Firebase is the alternative. |
-| Q9 | Prizes or daily winner announcement? | None in-game |
+| Topic | Choice |
+|---|---|
+| Name | **Let's Ship It** |
+| Country & language | Singapore, English (British/Singapore spelling). Times shown in SGT (UTC+8). |
+| Audience | Ages 12–25, tech-savvy. Don't talk down to them: the tone must work for a 12-year-old *and* a 23-year-old. Smart, quick, light humour. |
+| Roles | The four **C4X Digital** specialisations in DIS, with these exact names in-game. Descriptions are self-explanatory one-liners (§8.3). |
+| Call to action | No hard sell. The end screen recaps **what they learned** in each specialisation and **why digital matters to DIS** (§8.3). |
+| Scenario | Flood relief: humanitarian, no combat. |
+| Length | **One run length, ≈ 16 min of play**, fitting a 20-minute rotation with joining and debrief (§2). |
+| Modes | **Solo** (not ranked) and **Team** of 2–4 that **take turns**: one player per stage, everyone else on a Waiting screen (§3.5.2). |
+| Replays | After a run, any stage can be replayed with its **bonus levels** (never ranked). |
+| Leaderboard | Teams only. Resets daily (SGT), with a "View all" history. Shows team name, size, families reached and the clock time finished (`HH:MM`). §3.6. |
+| Career copy | DIS- and career-facing text is drafted, then approved by the project owner before release. |
+| Branding | No logos; the text "DIS" and "C4X Digital" only. |
+| Accessibility | WCAG 2.2 AA (§10). |
+| Connectivity | Online web app. Fails gracefully on a weak connection (§3.5.6). |
+| Devices | Current iOS Safari and Android Chrome, 360 px wide and up. |
+| Hosting | Static frontend on Vercel; Supabase free tier (Postgres + Realtime) for the leaderboard and team sync (§11.2). |
+| Big screen | Optional `/host` view: join QR, teams playing now, live leaderboard. |
+| Prizes | None in-game. |
 
 ---
 
@@ -49,12 +38,12 @@
 2. **Show how it comes together.** Each stage's output is a real input to the next stage and to the finale. Players must *feel* that bad data leads to a worse AI and a worse outcome.
 3. **"Reality Check" moments.** After players struggle manually, reveal how professionals solve it: automation, pipelines, Kubernetes, testing, human-in-the-loop AI. This is the "aha" and the career hook.
 4. **No coding knowledge needed.** Problem solving, pattern spotting and logic only. Tricky but fair.
-5. **Own phone, no accounts, no install.** Scan a QR to play solo or to join a group. Progress is saved locally so a player can resume or rejoin.
-6. **Play together.** Groups of 2–4 play side by side and compete on the daily leaderboard. Teamwork mirrors how the four specialisations really work.
+5. **Own phone, no accounts, no install.** Scan a QR to play solo or to join a team. Progress is saved locally so a player can resume or rejoin.
+6. **Play together.** Teams of 2–4 play side by side and compete on the daily leaderboard. Teamwork mirrors how the four specialisations really work.
 
 ### Non-goals
 - No combat or weapons content.
-- No real hacking or cyber-offence content (that's a separate team's game).
+- No real hacking or cyber-offence content.
 - No collection of personal data.
 
 ---
@@ -145,7 +134,7 @@ Scan booth QR (or open link)
 ```
 - Joining **closes at START**. A player who drops can **rejoin** from the same device (the session token is in localStorage).
 - A lobby expires after 15 min without starting. A run expires 60 min after start.
-- Optional `/host` view (booth big screen): a QR to the game, teams currently playing (name, size, current stage), and the live leaderboard.
+- Optional `/host` view (a big screen at the venue): a QR to the game, teams currently playing (name, size, current stage), and the live leaderboard.
 
 #### 3.5.2 How a team plays: take turns
 Simple on purpose. Teammates stand together, so the talking happens in person.
@@ -165,7 +154,7 @@ Simple on purpose. Teammates stand together, so the talking happens in person.
 
 #### 3.5.4 Data stored server-side (only this)
 `group_id, group_name, group_size, families, duration_sec, finished_at (timestamptz), board_date (SGT date), hidden (bool)`
-Nicknames, device info, IPs, emails and any personal data are **never stored**. The group name is the only player-entered text stored. Live lobby presence (nicknames) lives only in ephemeral realtime channels, never in tables.
+Nicknames, device info, IPs, emails and any personal data are **never stored**. The team name is the only player-entered text stored. (Column names say `group` for historical reasons.) Live lobby presence (nicknames) lives only in ephemeral realtime channels, never in tables.
 
 #### 3.5.5 Moderation
 - Generated-name picker by default (adjective + Singapore animal/place, e.g. "Swift Kingfisher", "Bold Merlion").
@@ -173,15 +162,15 @@ Nicknames, device info, IPs, emails and any personal data are **never stored**. 
 - The facilitator can hide a name from `/host` (PIN-protected, PIN checked server-side).
 
 #### 3.5.6 Weak connection
-- Gameplay runs locally. Only the lobby, hand-off syncs, finale incidents and score submission need the network.
+- Gameplay runs locally. Only the lobby, team sync, hand-offs and score submission need the network.
 - If the connection drops: keep playing, show a small "reconnecting" pill, and queue the score submission with retry.
 - If a teammate disconnects for more than 30s at a hand-off: continue without them. They can rejoin at the current stage.
 
 ### 3.6 Leaderboard
 - **Today** tab (default): resets 00:00 SGT, shows the top 20.
 - **View all** tab: all-time top 50, plus a date filter.
-- Row: rank · group name · 👥 size · families reached · finished at `HH:MM` (SGT clock time).
-- The player's own group is highlighted, and pinned at the bottom if it's outside the top 20.
+- Row: rank · team name · 👥 size · families reached · finished at `HH:MM` (SGT clock time).
+- The player's own team is highlighted, and pinned at the bottom if it's outside the top 20.
 - Visible from the home screen, the debrief and `/host`.
 
 ---
@@ -213,7 +202,7 @@ A pinned "📘 Rulebook" button opens a bottom sheet. Show the **one new rule** 
 Animation: the player's 16 hand-sorted cards shrink, then a counter shoots up to **2,000,000 records**. Text: *"You cleaned 16 by hand. Data scientists write each rule once as code, and a pipeline applies it to millions of rows in seconds."* The player then gets **one tap** to choose which rule to automate (3 options): *trash records with a blank field* (correct: a blank can never be guessed), *trash households over 12 people* (bins real data) or *trash every typo* (typos can be fixed). The correct choice gives a bonus.
 
 ### 4.4 Content needed
-- `records.json`: ≥ 40 records (so replays vary), each with `valid | fixable | invalid`, the fix options, and the rule id. **`[FILL]` optional: local place or sector names.**
+- `records.json`: ≥ 40 records (so replays vary), each with `valid | fixable | invalid`, the fix options, and the rule id. Sectors are letters A–F.
 
 ---
 
@@ -239,8 +228,8 @@ Show the model's training curve rising, fed by the player's labels (their count 
 
 ### 5.4 Assets (hybrid)
 - Needed: ~60 images across 8 classes, including ~6 night/low-light road images. Each needs `{id, label, box:[x,y,w,h], variant:'day'|'night', source, licence}`.
-- **L1, L2 and L4:** flat SVG illustrations generated in-repo by Claude Code. Consistent style, no licensing issues, tiny size. Tile-reveal works on SVG.
-- **Bonus L3 "Draw the Box":** real photos from open datasets that already include bounding boxes, e.g. **Open Images** (images CC BY 2.0, box annotations CC BY 4.0) or **COCO** (annotations CC BY 4.0; image licences vary per photo). For flood-road photos, search Kaggle / Hugging Face for road-flooding datasets and **check each dataset's licence** before use.
+- **All levels** use flat SVG illustrations made for the game: consistent style, no licensing issues, tiny size. Tile-reveal works on SVG.
+- **Option for bonus L3 "Draw the Box":** real photos from open datasets that already include bounding boxes, e.g. **Open Images** (images CC BY 2.0, box annotations CC BY 4.0) or **COCO** (annotations CC BY 4.0; image licences vary per photo). For flood-road photos, search Kaggle / Hugging Face for road-flooding datasets and **check each dataset's licence** before use.
   - Only use images whose licence allows reuse with attribution. Record every image in `assets/CREDITS.md` and show a "Photo credits" link in settings.
   - Avoid identifiable faces and licence plates; crop or skip such images.
   - Compress to WebP ≤ 60 KB each.
@@ -349,13 +338,13 @@ Use the specialisation names on the routing buttons: Data Science · AI Engineer
 
 ### 8.3 Debrief
 - Big number: families reached / 1,200. Rank title. "New best" if applicable.
-- **Your C4X Digital match**: the four specialisations ranked by the player's normalised stage performance (in a group, each member sees their own):
+- **Your C4X Digital match**: the four specialisations ranked by the run's normalised stage performance (a team shares one result):
   - **Data Science**: turns messy data into trustworthy insight.
   - **Artificial Intelligence Engineering**: builds and checks AI that can see, predict and decide.
   - **Software Development**: builds the apps and systems people rely on.
   - **Cloud Engineering**: keeps systems running at scale, automatically.
 - **What you learned** (one line per stage, based on what they actually did), e.g. *"You cleaned 20 records by hand and saw how one rule cleans millions."*
-- **Why digital matters to DIS**: 2–3 short cards on how data, AI, software and cloud work *together* to support defence and missions like disaster relief. Drafted by `content-writer` and **approved by the project owner (D14)** before release.
+- **Why digital matters to DIS**: 2–3 short cards on how data, AI, software and cloud work *together* to support defence and missions like disaster relief. Drafted, then **approved by the project owner** before release.
 - Team mode: a leaderboard rank reveal ("You're #3 today!") on every phone.
 - "Play again" and **"Replay with bonus levels"**: a "🔓 There's more!" callout, then a stage picker that shows how many bonus levels each stage adds. Also on Home while the last run is finished.
 - End card designed to be **screenshot-friendly** (fits one screen, shows name-free score, rank, date).
@@ -392,20 +381,20 @@ Use the specialisation names on the routing buttons: Data Science · AI Engineer
 - **Privacy (PDPA-minded; many players are minors):** no cookies beyond functional localStorage, no third-party trackers, no PII stored server-side. The only network calls go to the leaderboard/realtime backend (§11.2).
 
 ### 11.2 Backend (free tier)
-- Default **Supabase** (Q8): a `runs` table (fields in §3.5.4) plus Realtime channels for lobbies, hand-off sync and finale incidents.
-- Row Level Security: anonymous clients may **insert** one run per group token and **select** non-hidden rows only. Hide/unhide goes through a server-side function that checks the facilitator PIN.
+- **Supabase**: a `runs` table (fields in §3.5.4) plus Realtime channels for lobbies, team sync and hand-offs.
+- Row Level Security: anonymous clients may **insert** one run per team token and **select** non-hidden rows only. Hide/unhide goes through a server-side function that checks the facilitator PIN.
 - Basic anti-cheat: a server-side check rejects families > 1200 or implausibly short durations (< 8 min). Rate-limit submissions.
 - Daily board = `board_date = (now() at time zone 'Asia/Singapore')::date`.
 - Keys in env vars (`VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`), with a committed `.env.example`. Never commit secrets.
-- The static frontend deploys to the free host `[FILL: D11]`.
+- The static frontend deploys to Vercel.
 - **Testing:**
   - Vitest unit tests for all scoring formulas, the cluster sim, puzzle solvers and IoU.
   - Every Stage 3 puzzle must have an automated solver test proving it's solvable within the block limit.
   - Playwright e2e on mobile viewports (iPhone 12, Pixel 5): a full run completes and resume works.
   - Content schema validation in CI.
 - **Debug:** `?debug=1` shows stage skip buttons, the seed and live scores. `?stage=3` jumps to a stage.
-- **Facilitator params:** `?relaxed=1`. Route `/host` for the booth screen.
-- **Multiplayer testing:** a `?fakePeers=3` debug flag simulates teammates locally. Playwright runs a 3-browser-context group test.
+- **Facilitator params:** `?relaxed=1`. Route `/host` for the big-screen view.
+- **Team testing:** a `?fakePeers=3` debug flag simulates teammates locally. Playwright runs a 3-browser-context team test.
 
 ### 11.1 Suggested folder structure
 ```
@@ -424,21 +413,21 @@ docs/
 
 ---
 
-## 12. Build milestones (each ends playable)
+## 12. Build history
 
-| M | Deliverable | Acceptance |
-|---|---|---|
-| M0 | Scaffold, CI, PWA shell, theme, pipeline strip, state + persistence, debug params | Deploys; resume works; lint/test green |
-| M0.5 | Backend: Supabase schema, RLS, leaderboard read/write, `/host` skeleton | Insert + daily query work; RLS blocks tampering |
-| M1 | Shared components: Briefing, Tutorial overlay, Timer, StarResult, RealityCheck, Hand-off, Rulebook sheet | Storybook-like demo route `/dev/components` |
-| M2 | Stage 1 complete (all levels + Reality Check) | Quick path ≤ 3.5 min in playtest |
-| M3 | Stage 2 complete with placeholder SVG assets | Occlusion reveal and IoU tested |
-| M4 | Stage 3 complete with puzzle solver tests | All puzzles proven solvable |
-| M5 | Stage 4 complete: manual, K8s explainer, configure, replay | Sim unit tests; manual < auto uptime for a sensible config |
-| M6 | Finale + debrief + chapter select (solo) | Formula tests; screenshot card fits 360×740 |
-| M6.5 | Groups: create/join via QR + code, lobby + rotation order, main/support views for every stage (§3.5.2 table), co-op finale, group submission, leaderboard tabs, moderation | 3-context Playwright test completes a group run that appears on Today's board |
-| M7 | Polish: haptics, sound toggle, relaxed mode, a11y pass, perf budget | axe clean, Lighthouse mobile ≥ 90 |
-| M8 | Playtest with 5+ teens, tune timings and difficulty | Median run 14–17 min |
+The game was built in playable milestones; all are complete.
+
+| Milestone | Delivered |
+|---|---|
+| M0 | Scaffold, CI, PWA shell, theme, pipeline strip, state + persistence, debug params |
+| M0.5 | Supabase schema, row-level security, leaderboard read/write, `/host` |
+| M1 | Shared components (briefing, tutorial overlay, timer, stars, Reality Check, hand-off, rulebook) and the `/dev/components` gallery |
+| M2–M5 | Stages 1–4, each with its Reality Check, pure logic and tests (puzzle solver, cluster sim, IoU) |
+| M6 | Finale, debrief, replays |
+| M6.5 | Team play: create/join via QR + code, lobby, rotation, sync, team submission, moderation |
+| M7 | Polish: haptics, sound, relaxed mode, accessibility pass (axe clean), performance (Lighthouse mobile ≥ 90) |
+| Oct 2026 | Simplified: one run length, Solo/Team with turn-taking, bonus levels on replays, an easier Stage 1 |
+| Next | Playtests with 5+ teens; tune timings and difficulty (target median run 14–17 min) |
 
 ---
 

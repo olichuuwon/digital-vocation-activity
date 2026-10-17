@@ -14,7 +14,7 @@ import { GroupDebugBar } from './screens/GroupDebugBar';
 import { GroupEnded } from './screens/GroupEnded';
 import { GroupPill } from './screens/GroupPill';
 import { Home } from './screens/Home';
-import { StagePlaceholder } from './screens/StagePlaceholder';
+import { Prologue } from './screens/Prologue';
 import { SettingsDialog } from './SettingsDialog';
 import ui from './ui.module.css';
 import { useTheme } from './useTheme';
@@ -22,7 +22,7 @@ import { useTheme } from './useTheme';
 // Booth screen code (incl. the QR encoder) only loads on /host.
 const Host = lazy(() => import('./screens/Host'));
 const DevComponents = lazy(() => import('./screens/DevComponents'));
-// Everything past Home loads on demand too (M7 perf: Lighthouse mobile ≥ 90). Stage 1 is
+// Everything past Home loads on demand too (performance budget: Lighthouse mobile ≥ 90). Stage 1 is
 // prefetched once Home has painted, so Play starts without a wait.
 const loadDataStage = () => import('../stages/data/DataStage');
 const loadGroupLobby = () => import('./screens/GroupLobby');
@@ -48,7 +48,7 @@ export function App() {
     return isHostPath(pathname, base) ? 'host' : isDevComponentsPath(pathname, base) ? 'dev' : 'game';
   }, []);
   // Framer Motion honours prefers-reduced-motion everywhere (§10). Its features load after first
-  // paint (`m` components, LazyMotion strict), keeping ~30 KB gz off the critical path (M7 perf).
+  // paint (`m` components, LazyMotion strict), keeping ~30 KB gz off the critical path (performance).
   return (
     <LazyMotion features={loadMotion} strict>
       <MotionConfig reducedMotion="user">
@@ -233,11 +233,8 @@ function GameApp() {
           />
         </main>
       ) : inRun ? (
-        <StagePlaceholder
-          key={`${run.stage}-${run.levelIndex}`}
-          run={run}
-          onHome={() => setOnHome(true)}
-        />
+        // Stage 0: mission briefing, then Stage 1.
+        <Prologue onGo={() => useGame.getState().completeLevel()} />
       ) : boardOpen ? (
         <Leaderboard debug={params.debug} onBack={() => setBoardOpen(false)} />
       ) : (

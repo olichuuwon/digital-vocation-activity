@@ -70,8 +70,8 @@
 //   Rolling update ON: it goes to one pod first (a canary). That pod errors 50% of its requests
 //     for AUTO_ROLLBACK_S = 2 s, the health check fails and it is rolled back automatically.
 //
-// TRAFFIC. Keyframes × seeded noise × traffic.scale. Booth-length storm (owner item 29, Oct 2026:
-//   45 s, was 75 s): a quick jump to ×2.5 (min pods cover it), a steady climb to ×6.5 by 22 s with
+// TRAFFIC. Keyframes × seeded noise × traffic.scale. Short storm (45 s, was 75 s, to fit
+//   the 3-minute stage): a quick jump to ×2.5 (min pods cover it), a steady climb to ×6.5 by 22 s with
 //   the bad deploy at 16 s, the viral surge ×6.5 → ×10 over 22–31 s, the ×10 peak 31–37 s with the
 //   hardware fault at 32 s, then a short cool-down (scale-down) to 45 s. Every climb grows ≤ ≈ 5%
 //   per second (relative), like the 75 s storm: with a 2 s HPA period + 4 s cold start a 60–70%
@@ -106,7 +106,7 @@ export type Rng = () => number;
 // ---- Constants (spec §7.5 unless noted) ----
 export const TICK_MS = 100;
 export const TICK_S = TICK_MS / 1000;
-/** Phase A and Phase C length. Spec §7.1/§7.4 say ~60–90 s; shortened to 45 s for the 3-minute booth budget (owner item 29). */
+/** Phase A and Phase C length. Spec §7.1/§7.4 say ~60–90 s; shortened to 45 s to fit the 3-minute stage budget. */
 export const PHASE_SECONDS = 45;
 export const PHASE_TICKS = PHASE_SECONDS * 10;
 export const POD_CAPACITY = 100; // req/s

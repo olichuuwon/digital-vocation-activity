@@ -42,7 +42,6 @@ export const copySchema = z.object({
   }),
   /** Lazy screens: loading state and a failed load (weak booth Wi-Fi, or a redeploy). */
   app: z.object({ loading: text, loadError: text, reload: text }),
-  placeholder: z.object({ note: text, finishLevel: text, finale: text, finaleNote: text, backHome: text }),
   /** Stage 0 (§2 prologue): mission briefing + a 10-second "how to play". */
   prologue: z.object({
     heading: text,
@@ -79,7 +78,7 @@ export type StageContent = z.infer<typeof stageSchema>;
 export type Copy = z.infer<typeof copySchema>;
 
 // ---------------------------------------------------------------------------------------
-// M1 shared-component content. Word limits come from CLAUDE.md rule 1 and spec §2/§7.2/§9.
+// Shared-component content. Word limits come from CLAUDE.md rule 1 and spec §2/§7.2/§9.
 // ---------------------------------------------------------------------------------------
 export const wordCount = (s: string) => s.trim().split(/\s+/).filter(Boolean).length;
 const maxWords = (n: number) =>
@@ -137,7 +136,7 @@ export type RealityVars = typeof REALITY_DEFAULTS;
 export const realityCheckSchema = z.object({
   id: z.enum(['data', 'ai', 'logic', 'cloud-k8s', 'cloud-end']),
   heading: maxWords(6),
-  /** Career/DIS-facing copy must be approved by the owner before release (D14). */
+  /** Career/DIS-facing copy must be approved by the project owner before release. */
   needsApproval: z.boolean(),
   cards: z.array(z.object({ visual: realityVisual, title: maxWords(5).optional(), body: maxWords(40) })).min(1).max(6),
 });

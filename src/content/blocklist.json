@@ -1,5 +1,5 @@
 {
-  "_note": "Profanity filter for custom group names and nicknames (spec 3.5.5). Matching ignores case, spaces, punctuation, accents, repeated letters and basic leetspeak (0=o, 1=i/l, 3=e, 4=a, 5=s, 7=t, @=a, $=s). 'anywhere' terms match inside longer words; 'words' terms only match a whole word (or the whole name), so 'Grass' or 'Peacock' stay allowed. Owner to review (OWNER_INPUTS).",
+  "_note": "Profanity filter for custom group names and nicknames (spec 3.5.5). Matching ignores case, spaces, punctuation, accents, repeated letters and basic leetspeak (0=o, 1=i/l, 3=e, 4=a, 5=s, 7=t, @=a, $=s). 'anywhere' terms match inside longer words; 'words' terms only match a whole word (or the whole name), so 'Grass' or 'Peacock' stay allowed.",
   "anywhere": [
     "fuck",
     "fck",

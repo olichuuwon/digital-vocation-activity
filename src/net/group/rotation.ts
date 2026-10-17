@@ -4,7 +4,7 @@ import type { Stage } from '../../state/types';
 
 /**
  * Index in the rotation of the main phone for a stage. Player 1 is the group's IC, the team
- * leader (owner decision, 2026-10-08): they open with the prologue and always play the finale.
+ * leader: they open with the prologue and always play the finale.
  * Stages 1–4 rotate starting from player 2 (stage k by rotation[k % n]), so main-phone turns
  * are as even as they can be:
  *   2 players: P1 = stages 2, 4 + finale; P2 = stages 1, 3.

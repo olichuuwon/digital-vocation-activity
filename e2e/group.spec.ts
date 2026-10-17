@@ -1,7 +1,7 @@
 import { expect, test, type Browser, type Page, type TestInfo } from '@playwright/test';
 import { boardRow, mockSupabase } from './supabaseMock';
 
-// Team play (spec §3.5, §12 M6.5) with real browser contexts talking through the e2e
+// Team play (spec §3.5) with real browser contexts talking through the e2e
 // WebSocket relay (e2e/groupRelay.ts). Supabase RPCs are mocked; nothing touches a real backend.
 
 test.use({ serviceWorkers: 'block' });

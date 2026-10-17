@@ -411,7 +411,7 @@ function Debrief({
 
       <section aria-labelledby="why-h" className={s.block}>
         <h2 id="why-h">{c.debrief.whyHeading}</h2>
-        {/* NEEDS OWNER APPROVAL (D14): src/content/finaleCopy.json debrief.why and roles */}
+        {/* NEEDS OWNER APPROVAL: src/content/finaleCopy.json debrief.why and roles */}
         {c.debrief.why.map((w) => (
           <div key={w.title} className={s.why}>
             <h3>{w.title}</h3>

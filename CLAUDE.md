@@ -12,7 +12,7 @@ Mobile web game (one ≈16-min run in a 20-min rotation; Solo, or Team of 2–4 
 7. **Keep team play simple.** One player per stage plays exactly like solo; everyone else sees the Waiting screen and helps in person (spec §3.5.2). No support cards or split controls.
 8. **No dead ends.** Show a hint after 2 fails and the answer after 3.
 9. **DIS / career copy is drafted, not finalised.** Mark it `<!-- NEEDS OWNER APPROVAL -->` and list it in `docs/DECISIONS.md`.
-10. Each milestone in spec §12 must end **playable and deployed**.
+10. Every change must end **playable and deployed** (all checks green).
 
 ## Stack
 Vite + React + TypeScript (strict) · Zustand · Framer Motion · Supabase (free tier: Postgres + Realtime) · Vitest · Playwright · zod · `qrcode`
@@ -25,6 +25,6 @@ Vite + React + TypeScript (strict) · Zustand · Framer Motion · Supabase (free
 - `npm run build`: production build
 
 ## Working style
-- Work milestone by milestone (spec §12). At the start of each, write a short plan. At the end, run lint, typecheck, test and e2e, and update `docs/DECISIONS.md`.
-- Use subagents in `.claude/agents/` for their specialties. Delegate content writing to `content-writer`, groups/backend to `realtime-engineer`, balancing to `game-designer`, verification to `qa-playtester`, and accessibility review to `a11y-reviewer`.
-- Commit after each green milestone with a clear message.
+- The build milestones (spec §12) are done. For each change, write a short plan first; at the end, run lint, typecheck, test and e2e, and update `docs/DECISIONS.md` (and `docs/GAME_FLOWS.md` screenshots if screens changed).
+- Use subagents in `.claude/agents/` for their specialties. Delegate content writing to `content-writer`, team play/backend to `realtime-engineer`, balancing to `game-designer`, verification to `qa-playtester`, and accessibility review to `a11y-reviewer`.
+- Commit after each green change with a clear message.

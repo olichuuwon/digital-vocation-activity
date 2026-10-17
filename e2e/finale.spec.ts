@@ -26,7 +26,7 @@ test('Finale: reveal, route every incident, debrief card fits one screen, then a
 
   await expect(page.getByRole('heading', { name: 'Mission complete' })).toBeVisible();
   await expect(page.getByTestId('families')).toContainText('of 1,200');
-  // §12 M6: the screenshot card fits 360×740.
+  // The screenshot card fits 360×740.
   const box = (await page.getByTestId('end-card').boundingBox())!;
   expect(box.y + box.height).toBeLessThanOrEqual(740);
   expect(box.width).toBeLessThanOrEqual(360);

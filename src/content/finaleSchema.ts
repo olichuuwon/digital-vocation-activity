@@ -67,7 +67,7 @@ export const finaleCopySchema = z.object({
   }),
   /** Incident text keyed by finale.json incident id (§8.2 table + more). */
   incidents: z.record(z.string().regex(/^inc\d{2}$/), z.object({ text: words(14), why: words(16) })),
-  /** Short team names on routing buttons: the specialisation names (D6, §8.2). */
+  /** Short team names on routing buttons: the specialisation names (§8.2). */
   teamButtons: perTeam(words(4)),
   debrief: z.object({
     heading: words(5),
@@ -78,11 +78,11 @@ export const finaleCopySchema = z.object({
     ranks: z.record(z.string(), words(5)),
     matchHeading: words(5),
     matchIntro: words(15),
-    /** One-liners (§8.3). DIS/career copy: NEEDS OWNER APPROVAL (D14). */
+    /** One-liners (§8.3). DIS/career copy: NEEDS OWNER APPROVAL. */
     roles: perTeam(words(15)),
     learnedHeading: words(5),
     whyHeading: words(6),
-    /** 2–3 cards on why digital matters to DIS (§8.3). NEEDS OWNER APPROVAL (D14). */
+    /** 2–3 cards on why digital matters to DIS (§8.3). NEEDS OWNER APPROVAL. */
     why: z.array(z.object({ title: words(6), body: words(35) })).min(2).max(3),
     soloNote: words(15),
     date: txt,

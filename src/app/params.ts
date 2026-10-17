@@ -38,7 +38,7 @@ function isAppPath(pathname: string, base: string, sub: string): boolean {
 
 export const isHostPath = (pathname: string, base = '/') => isAppPath(pathname, base, 'host');
 
-/** `/dev/components`: the shared-component gallery (M1). */
+/** `/dev/components`: the shared-component gallery. */
 export const isDevComponentsPath = (pathname: string, base = '/') => isAppPath(pathname, base, 'dev/components');
 
 /** The game link the booth QR opens; passes a facilitator `?relaxed=1` through. */

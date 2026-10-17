@@ -1,5 +1,5 @@
 -- =====================================================================================
--- Let's Ship It · M0.5 · group leaderboard (spec §3.5.3–3.5.5, §3.6, §11.2)
+-- Let's Ship It · team leaderboard (spec §3.5.3–3.5.5, §3.6, §11.2)
 --
 -- Paste this whole file into the Supabase SQL Editor and run it. It is safe to re-run.
 -- Then set the facilitator PIN (4–8 digits) in the SQL Editor:

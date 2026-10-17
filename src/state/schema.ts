@@ -11,7 +11,7 @@ export const gameStateSchema = z.object({
   scores: z.object({
     data: z.object({ accuracy: unit, fixedCount: count, ruleChosen: z.boolean() }),
     ai: z.object({ labelAccuracy: unit, earlyGuessBonus: unit, auditCatch: unit, modelAccuracy: unit }),
-    // extraBlocks arrived in M4; older saves default to 0.
+    // extraBlocks was added later; older saves default to 0.
     logic: z.object({ puzzlesSolved: count, hintsUsed: count, efficiency: unit, extraBlocks: count.default(0) }),
     cloud: z.object({ manualUptime: unit, autoUptime: unit, costEfficiency: unit }),
     finale: z.object({ familiesReached: count, incidentsRouted: count }),
@@ -19,7 +19,7 @@ export const gameStateSchema = z.object({
   stars: z.object({ data: star, ai: star, logic: star, cloud: star }),
   bestFamilies: count,
   startedAt: z.number(),
-  /** Set at the debrief (M6): the run is over; Home offers a new run, not Resume. */
+  /** Set at the debrief: the run is over; Home offers a new run, not Resume. */
   finishedAt: z.number().optional(),
   /** Chapter-select replays of this run (varies the Live Ops deal). */
   replays: count.optional(),

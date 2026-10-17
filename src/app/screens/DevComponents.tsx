@@ -30,7 +30,7 @@ type Demo =
   | { kind: 'hints' }
   | { kind: 'pictures' };
 
-/** `/dev/components` (M1 acceptance): every shared stage component with live content. */
+/** `/dev/components`: every shared stage component with live content. */
 export default function DevComponents() {
   const [demo, setDemo] = useState<Demo | null>(null);
   const back = () => setDemo(null);

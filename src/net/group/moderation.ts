@@ -52,7 +52,7 @@ function check(raw: string, max: number): TextProblem | null {
   const s = tidy(raw);
   if (!s) return 'empty';
   if ([...s].length > max) return 'tooLong';
-  // No numbers at all (owner decision 2026-10-08): digits are the easiest way round the
+  // No numbers at all: digits are the easiest way round the
   // filter ("4ss"), and real names don't need them.
   if (/\p{Nd}/u.test(s)) return 'digits';
   if (BAD_CHARS.test(s) || isBlocked(s)) return 'blocked';

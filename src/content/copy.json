@@ -32,13 +32,6 @@
     "close": "Close",
     "teamRelaxed": "A teammate has relaxed timers on, so your timers are relaxed too."
   },
-  "placeholder": {
-    "note": "This stage is still being built.",
-    "finishLevel": "Finish level",
-    "finale": "Finale",
-    "finaleNote": "Mission Live is still being built.",
-    "backHome": "Back to home"
-  },
   "leaderboard": {
     "heading": "Leaderboard",
     "tabsLabel": "Leaderboard view",

@@ -54,7 +54,7 @@ const pct = (x: number) => Math.floor(x * 100 + 1e-9);
 const levelName = (id: LevelId) => stageContent(4)!.levels.find((l) => l.id === id)?.name ?? '';
 /** Most "Tweak settings" round trips after a replay. */
 const MAX_TWEAKS = 2;
-/** Base seconds for Phase B (§7.3 says ~60 s; 45 s for the booth budget, owner item 29); relaxed ×1.5 and +30s apply via Timer. */
+/** Base seconds for Phase B (§7.3 says ~60 s; 45 s to fit the 3-minute stage budget); relaxed ×1.5 and +30s apply via Timer. */
 const CONFIGURE_SECONDS = 45;
 /** A good-enough setup shown as the answer after two tweaks (no dead ends). */
 const SUGGESTED: ClusterConfig = { loadBalancer: true, minPods: 2, maxPods: 10, scaleUpCpu: 0.65, selfHealing: true, rollingUpdate: true };

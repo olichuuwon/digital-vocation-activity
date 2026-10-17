@@ -108,7 +108,7 @@ describe('sanitisePersisted', () => {
   });
 });
 
-describe('finishRun / replayFrom (M6)', () => {
+describe('finishRun / replayFrom', () => {
   beforeEach(() => useGame.setState({ run: null, bestFamilies: 300 }));
 
   it('records families, keeps the best, marks the run finished', () => {
