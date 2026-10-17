@@ -17,7 +17,7 @@ Preview these at `/dev/components`, under "Reality Check". The text lives in `sr
 ## B. Stage 1 gameplay (play it first)
 Try it: https://digital-vocation-activity.vercel.app/?debug=1&stage=1
 
-- [x] **5. Level sizes:** *Closed 2026-10-17 (Stage 1 hook): tutorial 3 cards, Level 1 is 8 cards in 45 s, Level 2 is 10 cards in 60 s.*
+- [x] **5. Level sizes:** *Closed 2026-10-17 (Stage 1 hook): tutorial 3 cards, Level 1 is 8 cards in 60 s, Level 2 is 8 cards in 90 s, with the rules always shown above the card.*
 - [x] **6. Rules per level:** *Closed 2026-10-17 (Stage 1 hook): Level 1 adds rule 2 only; Level 2 adds duplicates and fixes (3, 4); rule 5 is folded into rule 2's card.*
 - [ ] **7. Stars:** 1★ at 30%, 2★ at 65%, 3★ at 88%. A careful player gets about 3★ and a first-timer about 2★. *Default: keep.*
 - [ ] **8. Automate question:** "Which rule would you turn into code first?" The correct answer is "trash repeated household IDs". The wrong answers are "trash households over 12 people" and "trash every typo". *Default: keep.*

@@ -4,6 +4,7 @@
     {
       "id": 1,
       "title": "Every field must be filled",
+      "chip": "Blank field → Trash",
       "body": "If a record is missing its sector, people count or water amount, trash it. You can't guess what isn't there.",
       "examples": [
         {
@@ -19,6 +20,7 @@
     {
       "id": 2,
       "title": "Numbers must make sense",
+      "chip": "People 1–15, water 5–200 L",
       "body": "People per household: 1 to 15. Water: 5 to 200 litres. Outside that range is trash. Big but inside, like 14 people? Keep.",
       "examples": [
         {
@@ -38,6 +40,7 @@
     {
       "id": 3,
       "title": "No duplicates",
+      "chip": "Same ID twice → Trash",
       "body": "An ID is a household's unique reference number. If the same ID shows up twice, trash the second one.",
       "examples": [
         {
@@ -49,6 +52,7 @@
     {
       "id": 4,
       "title": "Fix what's fixable",
+      "chip": "Typo or ml → Fix",
       "body": "Don't trash a record over a small slip. Correct typos, wrong units and lowercase letters instead.",
       "examples": [
         {
@@ -68,6 +72,7 @@
     {
       "id": 5,
       "title": "Outliers aren't errors",
+      "chip": "Big but possible → Keep",
       "body": "An outlier is a value far from the rest. If it's still possible, like a household of 14, keep it.",
       "examples": [
         {

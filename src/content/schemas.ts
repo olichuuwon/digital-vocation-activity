@@ -107,6 +107,8 @@ export const rulebookFileSchema = z.object({
       z.object({
         id: z.number().int().min(1).max(5),
         title: maxWords(6),
+        /** Always-on reminder in the strip above the Stage 1 card (no Rulebook trip needed). */
+        chip: maxWords(6),
         body: maxWords(25),
         examples: z.array(z.object({ before: z.string().min(1), after: z.string().min(1) })).max(3),
       }),

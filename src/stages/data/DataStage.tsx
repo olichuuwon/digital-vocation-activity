@@ -5,7 +5,7 @@ import { BriefingCard } from '../../components/BriefingCard';
 import { HandOff } from '../../components/HandOff';
 import { HintBox } from '../../components/HintBox';
 import { RealityCheck } from '../../components/RealityCheck';
-import { NewRuleCard, RulebookButton } from '../../components/Rulebook';
+import { NewRuleCard, RulebookButton, RuleStrip } from '../../components/Rulebook';
 import { StarResult } from '../../components/StarResult';
 import { Timer } from '../../components/Timer';
 import { toast } from '../../components/toastStore';
@@ -301,6 +301,7 @@ function CardPlay({ run, level, debug, onDone }: { run: GameState; level: CardLe
         )}
         <RulebookButton rulesInPlay={level.rules} newRuleId={level.newRules[level.newRules.length - 1]} onOpenChange={setRulebookOpen} />
       </div>
+      <RuleStrip rulesInPlay={level.rules} />
       {level.seconds !== null && (
         <Timer
           seconds={level.seconds}

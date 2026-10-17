@@ -32,7 +32,7 @@ No coding knowledge needed. No account, no app to install, and no personal data 
 
 ### The stages
 
-**📊 Stage 1: Clean the Data.** Swipe each relief request: right to keep, left to trash, up to fix. Swiping is optional, because every swipe also has a button. Every good card adds to your 💧 *people reached* counter. Open the 📘 Rulebook any time to see the rules. *Bonus on replay: Spot the Outlier.*
+**📊 Stage 1: Clean the Data.** Swipe each relief request: right to keep, left to trash, up to fix. Swiping is optional, because every swipe also has a button. Every good card adds to your 💧 *people reached* counter. The rules in play show as small reminders above each card, and the 📘 Rulebook has the full details. *Bonus on replay: Spot the Outlier.*
 
 **🧠 Stage 2: Teach the Machine to See.** Label pictures of relief supplies to train your AI. Then guess pictures hidden under tiles (guess early for more points) and audit your AI's answers. Being *sure* isn't the same as being *right*! The 📖 Field guide shows what each item looks like. *Bonus on replay: Draw the Box.*
 

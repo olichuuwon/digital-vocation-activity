@@ -12,7 +12,7 @@
     {
       "id": "data-l1",
       "count": 8,
-      "seconds": 45,
+      "seconds": 60,
       "rules": [1, 2],
       "newRules": [2],
       "allowFix": false,
@@ -20,8 +20,8 @@
     },
     {
       "id": "data-l2",
-      "count": 10,
-      "seconds": 60,
+      "count": 8,
+      "seconds": 90,
       "rules": [1, 2, 3, 4, 5],
       "newRules": [3, 4],
       "allowFix": true,

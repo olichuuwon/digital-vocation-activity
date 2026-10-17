@@ -29,6 +29,21 @@ function RuleItem({ rule, isNew }: { rule: Rule; isNew: boolean }) {
   );
 }
 
+/**
+ * Stage 1: the rules in play as small always-visible reminders above the card, so players sort
+ * instead of memorising (the Rulebook sheet still has the full text and examples).
+ */
+export function RuleStrip({ rulesInPlay }: { rulesInPlay: readonly number[] }) {
+  const rules = rulebook.rules.filter((r) => rulesInPlay.includes(r.id));
+  return (
+    <ul className={s.ruleStrip} aria-label={t.rulesInPlay} data-testid="rule-strip">
+      {rules.map((r) => (
+        <li key={r.id}>{r.chip}</li>
+      ))}
+    </ul>
+  );
+}
+
 /** The one new rule, shown as a card before a level (§4.1). */
 export function NewRuleCard({ ruleId }: { ruleId: number }) {
   const rule = rulebook.rules.find((r) => r.id === ruleId);

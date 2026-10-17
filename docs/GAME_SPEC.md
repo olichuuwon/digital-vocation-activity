@@ -199,15 +199,15 @@ A pinned "📘 Rulebook" button opens a bottom sheet. Show the **one new rule** 
 | Level | Mechanic | Rules in play | Size / time |
 |---|---|---|---|
 | Tutorial | Swipe 3 obvious cards with an animated hand hint | 1 | 3 cards, untimed |
-| L1 Keep or Trash | Swipe right = keep, left = trash (buttons also available) | 1–2 | 8 cards / 45s |
-| L2 Keep, Fix or Trash | Swipe up (or Fix button) opens a quick-fix picker with 2–3 options. New: duplicates and fixes | 1–5 | 10 cards / 60s |
+| L1 Keep or Trash | Swipe right = keep, left = trash (buttons also available) | 1–2 | 8 cards / 60s |
+| L2 Keep, Fix or Trash | Swipe up (or Fix button) opens a quick-fix picker with 2–3 options. New: duplicates and fixes | 1–5 | 8 cards / 90s |
 | Bonus L3 Spot the Outlier | Bar chart of 20 households; tap bars that are **errors** (not just unusual) | 2, 5 | 3 charts / 45s |
 
 - On an error, show a one-line toast naming the rule broken ("Rule 3: duplicate").
-- **Hook (2026-10-17):** the briefing goes straight into the tutorial, which opens on a clean card, so the first swipe is a win within seconds. A **💧 people reached** counter grows with every record correctly kept or fixed.
+- **Hook (2026-10-17):** the briefing goes straight into the tutorial, which opens on a clean card, so the first swipe is a win within seconds. A **💧 people reached** counter grows with every record correctly kept or fixed. A **rule strip** above the card shows the rules in play as short chips ("Blank field → Trash", "People 1–15, water 5–200 L"…), so nobody has to memorise them.
 
 ### 4.3 Reality Check: "Clean once, apply everywhere"
-Animation: the player's 18 hand-sorted cards shrink, then a counter shoots up to **2,000,000 records**. Text: *"You cleaned 18 by hand. Data scientists write each rule once as code, and a pipeline applies it to millions of rows in seconds."* The player then gets **one tap** to choose which rule to automate (3 options). The correct choice gives a bonus.
+Animation: the player's 16 hand-sorted cards shrink, then a counter shoots up to **2,000,000 records**. Text: *"You cleaned 16 by hand. Data scientists write each rule once as code, and a pipeline applies it to millions of rows in seconds."* The player then gets **one tap** to choose which rule to automate (3 options). The correct choice gives a bonus.
 
 ### 4.4 Content needed
 - `records.json`: ≥ 40 records (so replays vary), each with `valid | fixable | invalid`, the fix options, and the rule id. **`[FILL]` optional: local place or sector names.**
