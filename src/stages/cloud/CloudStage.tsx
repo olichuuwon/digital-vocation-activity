@@ -45,9 +45,6 @@ import { appQuality, diagnose } from './logic';
 import { stage4For, useStage4Progress, type EndPhase, type ReplayResult } from './progress';
 import { useSimLoop } from './useSimLoop';
 import s from './cloud.module.css';
-import { publish, useActions } from '../../net/group';
-import { sc } from '../support/content';
-import { BOOST, CONFIG, RESTART, ROLLBACK, S4C, S4M, S4R, configPatchSchema, podActionSchema, useCoop } from '../support/topics';
 
 type LevelId = 'cloud-manual' | 'cloud-configure' | 'cloud-replay';
 type Phase = 'briefing' | 'k8s' | 'intro' | 'play' | EndPhase;
@@ -82,7 +79,7 @@ function useTraffic(run: GameState): Traffic {
  */
 export default function CloudStage({ run, debug }: { run: GameState; debug: boolean }) {
   const stage = stageContent(4)!;
-  const levels = levelsFor(stage, run.mode);
+  const levels = levelsFor(stage);
   const levelId = (levels[run.levelIndex]?.id ?? 'cloud-manual') as LevelId;
   const saved = stage4For(run.startedAt);
   const isLast = levelId === 'cloud-replay';
@@ -395,27 +392,6 @@ function ManualPlay({ traffic, debug, onDone }: { traffic: Traffic; debug: boole
     speed: (relaxed ? 1 / RELAXED_FACTOR : 1) * debugSpeed(debug),
   });
   useClusterEvents(state, false);
-  // Group mode (§3.5.2): each support phone runs its servers' Boost and Restart buttons.
-  const coop = useCoop();
-  useEffect(() => {
-    if (!coop) return;
-    publish(S4M, {
-      pods: state.pods.map((p) => ({
-        id: p.id,
-        status: p.status,
-        cpu: Math.min(5, p.cpu),
-        boosted: p.boostTicks > 0,
-        cooling: p.boostCooldown > 0,
-      })),
-    });
-  }, [coop, state]);
-  useEffect(() => () => publish(S4M, null), []);
-  useActions((a) => {
-    const p = podActionSchema.safeParse(a.payload);
-    if (!p.success) return;
-    if (a.type === BOOST) act({ type: 'boost', pod: p.data.pod });
-    if (a.type === RESTART) act({ type: 'restart', pod: p.data.pod });
-  });
   const uptime = uptimeSoFar(state);
   const mult = Math.max(1, Math.round(state.last.demand / (BASE_RPS * traffic.scale)));
   const continueRef = useRef<HTMLButtonElement>(null);
@@ -435,18 +411,12 @@ function ManualPlay({ traffic, debug, onDone }: { traffic: Traffic; debug: boole
         <span>{fill(c.manual.traffic, { n: mult })}</span>
       </div>
       <Clock tick={state.tick} />
-      {!tutorialSeen && <TutorialOverlay gesture="tap" text={coop ? sc.main.askServersTutorial : c.tutorialHint} onDismiss={() => setTutorialSeen(true)} />}
-      {coop && (
-        <p className={s.help} data-testid="ask-servers">
-          <span aria-hidden="true">📣 </span>
-          {sc.main.askServers}
-        </p>
-      )}
+      {!tutorialSeen && <TutorialOverlay gesture="tap" text={c.tutorialHint} onDismiss={() => setTutorialSeen(true)} />}
       <ul className={s.servers} role="list">
         {[...state.pods]
           .sort((a, b) => a.id - b.id)
           .map((pod) => (
-            <ServerCard key={pod.id} pod={pod} act={act} buttons={!coop} />
+            <ServerCard key={pod.id} pod={pod} act={act} />
           ))}
       </ul>
       {state.done ? (
@@ -464,7 +434,7 @@ function ManualPlay({ traffic, debug, onDone }: { traffic: Traffic; debug: boole
   );
 }
 
-function ServerCard({ pod, act, buttons = true }: { pod: Pod; act: (a: Action) => void; buttons?: boolean }) {
+function ServerCard({ pod, act }: { pod: Pod; act: (a: Action) => void }) {
   const name = fill(c.manual.server, { n: pod.id + 1 });
   const busy = fill(c.manual.busy, { pct: pct(pod.cpu) });
   let label: string = c.manual.boost;
@@ -493,20 +463,16 @@ function ServerCard({ pod, act, buttons = true }: { pod: Pod; act: (a: Action) =
         {name}
         <span className={s.serverState}>{state}</span>
       </span>
-      {buttons ? (
-        <button
-          type="button"
-          className={s.act}
-          data-kind={kind}
-          aria-disabled={off || undefined}
-          aria-label={`${label}: ${name}`}
-          onClick={() => !off && act({ type: kind === 'restart' ? 'restart' : 'boost', pod: pod.id })}
-        >
-          {label}
-        </button>
-      ) : (
-        <span aria-hidden="true">{pod.status === 'crashed' ? '🆘' : ''}</span>
-      )}
+      <button
+        type="button"
+        className={s.act}
+        data-kind={kind}
+        aria-disabled={off || undefined}
+        aria-label={`${label}: ${name}`}
+        onClick={() => !off && act({ type: kind === 'restart' ? 'restart' : 'boost', pod: pod.id })}
+      >
+        {label}
+      </button>
       <PodBar pod={pod} />
     </li>
   );
@@ -611,35 +577,6 @@ function Configure({
     setConfigState((x) => normalizeConfig({ ...x, ...patch }));
   };
   const onOff = (v: boolean) => (v ? c.configure.on : c.configure.off);
-  // Group mode (§3.5.2): settings are split across support phones; everyone sees the budget.
-  const coop = useCoop();
-  useEffect(() => {
-    if (coop) publish(S4C, { config, cost, budget: traffic.budget });
-  }, [coop, config, cost, traffic.budget]);
-  useEffect(() => () => publish(S4C, null), []);
-  useActions((a) => {
-    if (a.type !== CONFIG) return;
-    const p = configPatchSchema.safeParse(a.payload);
-    if (!p.success) return;
-    const [key, value] = Object.entries(p.data)[0] ?? [];
-    if (key === undefined) return;
-    const labels: Record<string, string> = {
-      loadBalancer: c.configure.loadBalancer,
-      minPods: c.configure.minPods,
-      maxPods: c.configure.maxPods,
-      scaleUpCpu: c.configure.thresholdLabel,
-      selfHealing: c.configure.selfHealing,
-      rollingUpdate: c.configure.rolling,
-    };
-    const said = typeof value === 'boolean' ? onOff(value) : key === 'scaleUpCpu' ? `${pct(Number(value))}%` : String(value);
-    setConfig(p.data, labels[key] ?? key, said);
-  });
-  /** Co-op: the main phone shows the value; the support phones hold the control (§3.5.2). */
-  const ro = (text: string) => (
-    <strong className={s.roValue} data-testid="ro-value">
-      {text}
-    </strong>
-  );
   const hint = tweaks >= 2 ? 'answer' : tweaks >= 1 ? 'hint' : 'none';
   const answer = [
     `${c.configure.loadBalancer}, ${c.configure.selfHealing}, ${c.configure.rolling}: ${c.configure.on}`,
@@ -666,17 +603,11 @@ function Configure({
         </span>
       </div>
       <HintBox level={hint} hint={c.hint} answer={answer} />
-      {coop && (
-        <p className={s.help} data-testid="ask-config">
-          <span aria-hidden="true">📣 </span>
-          {sc.main.askConfig}
-        </p>
-      )}
       <ul className={s.settings} role="list">
         <li className={s.setting}>
           <div className={s.settingHead}>
             <span id="cfg-lb">{c.configure.loadBalancer}</span>
-            {coop ? ro(onOff(config.loadBalancer)) : <Toggle labelledBy="cfg-lb" describedBy="cfg-lb-help" value={config.loadBalancer} onChange={(v) => setConfig({ loadBalancer: v }, c.configure.loadBalancer, onOff(v))} />}
+            <Toggle labelledBy="cfg-lb" describedBy="cfg-lb-help" value={config.loadBalancer} onChange={(v) => setConfig({ loadBalancer: v }, c.configure.loadBalancer, onOff(v))} />
           </div>
           <p className={s.help} id="cfg-lb-help">
             {c.configure.loadBalancerHelp}
@@ -685,8 +616,7 @@ function Configure({
         <li className={s.setting}>
           <div className={s.settingHead}>
             <span id="cfg-min">{c.configure.minPods}</span>
-            {coop ? ro(String(config.minPods)) : (
-            <Stepper
+                        <Stepper
               label={c.configure.minPods}
               labelledBy="cfg-min"
               describedBy="cfg-pods-help"
@@ -695,12 +625,10 @@ function Configure({
               max={PODS_MAX}
               onChange={(v) => setConfig({ minPods: v, maxPods: Math.max(v, config.maxPods) }, c.configure.minPods, String(v))}
             />
-            )}
           </div>
           <div className={s.settingHead}>
             <span id="cfg-max">{c.configure.maxPods}</span>
-            {coop ? ro(String(config.maxPods)) : (
-            <Stepper
+                        <Stepper
               label={c.configure.maxPods}
               labelledBy="cfg-max"
               describedBy="cfg-pods-help"
@@ -709,7 +637,6 @@ function Configure({
               max={PODS_MAX}
               onChange={(v) => setConfig({ maxPods: v, minPods: Math.min(v, config.minPods) }, c.configure.maxPods, String(v))}
             />
-            )}
           </div>
           <p className={s.help} id="cfg-pods-help">
             {c.configure.podsHelp}
@@ -717,12 +644,11 @@ function Configure({
         </li>
         <li className={s.setting}>
           <div className={s.settingHead}>
-            <label id="cfg-th" htmlFor={coop ? undefined : 'threshold'}>
+            <label id="cfg-th" htmlFor="threshold">
               {c.configure.thresholdLabel}
             </label>
             {/* Buttons as well as the slider: no dragging needed (§10). */}
-            {coop ? ro(`${thresholdPct}%`) : (
-            <Stepper
+                        <Stepper
               label={c.configure.thresholdLabel}
               labelledBy="cfg-th"
               describedBy="cfg-th-help"
@@ -733,9 +659,7 @@ function Configure({
               format={(v) => `${v}%`}
               onChange={(v) => setConfig({ scaleUpCpu: v / 100 }, c.configure.thresholdLabel, `${v}%`)}
             />
-            )}
           </div>
-          {!coop && (
           <input
             id="threshold"
             className={s.range}
@@ -748,7 +672,6 @@ function Configure({
             aria-describedby="cfg-th-help"
             onChange={(e) => setConfig({ scaleUpCpu: Number(e.target.value) / 100 }, c.configure.thresholdLabel, `${e.target.value}%`)}
           />
-          )}
           <p className={s.help} id="cfg-th-help">
             {c.configure.thresholdHelp}
           </p>
@@ -756,7 +679,7 @@ function Configure({
         <li className={s.setting}>
           <div className={s.settingHead}>
             <span id="cfg-heal">{c.configure.selfHealing}</span>
-            {coop ? ro(onOff(config.selfHealing)) : <Toggle labelledBy="cfg-heal" describedBy="cfg-heal-help" value={config.selfHealing} onChange={(v) => setConfig({ selfHealing: v }, c.configure.selfHealing, onOff(v))} />}
+            <Toggle labelledBy="cfg-heal" describedBy="cfg-heal-help" value={config.selfHealing} onChange={(v) => setConfig({ selfHealing: v }, c.configure.selfHealing, onOff(v))} />
           </div>
           <p className={s.help} id="cfg-heal-help">
             {c.configure.selfHealingHelp}
@@ -765,7 +688,7 @@ function Configure({
         <li className={s.setting}>
           <div className={s.settingHead}>
             <span id="cfg-roll">{c.configure.rolling}</span>
-            {coop ? ro(onOff(config.rollingUpdate)) : <Toggle labelledBy="cfg-roll" describedBy="cfg-roll-help" value={config.rollingUpdate} onChange={(v) => setConfig({ rollingUpdate: v }, c.configure.rolling, onOff(v))} />}
+            <Toggle labelledBy="cfg-roll" describedBy="cfg-roll-help" value={config.rollingUpdate} onChange={(v) => setConfig({ rollingUpdate: v }, c.configure.rolling, onOff(v))} />
           </div>
           <p className={s.help} id="cfg-roll-help">
             {c.configure.rollingHelp}
@@ -863,26 +786,6 @@ function LiveReplay({
   useClusterEvents(state, true, config.selfHealing);
   const uptime = uptimeSoFar(state);
   const cost = costPerMin(state);
-  // Group mode: supports watch the storm with the main phone and can Restart or Roll back too.
-  const coop = useCoop();
-  const s4r = JSON.stringify({
-    uptime: Math.min(1, Math.max(0, Math.floor(uptime * 1000) / 1000)),
-    pods: Math.min(20, state.pods.length),
-    cost: Math.min(1000, Math.round(cost)),
-    budget: traffic.budget,
-    crashed: state.pods.filter((p) => p.status === 'crashed').map((p) => p.id).slice(0, 20),
-    badDeploy: state.deploy === 'bad' && !state.done,
-  });
-  useEffect(() => {
-    if (coop) publish(S4R, JSON.parse(s4r));
-  }, [coop, s4r]);
-  useEffect(() => () => publish(S4R, null), []);
-  useActions((a) => {
-    if (a.type === ROLLBACK && state.deploy === 'bad' && !state.done) act({ type: 'rollback' });
-    if (a.type !== RESTART) return;
-    const p = podActionSchema.safeParse(a.payload);
-    if (p.success && state.pods.some((x) => x.id === p.data.pod && x.status === 'crashed')) act({ type: 'restart', pod: p.data.pod });
-  });
   useEffect(() => {
     if (!state.done) return;
     const sum = summarize(state);

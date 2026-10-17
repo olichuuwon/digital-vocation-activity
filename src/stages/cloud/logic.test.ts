@@ -11,7 +11,7 @@ const run = (c: Partial<ClusterConfig>) => {
 
 describe('appQuality', () => {
   it('is 0 for a fresh run and 1 for a perfect one', () => {
-    const r = newRun('booth');
+    const r = newRun();
     expect(appQuality(r.scores)).toBe(0);
     const s = { ...r.scores, data: { ...r.scores.data, accuracy: 1 }, ai: { ...r.scores.ai, labelAccuracy: 1 }, logic: { ...r.scores.logic, puzzlesSolved: 3 } };
     expect(appQuality(s)).toBe(1);

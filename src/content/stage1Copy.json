@@ -1,6 +1,6 @@
 {
   "levelIntro": {
-    "data-tutorial": "Swipe right to keep a record, left to trash it. Or tap the buttons. Follow the hand first.",
+    "data-tutorial": "Good record? Swipe right. Broken? Swipe left. Or tap the buttons.",
     "data-l1": "Keep good records and trash broken ones. Not sure? Open the rulebook. Beat the clock!",
     "data-l2": "New move: swipe up or tap Fix to correct small slips. Only trash what can't be saved.",
     "data-l3": "Tap the bars that are errors. Unusual isn't wrong, so leave possible values alone."
@@ -41,6 +41,7 @@
   "hint": "Stuck? Check rule {rule}: {short}.",
   "answer": "This one's a {action}. Rule {rule} decides it.",
   "timeUp": "Time's up! Let's see how you did.",
+  "counter": "{n} people reached",
   "outlier": {
     "instruction": "Tap only the bars that are impossible. Big but possible values are outliers, not errors. Then tap Done.",
     "chartPeople": "People per household",
@@ -71,6 +72,7 @@
     "heading0": "Messy data is tricky. Have another go!",
     "accuracy": "Accuracy {pct}%",
     "fixed": "{n} records fixed",
+    "reached": "{n} people will get clean water",
     "automated": "Automation bonus earned"
   },
   "learned": "You cleaned {count} records by hand. Write a rule once as code, and a pipeline (an automatic chain of steps) cleans millions.",

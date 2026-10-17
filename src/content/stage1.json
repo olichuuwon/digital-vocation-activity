@@ -11,19 +11,19 @@
     },
     {
       "id": "data-l1",
-      "count": 10,
-      "seconds": 40,
-      "rules": [1, 2, 3],
-      "newRules": [2, 3],
+      "count": 8,
+      "seconds": 45,
+      "rules": [1, 2],
+      "newRules": [2],
       "allowFix": false,
-      "mix": { "valid": 4, "fixable": 0, "invalid": 4 }
+      "mix": { "valid": 4, "fixable": 0, "invalid": 3 }
     },
     {
       "id": "data-l2",
       "count": 10,
       "seconds": 60,
       "rules": [1, 2, 3, 4, 5],
-      "newRules": [4, 5],
+      "newRules": [3, 4],
       "allowFix": true,
       "mix": { "valid": 3, "fixable": 3, "invalid": 2 }
     }

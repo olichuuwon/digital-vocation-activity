@@ -89,28 +89,3 @@ test('Stage 3: blocks can be selected, moved and removed; the limit blocks extra
   await page.getByTestId('remove-block').click();
   await expect(page.getByTestId('block-count')).toContainText('1');
 });
-
-test('Stage 3 full mode: Debug It swaps a block, and Ask the AI levels run', async ({ page }) => {
-  test.setTimeout(150_000); // six levels of animated truck runs
-  await page.goto('/?debug=1&mode=full&stage=3');
-  await page.getByRole('button', { name: 'Start building' }).click();
-  await page.getByRole('button', { name: 'Start', exact: true }).click();
-  await page.getByRole('button', { name: 'Got it' }).click();
-  await solveWithAnswer(page);
-  for (let i = 0; i < 3; i++) {
-    await page.getByRole('button', { name: 'Start', exact: true }).click();
-    await solveWithAnswer(page);
-  }
-  await expect(page.getByRole('heading', { name: 'Debug It', level: 1 })).toBeVisible();
-  await page.getByRole('button', { name: 'Start', exact: true }).click();
-  await expect(page.getByTestId('block-count')).toContainText('9');
-  const program = page.getByTestId('program');
-  await program.locator('[data-op]').nth(2).click();
-  await block(page, 'Turn left').click();
-  await expect(page.getByText('Swaps left: 1')).toBeVisible();
-  await solveWithAnswer(page);
-  await expect(page.getByRole('heading', { name: 'Ask the AI', level: 1 })).toBeVisible();
-  await page.getByRole('button', { name: 'Start', exact: true }).click();
-  await solveWithAnswer(page);
-  await expect(page.getByRole('heading', { name: 'That was programming' })).toBeVisible();
-});

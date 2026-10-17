@@ -20,10 +20,13 @@ async function playCards(page: Page) {
   }
 }
 
-test('Stage 1 booth: perfect play earns 3 stars and hands off to Stage 2', async ({ page }) => {
+test('Stage 1: perfect play earns 3 stars and hands off to Stage 2', async ({ page }) => {
   await page.goto('/?debug=1&stage=1');
   await page.getByRole('button', { name: 'Start sorting' }).click();
-  for (const level of ['Tutorial', 'Keep or Trash', 'Keep, Fix or Trash']) {
+  // The tutorial starts straight from the briefing, opening on a clean card.
+  await expect(page.getByTestId('record-card')).toHaveAttribute('data-status', 'valid');
+  await playCards(page);
+  for (const level of ['Keep or Trash', 'Keep, Fix or Trash']) {
     await expect(page.getByRole('heading', { name: level, level: 1 })).toBeVisible();
     await page.getByRole('button', { name: 'Start', exact: true }).click();
     await playCards(page);
@@ -44,7 +47,6 @@ test('Stage 1 booth: perfect play earns 3 stars and hands off to Stage 2', async
 test('Stage 1: every card can be decided with buttons only, and wrong answers lead to a hint', async ({ page }) => {
   await page.goto('/?debug=1&stage=1');
   await page.getByRole('button', { name: 'Start sorting' }).click();
-  await page.getByRole('button', { name: 'Start', exact: true }).click();
   await playCards(page); // tutorial
   await page.getByRole('button', { name: 'Start', exact: true }).click();
   // Answer the first two cards wrongly on purpose.
@@ -55,23 +57,11 @@ test('Stage 1: every card can be decided with buttons only, and wrong answers le
   await expect(page.getByTestId('hint')).toContainText(/Hint/);
 });
 
-test('Stage 1 full mode includes the Spot the Outlier bonus', async ({ page }) => {
-  await page.goto('/?debug=1&mode=full&stage=1');
-  await page.getByRole('button', { name: 'Start sorting' }).click();
-  for (let i = 0; i < 3; i++) {
-    await page.getByRole('button', { name: 'Start', exact: true }).click();
-    await playCards(page);
-  }
-  await expect(page.getByRole('heading', { name: 'Spot the Outlier', level: 1 })).toBeVisible();
-  await page.getByRole('button', { name: 'Start', exact: true }).click();
-  for (let i = 0; i < 3; i++) await page.getByRole('button', { name: 'Done' }).click();
-  await expect(page.getByRole('heading', { name: 'Clean once, apply everywhere' })).toBeVisible();
-});
-
 test('Stage 1: reloading after the last level resumes at the same step, not a replay', async ({ page }) => {
   await page.goto('/?debug=1&stage=1');
   await page.getByRole('button', { name: 'Start sorting' }).click();
-  for (let i = 0; i < 3; i++) {
+  await playCards(page); // tutorial
+  for (let i = 0; i < 2; i++) {
     await page.getByRole('button', { name: 'Start', exact: true }).click();
     await playCards(page);
   }

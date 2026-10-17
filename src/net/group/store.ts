@@ -3,7 +3,6 @@ import { create } from 'zustand';
 import { parseParams } from '../../app/params';
 import { useGame } from '../../state/store';
 import { safeStorage } from '../../state/storage';
-import type { Mode } from '../../state/types';
 import { supabaseConfig } from '../supabase';
 import { rememberOwnRun } from '../ownRuns';
 import { newUuid } from '../uuid';
@@ -175,7 +174,7 @@ function startFakePeers() {
 // ---------------------------------------------------------------------------------------
 
 export const groupActions = {
-  create(opts: { name: string; mode: Mode; nick: string }) {
+  create(opts: { name: string; nick: string }) {
     const e = getEngine();
     if (!e) return;
     e.create(opts);

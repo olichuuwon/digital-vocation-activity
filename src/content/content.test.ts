@@ -22,11 +22,10 @@ describe('content', () => {
     expect(new Set(ids).size).toBe(ids.length);
   });
 
-  it('booth mode drops bonus levels only', () => {
+  it('plays the non-bonus levels of every stage', () => {
     for (const s of stages) {
-      expect(levelsFor(s, 'full')).toHaveLength(s.levels.length);
-      expect(levelsFor(s, 'booth').every((l) => !l.bonus)).toBe(true);
-      expect(levelsFor(s, 'booth').length).toBeGreaterThan(0);
+      expect(levelsFor(s).every((l) => !l.bonus)).toBe(true);
+      expect(levelsFor(s).length).toBeGreaterThan(0);
     }
   });
 });

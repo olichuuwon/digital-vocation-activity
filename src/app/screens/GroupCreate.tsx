@@ -1,9 +1,7 @@
 import { useState, type FormEvent } from 'react';
-import { copy, fill } from '../../content';
 import { groupCopy } from '../../content/groupSchema';
 import { groupActions } from '../../net/group';
 import { checkGroupName, checkNickname, generateNames, MAX_GROUP_NAME, MAX_NICKNAME, tidy, type TextProblem } from '../../net/group/moderation';
-import type { Mode } from '../../state/types';
 import { useScreenHeading } from '../screenFocus';
 import ui from '../ui.module.css';
 import s from './Group.module.css';
@@ -14,14 +12,13 @@ const e = groupCopy.errors;
 const nameError: Record<TextProblem, string> = { empty: e.nameEmpty, tooLong: e.nameTooLong, digits: e.nameDigits, blocked: e.nameBlocked };
 const nickError: Record<TextProblem, string> = { empty: e.nickEmpty, tooLong: e.nickTooLong, digits: e.nickDigits, blocked: e.nickBlocked };
 
-/** Create a group (§3.5.1): pick a generated name or type one, nickname, run length. */
-export function GroupCreate({ facilitatorMode, onBack }: { facilitatorMode: Mode | null; onBack: () => void }) {
+/** Create a team (§3.5.1): pick a generated name or type one, and a nickname. */
+export function GroupCreate({ onBack }: { onBack: () => void }) {
   const headingRef = useScreenHeading<HTMLHeadingElement>(t.heading);
   const [names, setNames] = useState(() => generateNames(3));
   const [picked, setPicked] = useState(0);
   const [custom, setCustom] = useState<string | null>(null);
   const [nick, setNick] = useState('');
-  const [mode, setMode] = useState<Mode>(facilitatorMode ?? 'booth');
   const [tried, setTried] = useState(false);
 
   const name = custom ?? names[picked] ?? '';
@@ -35,10 +32,8 @@ export function GroupCreate({ facilitatorMode, onBack }: { facilitatorMode: Mode
       document.querySelector<HTMLInputElement>(nameProblem && custom !== null ? '#group-name' : '#group-nick')?.focus();
       return;
     }
-    groupActions.create({ name: tidy(name), mode: facilitatorMode ?? mode, nick: tidy(nick) });
+    groupActions.create({ name: tidy(name), nick: tidy(nick) });
   };
-
-  const lengthName = (m: Mode) => (m === 'booth' ? copy.length.booth : copy.length.full);
 
   return (
     <main className={ui.screen}>
@@ -138,24 +133,6 @@ export function GroupCreate({ facilitatorMode, onBack }: { facilitatorMode: Mode
             {tried && nickProblem ? nickError[nickProblem] : ''}
           </p>
         </div>
-
-        {facilitatorMode ? (
-          <p className={ui.muted}>{fill(t.lengthSet, { length: lengthName(facilitatorMode) })}</p>
-        ) : (
-          <fieldset className={s.field}>
-            <legend className={s.label}>{t.lengthLabel}</legend>
-            <div className={s.options}>
-              {(['booth', 'full'] as const).map((m) => (
-                <label key={m} className={s.option}>
-                  <input type="radio" name="group-length" checked={mode === m} onChange={() => setMode(m)} />
-                  <span>
-                    {lengthName(m)} <span className={ui.detail}>{m === 'booth' ? copy.length.boothDetail : copy.length.fullDetail}</span>
-                  </span>
-                </label>
-              ))}
-            </div>
-          </fieldset>
-        )}
 
         <div className={ui.actions}>
           <button type="submit" className={`${ui.btn} ${ui.primary}`}>

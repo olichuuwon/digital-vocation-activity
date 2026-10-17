@@ -1,6 +1,6 @@
 import type { Stage } from '../../state/types';
 
-// Main-phone rotation and support-card dealing (spec §3.5.2). Pure functions.
+// Whose turn it is to play each stage (spec §3.5.2). Pure functions.
 
 /**
  * Index in the rotation of the main phone for a stage. Player 1 is the group's IC, the team
@@ -32,30 +32,9 @@ function after(rotation: readonly string[], fromId: string | null): string[] {
   return [...rotation.slice(i + 1), ...rotation.slice(0, Math.max(0, i))].filter((id) => id !== fromId);
 }
 
-/**
- * Support phones in rotation order starting after the main phone, skipping members who have
- * gone (disconnected for more than 30 s, §3.5.6). Their cards are re-dealt to the rest.
- */
-export function supportsFor(rotation: readonly string[], mainId: string | null, isGone: (id: string) => boolean = () => false): string[] {
-  return after(rotation, mainId).filter((id) => !isGone(id));
-}
-
 /** Who takes over when the main phone drops: the next connected member in the rotation. */
 export function nextMainCandidate(rotation: readonly string[], mainId: string, isAlive: (id: string) => boolean): string | null {
   return after(rotation, mainId).find(isAlive) ?? null;
-}
-
-/**
- * Support cards for one phone (§3.5.2). One support gets every card (shown as tabs). With 2–3
- * supports, cards are dealt round-robin, one per phone; if there are more phones than cards,
- * cards are shared so every support phone still has something to do.
- */
-export function dealCards<T>(cardIds: readonly T[], supportCount: number, mySupportIndex: number | null): T[] {
-  if (mySupportIndex === null || supportCount <= 0 || cardIds.length === 0) return [];
-  if (supportCount === 1) return [...cardIds];
-  const i = mySupportIndex % supportCount;
-  if (cardIds.length <= supportCount) return [cardIds[i % cardIds.length]!];
-  return cardIds.filter((_, k) => k % supportCount === i);
 }
 
 /** Fisher–Yates shuffle (lobby "Shuffle order"). */

@@ -25,10 +25,7 @@ import { blockCount, blocksChanged, flatten, getBlock } from './program';
 import { blockText, ICON } from './blocks';
 import { ProgramEditor } from './ProgramEditor';
 import { stage3For, useStage3Progress, type EndPhase } from './progress';
-import { sc } from '../support/content';
 import s from './logic.module.css';
-import { publish } from '../../net/group';
-import { S3, useCoop } from '../support/topics';
 
 type Phase = 'briefing' | 'intro' | 'play' | EndPhase;
 
@@ -43,7 +40,7 @@ const STEP_MS = 380;
  */
 export default function LogicStage({ run, debug }: { run: GameState; debug: boolean }) {
   const stage = stageContent(3)!;
-  const levels = levelsFor(stage, run.mode);
+  const levels = levelsFor(stage);
   const levelId = (levels[run.levelIndex]?.id ?? 'logic-tutorial') as LogicLevelId;
   const isLast = run.levelIndex === levels.length - 1;
   const saved = stage3For(run.startedAt);
@@ -137,7 +134,7 @@ export default function LogicStage({ run, debug }: { run: GameState; debug: bool
 function testMaps(programs: Record<string, Program>, run: GameState): { passed: number; failed: number } {
   const rng = mulberry32(run.startedAt);
   const l3 = levelById('logic-l3');
-  const l5Program = run.mode === 'full' ? programs['logic-l5'] : undefined;
+  const l5Program: Program | undefined = undefined;
   if (!l5Program) return robustness(l3, programs['logic-l3'] ?? l3.solution, stage3.testMaps, rng, 1);
   const half = Math.floor(stage3.testMaps / 2);
   const a = robustness(l3, programs['logic-l3'] ?? l3.solution, half, rng, 1);
@@ -209,13 +206,12 @@ type Assist = 'none' | 'hint' | 'answer';
 const truckText = (tr: { x: number; y: number; dir: 'N' | 'E' | 'S' | 'W' }) =>
   fill(c.map.truck, { row: tr.y + 1, col: tr.x + 1, dir: c.map.facing[tr.dir] });
 
-/** `coop`: house needs live on a support phone, so the map (and its description) hides them. */
-function tileName(ch: string, flood: string | null, coop = false): string {
+function tileName(ch: string, flood: string | null): string {
   if (ch === '.') return c.map.grass;
   if (ch === '#') return c.map.road;
   if (ch === 'D') return c.map.depot;
   if (ch === 'H') return c.map.house;
-  if (ch === 'W' || ch === 'F' || ch === 'M') return coop ? c.map.house : `${c.map.house}, ${c.map.needs[ch]}`;
+  if (ch === 'W' || ch === 'F' || ch === 'M') return `${c.map.house}, ${c.map.needs[ch]}`;
   if (ch === '~') return c.map.flooded;
   return flood === ch ? c.map.flooded : c.map.maybeFlooded;
 }
@@ -291,41 +287,6 @@ function PlayLevel({
     announce(text);
   };
 
-  // The flood for the next run is known before Run, so a support phone can scout it (§3.5.2).
-  const upcomingFlood =
-    forcedFlood ??
-    (level.floodGroups.length
-      ? level.floodGroups[Math.floor(mulberry32(seed + attempts * 131)() * level.floodGroups.length)]!
-      : null);
-  const coop = useCoop();
-  const [lastFail, setLastFail] = useState<RunResult | null>(null);
-  useEffect(() => {
-    if (!coop) return;
-    const where = (p: { x: number; y: number }) => fill(c.a11y.tile, { row: p.y + 1, col: p.x + 1 });
-    const floodTiles = (g: string) => (map.floodTiles[g as 'a' | 'b' | 'c'] ?? []).map(where);
-    const failSteps = lastFail
-      ? lastFail.trace
-          .slice(0, (lastFail.failAt ?? lastFail.trace.length - 1) + 1)
-          .filter((st) => st.event !== 'loop' && st.event !== 'check')
-          .map((st) => {
-            const b = getBlock(program, st.addr);
-            return b ? blockText(b) : st.op;
-          })
-          .slice(-30)
-      : null;
-    const failAt = lastFail?.failAt !== undefined ? lastFail.trace[lastFail.failAt] : undefined;
-    const failBlock = failAt ? getBlock(program, failAt.addr) : undefined;
-    publish(S3, {
-      levelId: level.id,
-      flooded: upcomingFlood ? floodTiles(upcomingFlood) : [],
-      dry: level.floodGroups.filter((g) => g !== upcomingFlood).flatMap(floodTiles),
-      needs: map.houses.filter((h) => h.need !== 'any').map((h) => ({ house: where(h), item: c.map.needs[h.need as 'W' | 'F' | 'M'] })),
-      houses: map.houses.map(where),
-      debug: failSteps ? { steps: failSteps, stoppedAt: failBlock ? blockText(failBlock) : null } : null,
-    });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [coop, upcomingFlood, lastFail, level.id]);
-  useEffect(() => () => publish(S3, null), []);
 
   const start = (auto: boolean) => {
     if (solved) return;
@@ -360,7 +321,6 @@ function PlayLevel({
     const counts = !isDebug || failKey === lastFailKey.current;
     lastFailKey.current = failKey;
     if (counts) setFailedRuns((f) => f + 1);
-    setLastFail(result);
     const why = result.reason === 'tooLong' ? 'unfinished' : (result.reason as Exclude<RunResult['reason'], 'success' | 'tooLong'>);
     // New help is spoken with the failure (HintBox is quiet), so one live region speaks at a time.
     const help = nextAssist(failedRuns + (counts ? 1 : 0));
@@ -426,7 +386,7 @@ function PlayLevel({
   })}`;
   const describeTile = (ch: string, x: number, y: number) => {
     const key = `${x},${y}`;
-    let name = tileName(ch, flood, coop);
+    let name = tileName(ch, flood);
     if (/[HWFM]/.test(ch) && delivered.has(key)) name = wrong.has(key) ? c.a11y.wrongSupply : c.map.delivered;
     if (truck.x === x && truck.y === y) name += ` (${fill(c.a11y.truckHere, { dir: c.map.facing[truck.dir] })})`;
     return name;
@@ -458,7 +418,6 @@ function PlayLevel({
           crashed={!!failStep}
           label={mapLabel}
           describedBy="map-rows"
-          hideNeeds={coop}
         />
       </div>
       <ol className="visually-hidden" id="map-rows">
@@ -468,12 +427,6 @@ function PlayLevel({
       </ol>
       {!tutorialSeen && (
         <TutorialOverlay gesture="tap" text={c.editor.tutorialHint} onDismiss={() => setTutorialSeen(true)} />
-      )}
-      {coop && (
-        <p className={s.askTeam} data-testid="ask-scout">
-          <span aria-hidden="true">📣 </span>
-          {sc.main.askScout}
-        </p>
       )}
       <HintBox quiet level={assist} hint={c.levelHint[level.id]} answer={answerShown ? c.answer : c.answerReady} />
       <ProgramEditor

@@ -31,6 +31,7 @@ import {
   outlierBonus,
   outlierChartScore,
   outlierHintLevel,
+  peopleReached,
   stageScore,
   streakActive,
   toDataScores,
@@ -427,6 +428,16 @@ describe('scoring', () => {
   const valid = pick((r) => r.status === 'valid' && r.rule === null);
   const right = fixable.fix?.correct ?? 0;
 
+  it('peopleReached counts households correctly kept or fixed, nothing else', () => {
+    const invalid = pick((r) => r.status === 'invalid' && r.people !== null);
+    const byId = new Map([valid, fixable, invalid].map((r) => [r.id, r]));
+    const res = (r: typeof valid, a: Action) => ({ ...judge(r, a, l2), recordId: r.id, assist: 'none' as const, points: 0 });
+    expect(peopleReached([res(valid, 'keep'), res(fixable, { fix: right }), res(invalid, 'trash')], byId)).toBe(
+      valid.people! + fixable.people!,
+    );
+    expect(peopleReached([res(valid, 'trash'), res(invalid, 'keep'), res(fixable, 'keep')], byId)).toBe(0);
+  });
+
   it('cardPoints: right 1 / hinted 0.75 / answered 0.5; wrong fix 0.5; keep/trash on fixable 0; fix on non-fixable 0', () => {
     expect(cardPoints(judge(valid, 'keep', l2), 'none')).toBe(1);
     expect(cardPoints(judge(valid, 'keep', l2), 'hint')).toBe(0.75);
@@ -586,10 +597,13 @@ describe.skipIf(!recordsJson)('content: records.json cross-check (skipped: src/c
           expect(deck.filter((r) => r.status === st).length, tag).toBeGreaterThanOrEqual(level.mix[st]);
         }
         expect(deck.every((r) => r.rule === null || level.rules.includes(r.rule)), tag).toBe(true);
-        if (level.id === 'data-tutorial') expect(deck.every((r) => r.tutorial), tag).toBe(true);
+        if (level.id === 'data-tutorial') {
+          expect(deck.every((r) => r.tutorial), tag).toBe(true);
+          expect(deck[0]!.status, tag).toBe('valid');
+        }
         if (!level.allowFix) expect(deck.some((r) => r.status === 'fixable'), tag).toBe(false);
         if (!level.rules.includes(4)) expect(deck.some((r) => r.water?.unit === 'ml'), tag).toBe(false);
-        if (level.id === 'data-l1' || level.id === 'data-l2') {
+        if (level.id !== 'data-tutorial' && level.rules.includes(3)) {
           expect(deck.some((r) => r.rule === 3), tag).toBe(true);
           deck.forEach((r, i) => {
             if (r.duplicateOf) expect(i - deck.findIndex((o) => o.id === r.duplicateOf), tag).toBeGreaterThanOrEqual(2);

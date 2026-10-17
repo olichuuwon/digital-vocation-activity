@@ -3,12 +3,12 @@ import { finaleFileSchema } from '../../content/finaleSchema';
 import { newRun } from '../../state/store';
 import type { GameState } from '../../state/types';
 import { mulberry32 } from '../data/logic';
-import { allHandsDone, dealIncidents, withAllHands, liveOpsFamilies, matchRanking, pipeline, rankFor, routeResult } from './logic';
+import { dealIncidents, liveOpsFamilies, matchRanking, pipeline, rankFor, routeResult } from './logic';
 
 const finale = finaleFileSchema.parse(finaleJson);
 
 function runWith(p: Partial<GameState['scores']>): GameState {
-  const r = newRun('booth');
+  const r = newRun();
   return { ...r, scores: { ...r.scores, ...p } };
 }
 
@@ -24,7 +24,7 @@ describe('finale content', () => {
 
 describe('pipeline (§3.2)', () => {
   it('a fresh run sits at the formula floor and a perfect run near 1200', () => {
-    expect(pipeline(newRun('booth')).families).toBe(Math.round(1200 * (0.15 + 0.85 * 0.5 * 1 * 0.25)));
+    expect(pipeline(newRun()).families).toBe(Math.round(1200 * (0.15 + 0.85 * 0.5 * 1 * 0.25)));
     const perfect = runWith({
       data: { accuracy: 1, fixedCount: 3, ruleChosen: true },
       ai: { labelAccuracy: 1, earlyGuessBonus: 1, auditCatch: 1, modelAccuracy: 0.98 },
@@ -73,23 +73,5 @@ describe('matchRanking (§8.3)', () => {
     const m = matchRanking(r);
     expect(m).toHaveLength(4);
     expect(m[0]!.team).toBe('cloud');
-  });
-});
-
-describe('all hands (group mode)', () => {
-  const dealt = Array.from({ length: 8 }, (_, i) => ({ id: `inc0${i}`, team: 'data' as const }));
-  it('inserts the calls spread out, never first, keeping every incident in order', () => {
-    const items = withAllHands(dealt, ['ah1', 'ah2', 'ah3'], 2);
-    expect(items).toHaveLength(10);
-    const at = items.flatMap((x, i) => (x.team === null ? [i] : []));
-    expect(at).toEqual([3, 7]);
-    expect(items.filter((x) => x.team !== null).map((x) => x.id)).toEqual(dealt.map((x) => x.id));
-    expect(withAllHands(dealt, ['ah1'], 0)).toHaveLength(8);
-    expect(withAllHands(dealt.slice(0, 1), ['ah1', 'ah2'], 2)[0]!.team).not.toBeNull();
-  });
-  it('is done only when every needed member tapped', () => {
-    expect(allHandsDone(['a', 'b'], ['a', 'b'])).toBe(true);
-    expect(allHandsDone(['a'], ['a', 'b'])).toBe(false);
-    expect(allHandsDone([], [])).toBe(false);
   });
 });

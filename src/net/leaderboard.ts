@@ -40,7 +40,11 @@ export function classifyError(err: { code?: string | null; message?: string | nu
 const isoDate = z.string().regex(/^\d{4}-\d{2}-\d{2}$/);
 const groupSize = z.number().int().min(2).max(4);
 const families = z.number().int().min(0).max(1200);
-const mode = z.enum(['booth', 'full']);
+/**
+ * The database still has a `mode` column (booth | full) from before Solo/Team (2026-10-17).
+ * There is one run length now; it's sent as 'booth' (8-min minimum duration) and not read back.
+ */
+const DB_MODE = 'booth';
 
 const boardRowSchema = z
   .object({
@@ -48,7 +52,6 @@ const boardRowSchema = z
     id: z.number().int().positive(),
     group_name: z.string().min(1).max(40),
     group_size: groupSize,
-    mode,
     families,
     finished_at: z.string().min(1),
     board_date: isoDate,
@@ -58,7 +61,6 @@ const boardRowSchema = z
     id: r.id,
     groupName: r.group_name,
     groupSize: r.group_size,
-    mode: r.mode,
     families: r.families,
     finishedAt: r.finished_at,
     boardDate: r.board_date,
@@ -78,7 +80,6 @@ const hostRowSchema = z
     id: z.number().int().positive(),
     group_name: z.string().min(1).max(40),
     group_size: groupSize,
-    mode,
     families,
     finished_at: z.string().min(1),
     hidden: z.boolean(),
@@ -87,7 +88,6 @@ const hostRowSchema = z
     id: r.id,
     groupName: r.group_name,
     groupSize: r.group_size,
-    mode: r.mode,
     families: r.families,
     finishedAt: r.finished_at,
     hidden: r.hidden,
@@ -105,7 +105,6 @@ export const runPayloadSchema = z.object({
     .transform((s) => s.trim().replace(/\s+/g, ' '))
     .pipe(z.string().min(1).max(20)),
   groupSize,
-  mode,
   families,
   durationSec: z.number().int().min(0).max(3600),
 });
@@ -154,7 +153,7 @@ export async function submitRun(payload: RunPayload): Promise<SubmitResult> {
       p_group_token: v.groupToken,
       p_group_name: v.groupName,
       p_group_size: v.groupSize,
-      p_mode: v.mode,
+      p_mode: DB_MODE,
       p_families: v.families,
       p_duration_sec: v.durationSec,
     }),

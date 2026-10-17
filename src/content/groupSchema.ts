@@ -4,7 +4,7 @@ import groupCopyJson from './groupCopy.json';
 import groupNamesJson from './groupNames.json';
 
 /*
- * Group play content (spec §3.5): UI copy, the generated-name lists and the profanity
+ * Team play content (spec §3.5): UI copy, the generated-name lists and the profanity
  * blocklist. Parsed at import, like src/content/index.ts, so bad content fails fast.
  */
 const txt = z.string().min(1);
@@ -17,7 +17,7 @@ export const groupCopySchema = z.object({
   home: section(['backToGroup', 'leaveGroup', 'unavailable']),
   create: section([
     'heading', 'nameLabel', 'moreNames', 'ownName', 'useGenerated', 'customLabel', 'customHint',
-    'nicknameLabel', 'nicknameHint', 'lengthLabel', 'lengthSet', 'create', 'back',
+    'nicknameLabel', 'nicknameHint', 'create', 'back',
   ]),
   join: section(['heading', 'codeLabel', 'codeHint', 'nicknameLabel', 'nicknameHint', 'join', 'looking', 'back']),
   errors: section([
@@ -27,17 +27,17 @@ export const groupCopySchema = z.object({
   lobby: section([
     'codeLabel', 'scanHint', 'qrAlt', 'playersHeading', 'rotationNote', 'you', 'leaderTag', 'playerN', 'reconnecting', 'joinedSay', 'awaySay', 'icTag',
     'leadsStages', 'leadsFinale', 'moveUp', 'moveDown', 'shuffle', 'start', 'needTwo', 'stillConnecting', 'waiting',
-    'lengthLine', 'closesIn', 'leave', 'close',
+    'closesIn', 'leave', 'close',
   ]),
-  // Support-phone text must be readable at a glance (§3.5.2: ≤15 words).
-  support: section(
-    ['supporting', 'mainHint', 'waitingCard', 'paused', 'promoted', 'upNext', 'upNextBody', 'ready', 'lobbyStage', 'finale'],
+  // Waiting-screen text must be readable at a glance.
+  waiting: section(
+    ['playing', 'prologue', 'finale', 'level', 'tip', 'yourTurn', 'turnsDone', 'stars', 'paused', 'promoted', 'upNext', 'upNextBody', 'ready'],
     15,
   ),
   pill: section(['reconnecting', 'sending'], 10),
   ended: section(['closed', 'lobbyExpired', 'runExpired', 'left', 'ok']),
   debrief: section(['groupLine', 'submitting', 'rank', 'onBoard', 'notRanked', 'retrying'], 12),
-  host: section(['none', 'lobby', 'stage', 'finale', 'size']),
+  host: section(['none', 'lobby', 'prologue', 'stage', 'finale', 'size']),
 });
 export type GroupCopy = z.infer<typeof groupCopySchema>;
 

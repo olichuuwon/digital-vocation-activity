@@ -5,9 +5,7 @@
     "secondsEach": 8,
     "reward": 15,
     "penalty": 12,
-    "gapMs": 1800,
-    "allHandsCount": 2,
-    "allHandsSeconds": 5
+    "gapMs": 1800
   },
   "incidents": [
     {

@@ -199,3 +199,14 @@
 - Fonts stay system stacks (no download, nothing third-party); self-hosted fonts only if the owner wants a brand font (owner item 41).
 - Carried to M8: moving a block into or out of Repeat/If still needs remove + re-add; support phones show no countdown during all-hands (they buzz and speak instead); the main phone's Stage 1 intro shows the new rule in groups too.
 
+
+### Solo / Team simplification (2026-10-17, owner decision)
+| Date | Item | Decision / default used | Owner to confirm? |
+|------|------|-------------------------|-------------------|
+| 2026-10-17 | Run length (D18) | **Owner: no booth/full modes.** One length = the old booth levels. `?mode=` is ignored; the length pick and the stage-select flag (`flags.json`) are gone. Levels flagged `bonus` (Stage 1 Outlier, Stage 2 Draw the Box, Stage 3 Debug It + Ask the AI) stay in content but are not played. | Item 1 below |
+| 2026-10-17 | Team play (D19, §3.5.2) | **Owner: take turns.** One player per stage plays exactly like solo; everyone else sees a Waiting screen (who's playing, level, team stars, their next turn) and helps out loud. Support cards, split controls, co-op finale routing and all-hands calls removed (`src/stages/support/`, `supportCopy.json`). Join/lobby/rotation/hand-off/drop takeover/leaderboard unchanged. | Done |
+| 2026-10-17 | Free play | After the debrief, every phone can replay any stage solo (not ranked). A team member picks a stage → leaves the team on that phone → plays. Shown once the team's leaderboard result has arrived, so the leader's phone has submitted first. Home shows "Replay a stage" whenever the last run finished. | No |
+| 2026-10-17 | Waiting screen timer | Not shown: the level timer runs on the player's phone only. The waiting screen shows stage + level instead. | Item 2 below |
+| 2026-10-17 | Leaderboard `mode` column | DB keeps the `mode` column and its check. The client always sends `'booth'` (8-min minimum duration) and no longer reads it. No migration needed. | No |
+| 2026-10-17 | Wording | Player-facing "group" → "team" everywhere (Home: Play solo / Play as a team → Create a team / Join a team). | No |
+| 2026-10-17 | Stage 1 hook (game-designer) | Briefing goes straight into the tutorial (intro screen skipped); the tutorial deck opens on a clean card. L1: 8 cards / 45 s, rules 1–2 only (one new rule). L2 introduces duplicates + fixes (newRules 3, 4). Rule 2 now covers "big but possible, keep it" (rule 5 stays in the rulebook, never its own new-rule card). New 💧 "people reached" counter (households correctly kept or fixed) on the card screen and the stars screen. New briefing copy. Reality Check fallback count = 18 (scored cards). | Item 3 below |

@@ -19,7 +19,7 @@ export function DebugPanel() {
         ))}
       </div>
       <p>
-        mode {run.mode} · stage {run.stage} · level {run.levelIndex} · seed {run.startedAt}
+        stage {run.stage} · level {run.levelIndex} · seed {run.startedAt}
       </p>
       <pre>{JSON.stringify({ scores: run.scores, stars: run.stars }, null, 1)}</pre>
     </details>

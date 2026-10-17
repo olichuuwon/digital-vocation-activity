@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { copy, fill } from '../../content';
+import { fill } from '../../content';
 import { groupCopy } from '../../content/groupSchema';
 import { groupActions, stagesLedBy, useGroup, type Member } from '../../net/group';
 import { joinUrl } from '../../net/group/codes';
@@ -107,7 +107,7 @@ export function GroupLobby() {
         </p>
         <p className={ui.muted}>{t.scanHint}</p>
         <p className={ui.muted}>
-          {session.mode === 'booth' ? copy.length.booth : copy.length.full} · {fill(t.closesIn, { min: minsLeft })}
+          {fill(t.closesIn, { min: minsLeft })}
         </p>
       </div>
 

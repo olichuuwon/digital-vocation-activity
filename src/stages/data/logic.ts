@@ -227,7 +227,7 @@ export function buildDeck(records: readonly DataRecord[], level: CardLevel, rng:
   // Rejection-sample an order with duplicates spaced after their originals (cheap: ≤10 cards).
   for (let a = 0; a < SHUFFLE_ATTEMPTS; a++) {
     shuffleInPlace(chosen, rng);
-    if (duplicatesSpaced(chosen)) return chosen;
+    if (duplicatesSpaced(chosen)) return level.id === TUTORIAL_LEVEL_ID ? validFirst(chosen) : chosen;
   }
   // Fallback (practically unreachable): originals first, duplicates last, others between.
   const dupIds = new Set(chosen.filter((r) => r.duplicateOf).map((r) => r.duplicateOf as string));
@@ -235,6 +235,12 @@ export function buildDeck(records: readonly DataRecord[], level: CardLevel, rng:
   const ordered = [...chosen].sort((x, y) => rank(x) - rank(y));
   if (!duplicatesSpaced(ordered)) fail('cannot space duplicates');
   return ordered;
+}
+
+/** Tutorial: open on a clean card, so the first swipe is an easy win (no duplicates to space). */
+function validFirst(deck: DataRecord[]): DataRecord[] {
+  const i = deck.findIndex((r) => r.status === 'valid');
+  return i > 0 ? [deck[i]!, ...deck.slice(0, i), ...deck.slice(i + 1)] : deck;
 }
 
 // ---------------------------------------------------------------------------
@@ -444,6 +450,16 @@ export interface LevelOutcome {
   results: readonly CardResult[];
   /** Cards dealt (deck length). Unanswered cards at time-up stay in the denominator. */
   dealt: number;
+}
+
+/**
+ * People helped so far: the household sizes of records correctly kept or fixed (good data gets
+ * a truck). Trashed and wrongly handled records add nothing.
+ */
+export function peopleReached(results: readonly CardResult[], byId: ReadonlyMap<string, DataRecord>): number {
+  let n = 0;
+  for (const r of results) if (r.correct && r.expected !== 'trash') n += byId.get(r.recordId)?.people ?? 0;
+  return n;
 }
 
 export const outcomeOf = (s: LevelState): LevelOutcome => ({ levelId: s.level.id, results: s.results, dealt: s.deck.length });

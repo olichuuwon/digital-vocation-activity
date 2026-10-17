@@ -5,7 +5,7 @@ import { groupCopy } from '../../content/groupSchema';
 import type { Stage } from '../../state/types';
 import type { ActionEvent, GroupSnapshot } from './engine';
 import { PROMOTE_AFTER_MS } from './protocol';
-import { dealCards, mainFor, nextMainCandidate, supportsFor } from './rotation';
+import { mainFor, nextMainCandidate } from './rotation';
 import { onAction, publish, useGroupStore } from './store';
 
 export interface Member {
@@ -13,7 +13,7 @@ export interface Member {
   /** Nickname from live presence, or "Player n" if not seen since a reload. */
   nick: string;
   present: boolean;
-  /** Missing for 30 s+: left out of support dealing. */
+  /** Missing for 30 s+. */
   gone: boolean;
   isLeader: boolean;
   isMe: boolean;
@@ -36,10 +36,6 @@ export interface GroupView {
   main: Member | null;
   /** This phone runs the game for the current stage. */
   amMain: boolean;
-  /** Support phones in rotation order after the main phone (missing 30 s+ left out). */
-  supports: Member[];
-  mySupportIndex: number | null;
-  supportCount: number;
   connected: boolean;
   /** The main phone went missing (pause up to 20 s, then the next player takes over). */
   paused: { name: string; since: number } | null;
@@ -68,15 +64,8 @@ export function deriveView(snap: GroupSnapshot, puppets: readonly string[] = [],
   const byId = new Map(members.map((m) => [m.id, m]));
   const active = snap.status === 'playing';
   const controls = (id: string | null) => !!id && (id === snap.meId || puppets.includes(id));
-  let amMain = active && controls(snap.mainId);
-  const supportIds = active ? supportsFor(rotation, snap.mainId, (id) => gone.has(id)) : [];
-  const supports = supportIds.map((id) => byId.get(id)!).filter(Boolean);
-  let mySupportIndex = snap.meId && supportIds.includes(snap.meId) ? supportIds.indexOf(snap.meId) : null;
-  // Debug preview (?fakePeers): show this phone the support screen as support #viewAs.
-  if (active && viewAs !== null && supports.length > 0) {
-    amMain = false;
-    mySupportIndex = Math.min(viewAs, supports.length - 1);
-  }
+  // Debug preview (?fakePeers): show this phone the waiting screen.
+  const amMain = active && controls(snap.mainId) && viewAs === null;
   const main = snap.mainId ? (byId.get(snap.mainId) ?? null) : null;
   return {
     active,
@@ -89,9 +78,6 @@ export function deriveView(snap: GroupSnapshot, puppets: readonly string[] = [],
     mainId: snap.mainId,
     main,
     amMain,
-    supports,
-    mySupportIndex,
-    supportCount: supports.length,
     connected: snap.connected,
     paused: active && !amMain && snap.mainLostSince !== null && main ? { name: main.nick, since: snap.mainLostSince } : null,
     stage: snap.stage,
@@ -121,19 +107,13 @@ export function useTopic<T = unknown>(topic: string, schema?: z.ZodType<T>): T |
   }, [raw, schema]);
 }
 
-/** Main phone: handle support actions while mounted. The latest handler is always used. */
+/** Main phone: handle teammates' actions (e.g. hand-off Ready) while mounted. The latest handler is always used. */
 export function useActions(handler: (a: ActionEvent) => void) {
   const ref = useRef(handler);
   useEffect(() => {
     ref.current = handler;
   });
   useEffect(() => onAction((a) => ref.current(a)), []);
-}
-
-/** Support cards for this phone (§3.5.2 dealing rule). Empty on the main phone and in solo. */
-export function useDealtCards<T>(cardIds: readonly T[]): T[] {
-  const g = useGroup();
-  return useMemo(() => dealCards(cardIds, g.supportCount, g.mySupportIndex), [cardIds, g.supportCount, g.mySupportIndex]);
 }
 
 export interface HandOffInfo {
@@ -192,4 +172,3 @@ export function useHandOffSync(active: boolean, onReady: () => void, fromStage?:
   });
 }
 
-export { dealCards };

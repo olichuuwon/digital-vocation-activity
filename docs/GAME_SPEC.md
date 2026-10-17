@@ -27,8 +27,8 @@
 | D15 | Accessibility | WCAG 2.2 AA |
 | D16 | Connectivity | Online web app (internet required). Fail gracefully on a weak connection (§3.5.6). Offline caching is not required. |
 | D17 | Devices | Generalist: current-ish iOS Safari and Android Chrome, 360px+ width |
-| D18 | Booth rotation | **20 min**, including joining and the debrief. The booth default is **Booth mode ≈ 16 min of play** (§2). |
-| D19 | Group play | **One main phone + support phones** (asymmetric co-op, §3.5.2). The main player role **rotates each stage**, so everyone is involved and talking. |
+| D18 | Booth rotation | **20 min**, including joining and the debrief. There is **one run length, ≈ 16 min of play** (§2). Owner decision 2026-10-17: no booth/full modes. |
+| D19 | Team play | **Take turns** (§3.5.2, owner decision 2026-10-17). Each stage, one player plays on their own phone; teammates' phones show a **Waiting screen** and they help out loud. The turn **rotates each stage**. After the debrief everyone can replay any stage solo on their own phone. |
 | D20 | Leaderboard time | **Clock time finished**, `HH:MM` SGT (e.g. 14:32) |
 
 ### 0.2 Still open (use the default until answered)
@@ -61,29 +61,24 @@
 
 ## 2. Session structure & timing
 
-Two lengths from the same content:
-- **Booth run ≈ 16 min of play** (default): core levels only. It fits the 20-min rotation with about 2 min to join and 2 min of debrief and leaderboard.
-- **Full run ≈ 25–30 min**: core + bonus levels (other events / home).
-URL values: `?mode=booth|full` (`quick` is an alias of `booth`).
+One length for everyone: **≈ 16 min of play** (core levels). It fits the 20-min rotation with about 2 min to join and 2 min of debrief and leaderboard. Two ways to play: **Solo** (one phone, plays everything, not ranked) and **Team** (2–4 phones, take turns, ranked; §3.5). Levels flagged `bonus` in content are not played.
 
-The facilitator sets the length for the session via the `/host` view or URL param `?mode=booth|full`. A solo player picks it themselves. Within a group, everyone plays the same length, and the group leader's choice applies.
+**Team timing:** the player's phone owns the level timer. Hand-off cards (where the turn passes) are short, about 10s, with a "Ready" tap from the next player's phone.
 
-**Group timing:** the main phone owns the level timer. Support phones mirror it. Hand-off cards (also where the main player role rotates) are short, about 10s, with a "Ready" tap from the next main player.
-
-| Segment | Booth | Full | Content |
-|---|---|---|---|
-| Prologue | 1 min | 1.5 min | Mission briefing, pick run length, 10-sec "how to play" |
-| Stage 1: Data | 3 min | 5–6 min | §4 |
-| Stage 2: AI | 3 min | 5–6 min | §5 |
-| Stage 3: Problem solving | 3 min | 5–6 min | §6 |
-| Stage 4: Cloud/SRE | 3 min | 5–6 min | §7 |
-| Finale: Mission Live | 2 min | 3 min | §8 |
-| Debrief & roles | 1 min | 1.5 min | §8.3 |
+| Segment | Time | Content |
+|---|---|---|
+| Prologue | 1 min | Mission briefing, 10-sec "how to play" |
+| Stage 1: Data | 3 min | §4 |
+| Stage 2: AI | 3 min | §5 |
+| Stage 3: Problem solving | 3 min | §6 |
+| Stage 4: Cloud/SRE | 3 min | §7 |
+| Finale: Mission Live | 2 min | §8 |
+| Debrief & roles | 1 min | §8.3 |
 
 Each stage follows the same rhythm, so players learn the pattern:
 
 ```
-Briefing card (≤25 words) → Tutorial (interactive, 20–30s) → Level 1 → Level 2 → [Bonus level: full only]
+Briefing card (≤25 words) → Tutorial (interactive, 20–30s) → Level 1 → Level 2
 → REALITY CHECK (animated reveal, ≤40s, tap to advance) → Stage result (stars) → Hand-off card to next team
 ```
 
@@ -95,9 +90,7 @@ Every level is **timeboxed** (timer shown). A stuck player can always progress: 
 
 ### 3.1 Game state (single store)
 ```ts
-type Mode = 'booth' | 'full';
 interface GameState {
-  mode: Mode;
   stage: 0|1|2|3|4|5;           // 5 = finale
   levelIndex: number;
   scores: {
@@ -139,42 +132,33 @@ All levels, records, images, puzzles and copy live in `/src/content/*.json` (or 
 #### 3.5.1 Entry flow
 ```
 Scan booth QR (or open link)
- └─ Home: [ Play solo ]  [ Create group ]  [ Join group ]  [ Leaderboard ]
-     ├─ Solo: pick length, play. End card says "Solo runs aren't ranked. Team up to get on the board."
-     ├─ Create group: pick or generate a group name, then the LOBBY shows a big QR + 4-letter code (e.g. K7QM)
-     │      Teammates scan the QR on the leader's phone (or type the code), enter a nickname (device-only, never stored server-side)
-     │      Lobby shows members (max 4) and the **main player rotation order** (drag to reorder, or shuffle). Leader taps START (needs ≥2 for a ranked run)
-     └─ Join group: scan the leader's QR or type the code, enter a nickname, wait in the lobby
+ └─ Home: [ Play solo ]  [ Play as a team ]  [ Leaderboard ]   (+ [ Replay a stage ] after a finished run)
+     ├─ Solo: play straight away. End card says "Solo runs aren't ranked. Team up to get on the board."
+     └─ Play as a team: [ Create a team ]  [ Join a team ]
+         ├─ Create: pick or generate a team name, then the LOBBY shows a big QR + 4-letter code (e.g. K7QM)
+         │      Teammates scan the QR on the leader's phone (or type the code), enter a nickname (device-only, never stored server-side)
+         │      Lobby shows members (max 4) and the **turn order** (reorder or shuffle). Leader taps START (needs ≥2)
+         └─ Join: scan the leader's QR or type the code, enter a nickname, wait in the lobby
 ```
 - Joining **closes at START**. A player who drops can **rejoin** from the same device (the session token is in localStorage).
 - A lobby expires after 15 min without starting. A run expires 60 min after start.
-- Optional `/host` view (booth big screen): a QR to the game, groups currently playing (name, size, current stage), and the live leaderboard.
+- Optional `/host` view (booth big screen): a QR to the game, teams currently playing (name, size, current stage), and the live leaderboard.
 
-#### 3.5.2 How a group plays: one main phone + support phones
-Inspired by party games like *Keep Talking and Nobody Explodes* and *Spaceteam*. **The main player can't win alone: key information or controls live on the support phones**, so the group has to talk. This mirrors real C4X teams, where specialists depend on each other.
+#### 3.5.2 How a team plays: take turns
+Simple on purpose. Teammates stand together, so the talking happens in person.
 
-- **Main phone:** plays the stage (the board, swipes, taps). Held where everyone can see it.
-- **Support phones:** each gets a **support card** for that stage: information, a tool or a power the main player needs. Supports shout, point and tap.
-- **Rotation:** the main player role passes to the next member at every stage hand-off. With 4 players, each is main once. With 2–3, the rotation wraps (in a 3-player group, member 1 is also main in Stage 4).
-- **Splitting support cards:** with 1 support, that phone gets all the support cards for the stage (tabs). With 2–3 supports, cards are dealt one per phone. Every support phone always has *something* to do.
-- **Solo:** one phone gets everything. Support info appears as in-app panels (e.g. the Rulebook sheet), so solo players see the same content.
+- **The player:** each stage, one member plays on their own phone, exactly as in solo (Rulebook, Field guide, every button). They hold it where the others can see.
+- **Everyone else:** their phone shows a **Waiting screen**: who is playing which stage and level, the team's stars so far, when their own turn comes, and a nudge to "watch and talk it through together". Nobody is idle: they read along and call out answers.
+- **Rotation:** player 1 (the leader) plays the prologue and the finale; stages 1–4 rotate from player 2, so turns are as even as possible.
+- **Hand-off:** at the end of a stage, the next player's phone shows "You're up next!" with an **I'm ready** button.
+- **Drops:** if the player's phone goes quiet for 20 s, the next connected member takes over from the start of that level.
+- **Free play:** once the team is on the board, every member can pick any stage to replay solo on their own phone (not ranked).
 
-| Stage | Main phone does | Support cards (dealt across support phones) |
-|---|---|---|
-| 1 Data | Swipes Keep / Fix / Trash | **📘 Rulebook**: the main player *can't* see the rules in group mode, so a support reads them out. **🔍 Duplicate scanner**: shows the IDs already kept, so the support calls out "seen #14 already!". **🛠️ Fix kit**: the correct fix option for fixable records (the main player picks from 3 options). |
-| 2 AI | Labels images, draws boxes | **👁️ Reveal power**: the support taps to uncover one extra tile (limited charges). **📖 Field guide**: what each class looks like ("medical kits have a red cross"). **🧪 Auditor**: in the Audit level, sees the model's confidence numbers, which are hidden on the main phone. |
-| 3 Logic | Builds and runs the truck program | **🗺️ Scout map**: only support phones see which roads are flooded this run. The main player sees a fogged map. **📦 Manifest**: which supplies each house needs (for the AI block level). **🐞 Debugger**: in Debug It, sees a replay of the failing run step by step. |
-| 4 Cloud | Watches the cluster dashboard, rolls back bad deploys | Manual phase: **each support controls one server's boost/restart button**. In a 2-player group, one phone holds all three. K8s phase: settings are split, e.g. **⚖️ load balancer + self-healing** on one phone, **📈 autoscaler sliders** on another, **💰 budget meter** shown to all. |
-| Finale | Live family counter + incident feed | Each incident appears **only on the phone of the support who holds that specialisation**. They route it, and the main player confirms. Plus 2 "all hands" incidents where every phone taps within 5s. |
-
-- **Haptics as signals:** a support phone buzzes when it has new info, so supports glance down only when needed and otherwise watch the main screen.
-- Each support card shows **≤15 words of instruction** plus the info itself, readable at a glance.
-
-#### 3.5.3 Group score & ranking
-- The group shares one score per stage (the main phone's result, plus bonuses earned by support actions), then §3.2 for `groupFamilies`.
+#### 3.5.3 Team score & ranking
+- The team shares one score per stage (the player's result), then §3.2 for `groupFamilies`.
 - Rank: `groupFamilies` high to low, then shorter `durationSec` (stored, not displayed).
-- Submitted once, automatically, when the group reaches the debrief.
-- Debrief "Your C4X Digital match" is per member, based on the stage they led plus their support contributions.
+- Submitted once, automatically, when the team reaches the debrief.
+- Debrief "Your C4X Digital match" is based on the team's stage results.
 
 #### 3.5.4 Data stored server-side (only this)
 `group_id, group_name, group_size, families, duration_sec, finished_at (timestamptz), board_date (SGT date), hidden (bool)`
@@ -215,14 +199,15 @@ A pinned "📘 Rulebook" button opens a bottom sheet. Show the **one new rule** 
 | Level | Mechanic | Rules in play | Size / time |
 |---|---|---|---|
 | Tutorial | Swipe 3 obvious cards with an animated hand hint | 1 | 3 cards, untimed |
-| L1 Keep or Trash | Swipe right = keep, left = trash (buttons also available) | 1–3 | 10 cards / 40s |
-| L2 Keep, Fix or Trash | Swipe up (or Fix button) opens a quick-fix picker with 2–3 options | 1–5 | 10 cards / 60s |
+| L1 Keep or Trash | Swipe right = keep, left = trash (buttons also available) | 1–2 | 8 cards / 45s |
+| L2 Keep, Fix or Trash | Swipe up (or Fix button) opens a quick-fix picker with 2–3 options. New: duplicates and fixes | 1–5 | 10 cards / 60s |
 | Bonus L3 Spot the Outlier | Bar chart of 20 households; tap bars that are **errors** (not just unusual) | 2, 5 | 3 charts / 45s |
 
 - On an error, show a one-line toast naming the rule broken ("Rule 3: duplicate").
+- **Hook (2026-10-17):** the briefing goes straight into the tutorial, which opens on a clean card, so the first swipe is a win within seconds. A **💧 people reached** counter grows with every record correctly kept or fixed.
 
 ### 4.3 Reality Check: "Clean once, apply everywhere"
-Animation: the player's 20 hand-sorted cards shrink, then a counter shoots up to **2,000,000 records**. Text: *"You cleaned 20 by hand. Data scientists write each rule once as code, and a pipeline applies it to millions of rows in seconds."* The player then gets **one tap** to choose which rule to automate (3 options). The correct choice gives a bonus.
+Animation: the player's 18 hand-sorted cards shrink, then a counter shoots up to **2,000,000 records**. Text: *"You cleaned 18 by hand. Data scientists write each rule once as code, and a pipeline applies it to millions of rows in seconds."* The player then gets **one tap** to choose which rule to automate (3 options). The correct choice gives a bonus.
 
 ### 4.4 Content needed
 - `records.json`: ≥ 40 records (so replays vary), each with `valid | fixable | invalid`, the fix options, and the rule id. **`[FILL]` optional: local place or sector names.**
@@ -357,7 +342,7 @@ A live dashboard runs. Incidents pop up; the player routes each to the right tea
 
 Use the specialisation names on the routing buttons: Data Science · AI Engineering · Software Development · Cloud Engineering.
 
-**Group mode:** the main phone shows the live family counter and incident feed. Each incident's routing buttons appear only on the support phone holding that specialisation (§3.5.2), so teammates must call out to each other. Add 2 **"all hands"** incidents that need every member to tap within 5s (e.g. "Major storm: all teams confirm ready").
+**Team mode:** the finale is played on the leader's phone, like solo; teammates watch and call out the right team.
 
 ### 8.3 Debrief
 - Big number: families reached / 1,200. Rank title. "New best" if applicable.
@@ -368,7 +353,7 @@ Use the specialisation names on the routing buttons: Data Science · AI Engineer
   - **Cloud Engineering**: keeps systems running at scale, automatically.
 - **What you learned** (one line per stage, based on what they actually did), e.g. *"You cleaned 20 records by hand and saw how one rule cleans millions."*
 - **Why digital matters to DIS**: 2–3 short cards on how data, AI, software and cloud work *together* to support defence and missions like disaster relief. Drafted by `content-writer` and **approved by the project owner (D14)** before release.
-- Group mode: a leaderboard rank reveal ("You're #3 today!").
+- Team mode: a leaderboard rank reveal ("You're #3 today!") on every phone.
 - "Play again" and "Replay a stage" (chapter select unlocked after the first finish).
 - End card designed to be **screenshot-friendly** (fits one screen, shows name-free score, rank, date).
 
@@ -406,17 +391,17 @@ Use the specialisation names on the routing buttons: Data Science · AI Engineer
 ### 11.2 Backend (free tier)
 - Default **Supabase** (Q8): a `runs` table (fields in §3.5.4) plus Realtime channels for lobbies, hand-off sync and finale incidents.
 - Row Level Security: anonymous clients may **insert** one run per group token and **select** non-hidden rows only. Hide/unhide goes through a server-side function that checks the facilitator PIN.
-- Basic anti-cheat: a server-side check rejects families > 1200 or implausibly short durations (< 8 min booth, < 15 min full). Rate-limit submissions.
+- Basic anti-cheat: a server-side check rejects families > 1200 or implausibly short durations (< 8 min). Rate-limit submissions.
 - Daily board = `board_date = (now() at time zone 'Asia/Singapore')::date`.
 - Keys in env vars (`VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`), with a committed `.env.example`. Never commit secrets.
 - The static frontend deploys to the free host `[FILL: D11]`.
 - **Testing:**
   - Vitest unit tests for all scoring formulas, the cluster sim, puzzle solvers and IoU.
   - Every Stage 3 puzzle must have an automated solver test proving it's solvable within the block limit.
-  - Playwright e2e on mobile viewports (iPhone 12, Pixel 5): a full booth run completes and resume works.
+  - Playwright e2e on mobile viewports (iPhone 12, Pixel 5): a full run completes and resume works.
   - Content schema validation in CI.
 - **Debug:** `?debug=1` shows stage skip buttons, the seed and live scores. `?stage=3` jumps to a stage.
-- **Facilitator params:** `?mode=booth|full`, `?relaxed=1`. Route `/host` for the booth screen.
+- **Facilitator params:** `?relaxed=1`. Route `/host` for the booth screen.
 - **Multiplayer testing:** a `?fakePeers=3` debug flag simulates teammates locally. Playwright runs a 3-browser-context group test.
 
 ### 11.1 Suggested folder structure
@@ -450,7 +435,7 @@ docs/
 | M6 | Finale + debrief + chapter select (solo) | Formula tests; screenshot card fits 360×740 |
 | M6.5 | Groups: create/join via QR + code, lobby + rotation order, main/support views for every stage (§3.5.2 table), co-op finale, group submission, leaderboard tabs, moderation | 3-context Playwright test completes a group run that appears on Today's board |
 | M7 | Polish: haptics, sound toggle, relaxed mode, a11y pass, perf budget | axe clean, Lighthouse mobile ≥ 90 |
-| M8 | Playtest with 5+ teens, tune timings and difficulty | Median booth run 14–17 min; full 24–32 min |
+| M8 | Playtest with 5+ teens, tune timings and difficulty | Median run 14–17 min |
 
 ---
 
@@ -459,5 +444,5 @@ docs/
 - Where did they hesitate for more than 5 seconds without acting? (Fix the UI or copy there.)
 - Can they explain in their own words what one of the four roles does?
 - Did anyone get stuck without a way forward? (Must be zero.)
-- Group mode: did support players talk at least every ~20s? Did anyone sit idle for a whole stage? (Must be zero.)
+- Team mode: did the waiting players talk at least every ~20s? Did anyone tune out for a whole stage? (Must be zero.)
 - Record findings in `docs/PLAYTEST_NOTES.md`.

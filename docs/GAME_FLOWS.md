@@ -1,5 +1,7 @@
 # Let's Ship It: game flows and test walkthrough
 
+> **Out of date since 2026-10-17.** Team play no longer uses support cards or all-hands calls, and there is one run length (see GAME_SPEC §3.5.2 and DECISIONS "Solo / Team simplification"). The screenshots and `e2e-live/` checks below show the old design. Regenerate them after the next deploy.
+
 A picture guide to what players see in solo, 2, 3 and 4-player games, what happens in unusual situations, and what each automated test checks.
 
 - **Screenshots:** taken on 8 Oct 2026 from the live site (https://digital-vocation-activity.vercel.app) with real Supabase.

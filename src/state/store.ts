@@ -4,13 +4,13 @@ import { levelsFor, stageContent } from '../content';
 import { nextPosition } from './progress';
 import { gameStateSchema, settingsSchema } from './schema';
 import { safeStorage } from './storage';
-import type { Discipline, GameState, Mode, Scores, Settings, Stage, StarCount } from './types';
+import type { Discipline, GameState, Scores, Settings, Stage, StarCount } from './types';
 
 export const STORAGE_KEY = 'ship-it';
 
 export const DEFAULT_SETTINGS: Settings = { theme: 'system', sound: false, relaxed: false };
 
-type Persisted = Pick<Store, 'run' | 'bestFamilies' | 'settings' | 'chapterUnlocked'>;
+type Persisted = Pick<Store, 'run' | 'bestFamilies' | 'settings'>;
 
 /** Validates saved data so a bad save falls back to defaults instead of crashing (no dead ends). */
 export function sanitisePersisted(raw: unknown): Persisted {
@@ -21,20 +21,18 @@ export function sanitisePersisted(raw: unknown): Persisted {
   let run: GameState | null = parsed.success ? parsed.data : null;
   if (run) {
     const content = stageContent(run.stage);
-    const max = content ? levelsFor(content, run.mode).length - 1 : 0;
+    const max = content ? levelsFor(content).length - 1 : 0;
     run = { ...run, levelIndex: Math.min(run.levelIndex, max) };
   }
   return {
     run,
     bestFamilies: best,
     settings: settings.success ? settings.data : DEFAULT_SETTINGS,
-    chapterUnlocked: p.chapterUnlocked === true,
   };
 }
 
-export function newRun(mode: Mode, now = Date.now()): GameState {
+export function newRun(now = Date.now()): GameState {
   return {
-    mode,
     stage: 0,
     levelIndex: 0,
     scores: {
@@ -54,8 +52,6 @@ interface Store {
   run: GameState | null;
   /** Best families across runs; survives starting a new run. */
   bestFamilies: number;
-  /** "Replay a stage" (chapter select) unlocks after the first finished run (§8.3). */
-  chapterUnlocked: boolean;
   settings: Settings;
   /** ?relaxed=1 for this page load only, so a shared booth phone doesn't stay relaxed. */
   relaxedThisSession: boolean;
@@ -63,14 +59,14 @@ interface Store {
   teamRelaxed: boolean;
   /** Settings sheet open: every level timer and sim clock pauses (WCAG 2.2.1). Not persisted. */
   settingsOpen: boolean;
-  startRun: (mode: Mode) => void;
+  startRun: () => void;
   completeLevel: () => void;
   /** Save a stage's normalised scores and stars (persisted with the run). */
   recordStage: <D extends Discipline>(d: D, scores: Scores[D], stars: StarCount) => void;
   jumpToStage: (stage: Stage) => void;
-  /** Debrief reached: record families, best score, unlock chapter select. Idempotent per run. */
+  /** Debrief reached: record families and best score. Idempotent per run. */
   finishRun: (families: number, incidentsRouted?: number) => void;
-  /** Chapter select: replay from a stage (keeps earlier scores; the run continues from there). */
+  /** Free play after a finished run: replay from a stage (keeps earlier scores; the run continues from there). */
   replayFrom: (stage: Stage) => void;
   quitRun: () => void;
   updateSettings: (patch: Partial<Settings>) => void;
@@ -81,14 +77,13 @@ export const useGame = create<Store>()(
     (set) => ({
       run: null,
       bestFamilies: 0,
-      chapterUnlocked: false,
       settings: DEFAULT_SETTINGS,
       relaxedThisSession: false,
       teamRelaxed: false,
       settingsOpen: false,
-      startRun: (mode) => set((s) => ({ run: { ...newRun(mode), bestFamilies: s.bestFamilies } })),
+      startRun: () => set((s) => ({ run: { ...newRun(), bestFamilies: s.bestFamilies } })),
       completeLevel: () =>
-        set((s) => (s.run ? { run: { ...s.run, ...nextPosition(s.run, s.run.mode) } } : s)),
+        set((s) => (s.run ? { run: { ...s.run, ...nextPosition(s.run) } } : s)),
       recordStage: (d, scores, stars) =>
         set((s) =>
           s.run ? { run: { ...s.run, scores: { ...s.run.scores, [d]: scores }, stars: { ...s.run.stars, [d]: stars } } } : s,
@@ -100,7 +95,6 @@ export const useGame = create<Store>()(
           const best = Math.max(s.bestFamilies, families);
           return {
             bestFamilies: best,
-            chapterUnlocked: true,
             run: {
               ...s.run,
               finishedAt: s.run.finishedAt ?? Date.now(),
@@ -122,7 +116,7 @@ export const useGame = create<Store>()(
       name: STORAGE_KEY,
       version: 1,
       storage: createJSONStorage(() => safeStorage),
-      partialize: (s): Persisted => ({ run: s.run, bestFamilies: s.bestFamilies, settings: s.settings, chapterUnlocked: s.chapterUnlocked }),
+      partialize: (s): Persisted => ({ run: s.run, bestFamilies: s.bestFamilies, settings: s.settings }),
       // Older save versions go through the same validation as current ones.
       migrate: (persisted) => sanitisePersisted(persisted),
       merge: (persisted, current) => ({ ...current, ...sanitisePersisted(persisted) }),

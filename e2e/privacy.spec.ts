@@ -17,8 +17,6 @@ test('the only external host requested is the Supabase URL', async ({ page, base
 
   await page.goto('/');
   await page.getByRole('button', { name: 'Play solo' }).click();
-  await page.getByRole('button', { name: /Booth run/ }).click();
-  await page.getByRole('button', { name: 'From the beginning' }).click();
   await page.getByRole('button', { name: 'Start the mission' }).click();
   // Playing solo makes no backend calls at all.
   expect(calls).toHaveLength(0);

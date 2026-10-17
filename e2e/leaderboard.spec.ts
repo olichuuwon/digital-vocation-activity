@@ -33,14 +33,14 @@ test('Today tab shows ranked rows with size, families and HH:MM SGT', async ({ p
   await expect(page).toHaveTitle(/Leaderboard · Let's Ship It/);
 });
 
-test('own group is highlighted, or pinned below when outside the top 20', async ({ page }) => {
+test('own team is highlighted, or pinned below when outside the top 20', async ({ page }) => {
   await page.evaluate(() => localStorage.setItem('ship-it-own-runs', '[42]'));
   await mockSupabase(page, { leaderboard_today: () => ({ body: todayRows }) });
   await openBoard(page);
   const own = page.locator('[data-own]');
   await expect(own).toHaveCount(1);
   await expect(own).toContainText('Bold Merlion');
-  await expect(own).toContainText('Your group');
+  await expect(own).toContainText('Your team');
 
   await page.evaluate(() => localStorage.setItem('ship-it-own-runs', '[777]'));
   await page.unrouteAll();
@@ -51,7 +51,7 @@ test('own group is highlighted, or pinned below when outside the top 20', async 
   await page.getByRole('button', { name: 'Back' }).click();
   await page.getByRole('button', { name: 'Leaderboard' }).click();
   const pinned = page.getByTestId('board-pinned');
-  await expect(pinned).toContainText('Your group today');
+  await expect(pinned).toContainText('Your team today');
   await expect(pinned).toContainText('23');
   await expect(pinned).toContainText('Late Otters');
   expect(calls.find((c) => c.name === 'run_rank')?.args).toEqual({ p_id: 777 });
@@ -76,7 +76,7 @@ test('tabs work with arrow keys; View all has an all-time list and a day filter'
   expect(calls.at(-1)).toEqual({ name: 'leaderboard_all', args: { p_date: null } });
 
   await page.getByLabel('Day').fill('2026-10-01');
-  await expect(page.getByText('No groups on this day.')).toBeVisible();
+  await expect(page.getByText('No teams on this day.')).toBeVisible();
   await expect(page.getByText('Top 50 on 1 Oct 2026')).toBeVisible();
   expect(calls.at(-1)).toEqual({ name: 'leaderboard_all', args: { p_date: '2026-10-01' } });
 
@@ -87,10 +87,10 @@ test('tabs work with arrow keys; View all has an all-time list and a day filter'
   await expect(page.getByRole('tab', { name: 'Today' })).toHaveAttribute('aria-selected', 'true');
 });
 
-test('empty state invites the first group', async ({ page }) => {
+test('empty state invites the first team', async ({ page }) => {
   await mockSupabase(page, { leaderboard_today: () => ({ body: [] }) });
   await openBoard(page);
-  await expect(page.getByText('No groups yet today. Be the first.')).toBeVisible();
+  await expect(page.getByText('No teams yet today. Be the first.')).toBeVisible();
 });
 
 test('offline shows an error with retry, and retry recovers', async ({ page }) => {

@@ -2,11 +2,11 @@
 import type { FinaleContent, Team } from '../../content/finaleSchema';
 import { TEAMS } from '../../content/finaleSchema';
 import { clamp, familiesReached, logicScore, MAX_FAMILIES } from '../../state/scoring';
-import type { GameState, Mode } from '../../state/types';
+import type { GameState } from '../../state/types';
 import { shuffleInPlace, type Rng } from '../data/logic';
 
-/** Scored Stage 3 levels per run length (booth: L1–L3; full adds L4–L5). */
-export const LOGIC_DEALT: Record<Mode, number> = { booth: 3, full: 5 };
+/** Scored Stage 3 levels (L1–L3). */
+export const LOGIC_DEALT = 3;
 
 export interface Pipeline {
   /** Stage 1 accuracy, 0–1. */
@@ -52,30 +52,8 @@ export function dealIncidents(all: FinaleContent['incidents'], count: number, rn
   return shuffleInPlace(picked, rng);
 }
 
-/** A Live Ops item: an incident for one team, or (group mode) an "all hands" call (team null). */
-export interface LiveItem {
-  id: string;
-  team: Team | null;
-}
-
-/**
- * Group mode (§8.2): insert `count` all-hands calls, spread evenly and never first, so the group
- * has warmed up on ordinary routing before everyone has to tap.
- */
-export function withAllHands(dealt: readonly DealtIncident[], ids: readonly string[], count: number): LiveItem[] {
-  const out: LiveItem[] = [...dealt];
-  const n = Math.min(count, ids.length);
-  for (let k = n - 1; k >= 0; k--) {
-    const at = Math.max(1, Math.round(((k + 1) * dealt.length) / (n + 1)));
-    out.splice(at + k, 0, { id: ids[k]!, team: null });
-  }
-  return out;
-}
-
-/** All-hands: complete once every needed member has tapped. */
-export function allHandsDone(tapped: readonly string[], needed: readonly string[]): boolean {
-  return needed.length > 0 && needed.every((id) => tapped.includes(id));
-}
+/** A Live Ops item: an incident for one team. */
+export type LiveItem = DealtIncident;
 
 export type RouteResult = 'right' | 'wrong' | 'timeout';
 
@@ -113,7 +91,7 @@ export function matchRanking(run: GameState): { team: Team; score: number }[] {
   const scores: Record<Team, number> = {
     data: clamp(data.accuracy, 0, 1),
     ai: clamp(0.6 * ai.labelAccuracy + 0.4 * ai.auditCatch, 0, 1),
-    logic: clamp((logic.puzzlesSolved / LOGIC_DEALT[run.mode]) * logicScore(logic.hintsUsed, logic.extraBlocks), 0, 1),
+    logic: clamp((logic.puzzlesSolved / LOGIC_DEALT) * logicScore(logic.hintsUsed, logic.extraBlocks), 0, 1),
     cloud: clamp((cloud.autoUptime - 0.8) / 0.19, 0, 1),
   };
   return TEAMS.map((team) => ({ team, score: scores[team] })).sort((a, b) => b.score - a.score);

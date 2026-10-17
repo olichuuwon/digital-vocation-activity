@@ -1,5 +1,4 @@
 // Game state shape from spec §3.1. All score values are normalised 0–1 unless noted.
-export type Mode = 'booth' | 'full';
 export type Stage = 0 | 1 | 2 | 3 | 4 | 5; // 0 = prologue, 5 = finale
 export type Discipline = 'data' | 'ai' | 'logic' | 'cloud';
 export type StarCount = 0 | 1 | 2 | 3;
@@ -14,7 +13,6 @@ export interface Scores {
 }
 
 export interface GameState {
-  mode: Mode;
   stage: Stage;
   levelIndex: number;
   scores: Scores;

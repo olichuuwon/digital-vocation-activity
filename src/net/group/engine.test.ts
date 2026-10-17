@@ -55,7 +55,7 @@ const flush = () => vi.advanceTimersByTimeAsync(50);
 
 async function lobbyOf(n: number) {
   const leader = device();
-  leader.engine.create({ name: 'Bold Merlion', mode: 'booth', nick: 'Ann' });
+  leader.engine.create({ name: 'Bold Merlion', nick: 'Ann' });
   await flush();
   const code = leader.snap().session!.code;
   const members: Device[] = [];
@@ -135,7 +135,7 @@ describe('lobby', () => {
 
   it('START needs 2+ players', async () => {
     const leader = device();
-    leader.engine.create({ name: 'Solo Squad', mode: 'booth', nick: 'Ann' });
+    leader.engine.create({ name: 'Solo Squad', nick: 'Ann' });
     await flush();
     expect(leader.engine.start()).toBe(false);
   });
@@ -172,7 +172,6 @@ describe('run', () => {
     await flush();
     for (const d of all) {
       expect(d.snap().status).toBe('playing');
-      expect(d.game.run?.mode).toBe('booth');
       expect(d.game.run?.startedAt).toBe(leader.snap().session!.startedAt);
       expect(d.snap().session!.sizeAtStart).toBe(3);
     }
@@ -329,7 +328,7 @@ describe('run', () => {
     expect(fin.submits).toHaveLength(0);
     expect(members[1]!.submits).toHaveLength(0);
     const p = leader.submits[0]!;
-    expect(p).toMatchObject({ groupName: 'Bold Merlion', groupSize: 3, mode: 'booth', families: 812 });
+    expect(p).toMatchObject({ groupName: 'Bold Merlion', groupSize: 3, families: 812 });
     expect(p.durationSec).toBeGreaterThanOrEqual(540);
     expect(JSON.stringify(p)).not.toMatch(/Ann|P1|P2/);
     leader.engine.submitResult(p.groupToken, { kind: 'ok', id: 42, rankToday: 3 });

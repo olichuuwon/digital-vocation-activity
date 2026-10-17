@@ -43,7 +43,7 @@ function Prologue({ onGo }: { onGo: () => void }) {
 export function StagePlaceholder({ run, onHome }: { run: GameState; onHome: () => void }) {
   const completeLevel = useGame((s) => s.completeLevel);
   const content = stageContent(run.stage);
-  const levels = content ? levelsFor(content, run.mode) : [];
+  const levels = content ? levelsFor(content) : [];
   const level = levels[run.levelIndex];
   const title = run.stage === 5 ? t.finale : content ? content.title : 'Prologue';
   const headingRef = useScreenHeading<HTMLHeadingElement>(

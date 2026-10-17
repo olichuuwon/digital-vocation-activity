@@ -21,6 +21,12 @@
   color: var(--text-muted);
 }
 
+.reached {
+  display: inline-block;
+  font-weight: 800;
+  color: var(--data-ink);
+}
+
 .streak {
   font-weight: 800;
   color: var(--data-ink);

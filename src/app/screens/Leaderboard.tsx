@@ -116,7 +116,6 @@ function DebugSubmit({ onDone }: { onDone: () => void }) {
         groupToken: newUuid(),
         groupName: 'QA Test',
         groupSize: 2,
-        mode: 'booth',
         families: Math.floor(Math.random() * 1201),
         durationSec: 480 + Math.floor(Math.random() * 600),
       });

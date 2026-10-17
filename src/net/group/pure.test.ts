@@ -2,7 +2,7 @@ import { mulberry32 } from '../../stages/data/logic';
 import { CODE_ALPHABET, generateCode, normaliseCode } from './codes';
 import { allGeneratedNames, checkGroupName, checkNickname, generateNames, isBlocked } from './moderation';
 import { MAX_MESSAGE_CHARS, newer, parseEntryData, parseMessage, parsePresence, PROTOCOL } from './protocol';
-import { dealCards, mainFor, moveMember, nextMainCandidate, nominalMainIndex, shuffled, stagesLedBy, supportsFor } from './rotation';
+import { mainFor, moveMember, nextMainCandidate, nominalMainIndex, shuffled, stagesLedBy } from './rotation';
 
 describe('group codes', () => {
   it('are 4 characters with no I, O, 0 or 1', () => {
@@ -122,25 +122,10 @@ describe('rotation', () => {
     expect([0, 1, 2, 3].map((i) => stagesLedBy(i, 4))).toEqual([[4, 5], [1], [2], [3]]);
   });
 
-  it('orders supports after the main phone and skips the gone', () => {
-    expect(supportsFor(r, 'b')).toEqual(['c', 'd', 'a']);
-    expect(supportsFor(r, 'b', (id) => id === 'd')).toEqual(['c', 'a']);
+  it('hands a dropped turn to the next connected member', () => {
     expect(nextMainCandidate(r, 'b', (id) => id !== 'c')).toBe('d');
     expect(nextMainCandidate(r, 'd', () => true)).toBe('a');
     expect(nextMainCandidate(['a', 'b'], 'a', () => false)).toBeNull();
-  });
-
-  it('deals support cards: all to one support, one each to 2–3', () => {
-    const cards = ['rulebook', 'scanner', 'fixkit'];
-    expect(dealCards(cards, 1, 0)).toEqual(cards);
-    expect(dealCards(cards, 3, 0)).toEqual(['rulebook']);
-    expect(dealCards(cards, 3, 2)).toEqual(['fixkit']);
-    expect(dealCards(cards, 2, 0)).toEqual(['rulebook', 'fixkit']);
-    expect(dealCards(cards, 2, 1)).toEqual(['scanner']);
-    // More phones than cards: share, so nobody is idle.
-    expect(dealCards(['a', 'b'], 3, 2)).toEqual(['a']);
-    expect(dealCards(cards, 2, null)).toEqual([]);
-    expect(dealCards([], 2, 0)).toEqual([]);
   });
 
   it('moves and shuffles members', () => {

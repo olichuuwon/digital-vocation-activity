@@ -28,7 +28,6 @@ describe('parseBoard', () => {
         id: 42,
         groupName: 'Swift Kingfisher',
         groupSize: 3,
-        mode: 'booth',
         families: 1050,
         finishedAt: '2026-10-07T06:05:00.123456+00:00',
         boardDate: '2026-10-07',
@@ -43,7 +42,6 @@ describe('parseBoard', () => {
     ['group size 5', [{ ...row, group_size: 5 }]],
     ['missing field', [{ ...row, group_name: undefined }]],
     ['bad date', [{ ...row, board_date: '07/10/2026' }]],
-    ['unknown mode', [{ ...row, mode: 'quick' }]],
     ['null', null],
   ])('rejects %s', (_label, data) => {
     expect(() => parseBoard(data)).toThrow(LeaderboardError);
@@ -106,7 +104,6 @@ describe('runPayloadSchema', () => {
     groupToken: '1b4e28ba-2fa1-4d3b-a3f5-ef19b5a7633b',
     groupName: '  Bold   Merlion ',
     groupSize: 4,
-    mode: 'full',
     families: 1200,
     durationSec: 1500,
   };
@@ -124,7 +121,7 @@ describe('runPayloadSchema', () => {
 
   it('carries no nickname or device fields', () => {
     expect(Object.keys(runPayloadSchema.shape).sort()).toEqual(
-      ['durationSec', 'families', 'groupName', 'groupSize', 'groupToken', 'mode'].sort(),
+      ['durationSec', 'families', 'groupName', 'groupSize', 'groupToken'].sort(),
     );
   });
 });

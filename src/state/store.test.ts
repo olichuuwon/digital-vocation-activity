@@ -8,16 +8,15 @@ beforeEach(() => {
 });
 
 describe('game store', () => {
-  it('starts a run at the prologue in the chosen mode', () => {
-    useGame.getState().startRun('full');
+  it('starts a run at the prologue', () => {
+    useGame.getState().startRun();
     const run = useGame.getState().run!;
-    expect(run.mode).toBe('full');
     expect(run.stage).toBe(0);
     expect(run.levelIndex).toBe(0);
   });
 
   it('persists progress to localStorage after each level', () => {
-    useGame.getState().startRun('booth');
+    useGame.getState().startRun();
     useGame.getState().completeLevel(); // prologue → stage 1
     useGame.getState().completeLevel(); // stage 1 level 1
     const saved = JSON.parse(localStorage.getItem(STORAGE_KEY)!);
@@ -26,7 +25,7 @@ describe('game store', () => {
   });
 
   it('rehydrates a saved run (resume)', async () => {
-    useGame.getState().startRun('booth');
+    useGame.getState().startRun();
     useGame.getState().jumpToStage(3);
     const saved = localStorage.getItem(STORAGE_KEY)!;
     useGame.setState(initial, true);
@@ -38,7 +37,7 @@ describe('game store', () => {
 
   it('keeps settings when quitting a run', () => {
     useGame.getState().updateSettings({ relaxed: true });
-    useGame.getState().startRun('booth');
+    useGame.getState().startRun();
     useGame.getState().quitRun();
     expect(useGame.getState().run).toBeNull();
     expect(useGame.getState().settings.relaxed).toBe(true);
@@ -51,7 +50,7 @@ describe('game store', () => {
 
 describe('recordStage', () => {
   it('saves scores and stars for one discipline and persists them', () => {
-    useGame.getState().startRun('booth');
+    useGame.getState().startRun();
     useGame.getState().recordStage('data', { accuracy: 0.9, fixedCount: 3, ruleChosen: true }, 3);
     const run = useGame.getState().run!;
     expect(run.scores.data).toEqual({ accuracy: 0.9, fixedCount: 3, ruleChosen: true });
@@ -62,11 +61,11 @@ describe('recordStage', () => {
 });
 
 describe('sanitisePersisted', () => {
-  const good = () => JSON.parse(JSON.stringify({ run: newRun('booth', 1), bestFamilies: 5, settings: DEFAULT_SETTINGS }));
+  const good = () => JSON.parse(JSON.stringify({ run: newRun(1), bestFamilies: 5, settings: DEFAULT_SETTINGS }));
 
   it('keeps a valid save', () => {
     const s = sanitisePersisted(good());
-    expect(s.run?.mode).toBe('booth');
+    expect(s.run?.startedAt).toBe(1);
     expect(s.bestFamilies).toBe(5);
   });
 
@@ -87,11 +86,11 @@ describe('sanitisePersisted', () => {
     const g = good();
     g.run.stage = 1;
     g.run.levelIndex = 99;
-    expect(sanitisePersisted(g).run?.levelIndex).toBe(2); // booth stage 1 has 3 levels
+    expect(sanitisePersisted(g).run?.levelIndex).toBe(2); // stage 1 has 3 levels
   });
 
   it('handles junk input', () => {
-    expect(sanitisePersisted(null)).toEqual({ run: null, chapterUnlocked: false, bestFamilies: 0, settings: DEFAULT_SETTINGS });
+    expect(sanitisePersisted(null)).toEqual({ run: null, bestFamilies: 0, settings: DEFAULT_SETTINGS });
     expect(sanitisePersisted('oops').run).toBeNull();
   });
 
@@ -104,21 +103,20 @@ describe('sanitisePersisted', () => {
 
   it('does not persist the session-only relaxed flag', () => {
     useGame.setState({ relaxedThisSession: true });
-    useGame.getState().startRun('booth');
+    useGame.getState().startRun();
     expect(JSON.parse(localStorage.getItem(STORAGE_KEY)!).state.relaxedThisSession).toBeUndefined();
   });
 });
 
 describe('finishRun / replayFrom (M6)', () => {
-  beforeEach(() => useGame.setState({ run: null, bestFamilies: 300, chapterUnlocked: false }));
+  beforeEach(() => useGame.setState({ run: null, bestFamilies: 300 }));
 
-  it('records families, keeps the best, unlocks chapter select, marks the run finished', () => {
-    useGame.getState().startRun('booth');
+  it('records families, keeps the best, marks the run finished', () => {
+    useGame.getState().startRun();
     useGame.getState().finishRun(820, 6);
     const g = useGame.getState();
     expect(g.run!.scores.finale.incidentsRouted).toBe(6);
     expect(g.bestFamilies).toBe(820);
-    expect(g.chapterUnlocked).toBe(true);
     expect(g.run!.finishedAt).toBeTypeOf('number');
     expect(g.run!.scores.finale.familiesReached).toBe(820);
     g.finishRun(500);
@@ -126,7 +124,7 @@ describe('finishRun / replayFrom (M6)', () => {
   });
 
   it('replayFrom reopens the run at a stage, keeping scores', () => {
-    useGame.getState().startRun('booth');
+    useGame.getState().startRun();
     useGame.getState().finishRun(700);
     useGame.getState().replayFrom(2);
     const r = useGame.getState().run!;

@@ -16,15 +16,15 @@ const hostRow = (id: number, name: string, hidden: boolean) => ({
 
 test('shows a QR to the game, the live board and the playing placeholder', async ({ page }) => {
   await mockSupabase(page, { leaderboard_today: () => ({ body: [boardRow(1, 1, 'Swift Kingfisher', 1100)] }) });
-  await page.goto('/host?mode=full');
+  await page.goto('/host?relaxed=1');
   await expect(page.getByRole('heading', { level: 1 })).toContainText('Booth screen');
-  const qr = page.getByRole('img', { name: /QR code that opens the game at http:\/\/localhost:4173\/\?mode=full/ });
+  const qr = page.getByRole('img', { name: /QR code that opens the game at http:\/\/localhost:4173\/\?relaxed=1/ });
   await expect(qr).toBeVisible();
   expect(await qr.getAttribute('src')).toMatch(/^data:image\/png;base64,/);
-  await expect(page.getByText('http://localhost:4173/?mode=full')).toBeVisible();
+  await expect(page.getByText('http://localhost:4173/?relaxed=1')).toBeVisible();
   await expect(page.getByTestId('board-row')).toContainText('Swift Kingfisher');
   await expect(page.getByText(/Updated \d\d:\d\d SGT/)).toBeVisible();
-  await expect(page.getByTestId('host-playing')).toContainText('Groups playing now');
+  await expect(page.getByTestId('host-playing')).toContainText('Teams playing now');
   // The game's settings gear and home buttons are not part of the booth screen.
   await expect(page.getByRole('button', { name: 'Play solo' })).toHaveCount(0);
 });
@@ -65,7 +65,7 @@ test('facilitator: wrong PIN, then unlock, hide and unhide', async ({ page }) =>
   await page.getByRole('button', { name: 'Unlock' }).click();
   await page.getByRole('button', { name: 'Hide Rude Name' }).click();
   await expect(page.getByTestId('host-row')).toContainText('Hidden');
-  await expect(page.getByText('No groups yet today. Be the first.')).toBeVisible();
+  await expect(page.getByText('No teams yet today. Be the first.')).toBeVisible();
   expect(calls.find((c) => c.name === 'set_run_hidden')?.args).toEqual({ p_id: 7, p_hidden: true, p_pin: PIN });
 
   await page.getByRole('button', { name: 'Unhide Rude Name' }).click();

@@ -1,7 +1,7 @@
 import { expect, test, type Browser, type Page, type TestInfo } from '@playwright/test';
 import { boardRow, mockSupabase } from './supabaseMock';
 
-// Group play (spec §3.5, §12 M6.5) with real browser contexts talking through the e2e
+// Team play (spec §3.5, §12 M6.5) with real browser contexts talking through the e2e
 // WebSocket relay (e2e/groupRelay.ts). Supabase RPCs are mocked; nothing touches a real backend.
 
 test.use({ serviceWorkers: 'block' });
@@ -37,14 +37,15 @@ async function mockBoard(page: Page, state: { submitted: string | null }) {
 
 async function createGroup(page: Page, name: string, nick: string) {
   await page.goto('/?debug=1');
-  await page.getByRole('button', { name: 'Create group' }).click();
-  await expect(page.getByRole('heading', { name: 'Create a group' })).toBeVisible();
+  await page.getByRole('button', { name: 'Play as a team' }).click();
+  await page.getByRole('button', { name: 'Create a team' }).click();
+  await expect(page.getByRole('heading', { name: 'Create a team' })).toBeVisible();
   // Generated names are offered first; type our own so the test knows it.
   await expect(page.getByTestId('name-options').getByRole('radio')).toHaveCount(3);
   await page.getByRole('button', { name: /Type our own name/ }).click();
-  await page.getByLabel('Group name').fill(name);
+  await page.getByLabel('Team name').fill(name);
   await page.getByLabel('Your nickname').fill(nick);
-  await page.getByRole('button', { name: 'Create group' }).click();
+  await page.getByRole('button', { name: 'Create team' }).click();
   // Connecting to the relay (and loading the lobby screen) can take a while on a busy CI runner.
   try {
     await expect(page.getByTestId('group-name')).toHaveText(name, { timeout: 15_000 });
@@ -61,7 +62,7 @@ async function createGroup(page: Page, name: string, nick: string) {
 async function joinByLink(page: Page, code: string, nick: string) {
   // The lobby QR opens ?join=CODE: Join with the code filled in.
   await page.goto(`/?debug=1&join=${code}`);
-  await expect(page.getByLabel('Group code')).toHaveValue(code);
+  await expect(page.getByLabel('Team code')).toHaveValue(code);
   await page.getByLabel('Your nickname').fill(nick);
   await page.getByRole('button', { name: 'Join', exact: true }).click();
   await expect(page.getByTestId('lobby-waiting')).toBeVisible({ timeout: 15_000 });
@@ -69,8 +70,9 @@ async function joinByLink(page: Page, code: string, nick: string) {
 
 async function joinByTyping(page: Page, code: string, nick: string) {
   await page.goto('/?debug=1');
-  await page.getByRole('button', { name: 'Join group' }).click();
-  await page.getByLabel('Group code').fill(code.toLowerCase());
+  await page.getByRole('button', { name: 'Play as a team' }).click();
+  await page.getByRole('button', { name: 'Join a team' }).click();
+  await page.getByLabel('Team code').fill(code.toLowerCase());
   await page.getByLabel('Your nickname').fill(nick);
   await page.getByRole('button', { name: 'Join', exact: true }).click();
   await expect(page.getByTestId('lobby-waiting')).toBeVisible({ timeout: 15_000 });
@@ -82,32 +84,17 @@ async function debugJump(page: Page, label: string) {
   await page.locator('.debug-panel summary').click();
 }
 
-/**
- * Group Live Ops: the main phone has no routing buttons; each incident is routed from the support
- * phone holding that specialisation, and "all hands" calls need a tap on every phone.
- */
-async function playLiveOps(main: Page, supports: Page[]) {
-  await expect(main.locator('button[data-team]')).toHaveCount(0);
-  let allHands = 0;
+/** Live Ops on the player's phone: route each incident to its team (debug-only data-team). */
+async function playLiveOps(main: Page) {
   for (let guard = 0; guard < 20; guard++) {
     const card = main.getByTestId('incident');
-    if (!(await card.count())) return allHands;
+    if (!(await card.count())) return;
     const text = await card.textContent();
-    if (await card.getAttribute('data-all-hands')) {
-      allHands++;
-      for (const p of supports) await p.getByTestId('support-all-hands').click();
-      await main.getByTestId('all-hands-ready').click();
-    } else {
-      const team = (await card.getAttribute('data-team'))!;
-      const holder = [];
-      for (const p of supports) if ((await p.getByTestId('support-routing').getAttribute('data-teams'))!.split(',').includes(team)) holder.push(p);
-      expect(holder).toHaveLength(1);
-      await holder[0]!.locator(`button[data-team="${team}"]`).click();
-    }
+    const team = (await card.getAttribute('data-team'))!;
+    await main.locator(`button[data-team="${team}"]`).click();
     await expect(main.getByTestId('feedback')).toContainText('✓');
     await expect(main.getByTestId('incident').filter({ hasText: text ?? '' })).toHaveCount(0, { timeout: 10_000 });
   }
-  return allHands;
 }
 
 /** Stage 1 cards played right via the debug-only data attributes (as in stage1.spec.ts). */
@@ -135,7 +122,7 @@ const FRUIT = ['Kiwi', 'Mango', 'Lime', 'Plum', 'Pear', 'Fig', 'Lychee', 'Durian
 const fruit = () => FRUIT[Math.floor(Math.random() * FRUIT.length)]!;
 const uniqueName = (prefix: string) => `${prefix} ${fruit()} ${fruit()}`;
 
-test('3 phones: create, join by QR link and by code, reorder, play a group run, rank on Today’s board', async ({ browser }, info) => {
+test('3 phones: create, join by QR link and by code, reorder, play a team run, rank on Today’s board, then free play', async ({ browser }, info) => {
   test.setTimeout(180_000);
   const board = { submitted: null as string | null };
   const ann = await phone(browser, info);
@@ -177,36 +164,33 @@ test('3 phones: create, join by QR link and by code, reorder, play a group run, 
 
   await ann.getByRole('button', { name: 'Start' }).click();
 
-  // Cai (P1) holds the main phone for the prologue and stage 1; the others support.
+  // Cai (P1) plays the prologue; the others see the waiting screen.
   await expect(cai.getByTestId('prologue-heading')).toBeVisible();
   for (const p of [ann, ben]) {
-    await expect(p.getByTestId('support-screen')).toHaveAttribute('data-stage', '0');
-    await expect(p.getByTestId('supporting')).toContainText("You're supporting Cai");
+    await expect(p.getByTestId('waiting-screen')).toHaveAttribute('data-stage', '0');
+    await expect(p.getByTestId('now-playing')).toContainText('Cai is starting the mission');
   }
+  await expect(ben.getByTestId('my-turn')).toContainText('Your turn: Teach the Machine to See');
   await cai.getByRole('button', { name: 'Start the mission' }).click();
-  // Stage 1 belongs to Ann (P2); Cai and Ben support.
-  await expect(ann.getByTestId('support-screen')).toHaveCount(0);
-  for (const p of [cai, ben]) await expect(p.getByTestId('support-screen')).toHaveAttribute('data-stage', '1');
-  // Stage 1's three support cards are dealt between the two support phones (§3.5.2).
-  const cards = [];
-  for (const p of [cai, ben]) cards.push(...(await p.getByTestId('support-cards').getAttribute('data-cards'))!.split(','));
-  expect(cards.sort()).toEqual(['duplicates', 'fixKit', 'rulebook']);
+  // Stage 1 belongs to Ann (P2); Cai and Ben wait, and Ann's phone plays exactly like solo.
+  await expect(ann.getByTestId('waiting-screen')).toHaveCount(0);
+  await expect(ann.getByRole('button', { name: 'Start sorting' })).toBeVisible();
+  for (const p of [cai, ben]) {
+    await expect(p.getByTestId('waiting-screen')).toHaveAttribute('data-stage', '1');
+    await expect(p.getByTestId('now-playing')).toContainText('Ann is playing');
+  }
 
   // Debug jump to the finale: it goes to the IC (Cai); the host's phone (Ann) still submits.
   await debugJump(ann, 'F');
   await expect(cai.getByRole('heading', { name: 'Mission live' })).toBeVisible();
   for (const p of [ann, ben]) {
-    await expect(p.getByTestId('support-screen')).toHaveAttribute('data-stage', '5');
-    await expect(p.getByTestId('supporting')).toContainText("You're supporting Cai");
+    await expect(p.getByTestId('waiting-screen')).toHaveAttribute('data-stage', '5');
+    await expect(p.getByTestId('now-playing')).toContainText('Cai is playing');
   }
 
   await cai.getByRole('button', { name: 'Go live' }).click();
   await cai.getByRole('button', { name: 'Start shift' }).click();
-  // Every specialisation is dealt to exactly one support phone.
-  const teams = [];
-  for (const p of [ann, ben]) teams.push(...(await p.getByTestId('support-routing').getAttribute('data-teams'))!.split(','));
-  expect(teams.sort()).toEqual(['ai', 'cloud', 'data', 'logic']);
-  expect(await playLiveOps(cai, [ann, ben])).toBe(2);
+  await playLiveOps(cai);
 
   // Everyone reaches the debrief and sees the shared rank instead of the solo note.
   for (const p of [ann, ben, cai]) {
@@ -232,15 +216,21 @@ test('3 phones: create, join by QR link and by code, reorder, play a group run, 
   const own = ben.locator('[data-own]');
   await expect(own).toHaveCount(1);
   await expect(own).toContainText(name);
-  await expect(own).toContainText('Your group');
+  await expect(own).toContainText('Your team');
 
   // Nicknames never land in localStorage except each device's own.
   const stored = await ben.evaluate(() => JSON.stringify(localStorage));
   expect(stored).not.toMatch(/Ann|Cai/);
 
-  // Play again leaves the group.
+  // Play again leaves the team.
   await ann.getByRole('button', { name: 'Play again' }).click();
   await expect(ann.getByRole('button', { name: 'Play solo' })).toBeVisible();
+
+  // Free play: once ranked, any member replays a stage solo on their own phone.
+  await cai.getByTestId('replay-stage').click();
+  await cai.getByRole('button', { name: /Build the Logic/ }).click();
+  await expect(cai.getByRole('button', { name: 'Start building' })).toBeVisible();
+  await expect(cai.getByTestId('waiting-screen')).toHaveCount(0);
   for (const p of [ann, ben, cai]) await p.context().close();
 });
 
@@ -264,40 +254,40 @@ test('rejoin after a reload lands on the current stage; joining closes at START'
   await expect(listed).toContainText('In the lobby');
 
   await ann.getByRole('button', { name: 'Start' }).click();
-  await expect(listed).toContainText('Getting started');
-  await expect(ben.getByTestId('support-screen')).toHaveAttribute('data-stage', '0');
+  await expect(listed).toContainText('Starting the mission');
+  await expect(ben.getByTestId('waiting-screen')).toHaveAttribute('data-stage', '0');
 
   // A late player can't join a started group.
   const late = await phone(browser, info);
   await late.goto(`/?debug=1&join=${code}`);
   await late.getByLabel('Your nickname').fill('Late');
   await late.getByRole('button', { name: 'Join', exact: true }).click();
-  await expect(late.getByTestId('join-status')).toHaveText('That group has already started.', { timeout: 15_000 });
+  await expect(late.getByTestId('join-status')).toHaveText('That team has already started.', { timeout: 15_000 });
 
   // Ben reloads: Home offers "Back to …"; rejoining shows the current stage.
   await ben.reload();
   await ben.getByRole('button', { name: `Back to ${name}` }).click();
-  await expect(ben.getByTestId('support-screen')).toHaveAttribute('data-stage', '0');
+  await expect(ben.getByTestId('waiting-screen')).toHaveAttribute('data-stage', '0');
   // The IC (Ann) starts the mission; stage 1 belongs to Ben (P2).
   await ann.getByRole('button', { name: 'Start the mission' }).click();
-  await expect(ann.getByTestId('support-screen')).toHaveAttribute('data-stage', '1');
-  await expect(ann.getByTestId('supporting')).toContainText("You're supporting Ben");
+  await expect(ann.getByTestId('waiting-screen')).toHaveAttribute('data-stage', '1');
+  await expect(ann.getByTestId('now-playing')).toContainText('Ben is playing');
 
   // The main phone reloads too and carries on as the main phone, at stage 1.
   await ben.reload();
   await ben.getByRole('button', { name: `Back to ${name}` }).click();
-  await expect(ben.getByTestId('support-screen')).toHaveCount(0);
+  await expect(ben.getByTestId('waiting-screen')).toHaveCount(0);
   await expect(ben.locator('.debug-panel')).toContainText('stage 1');
   await debugJump(ben, '2');
   // Stage 2 belongs to Ann (rotation[2 % 2]).
-  await expect(ben.getByTestId('support-screen')).toHaveAttribute('data-stage', '2');
-  await expect(ben.getByTestId('supporting')).toContainText("You're supporting Ann");
-  await expect(ann.getByTestId('support-screen')).toHaveCount(0);
+  await expect(ben.getByTestId('waiting-screen')).toHaveAttribute('data-stage', '2');
+  await expect(ben.getByTestId('now-playing')).toContainText('Ann is playing');
+  await expect(ann.getByTestId('waiting-screen')).toHaveCount(0);
 
-  // Leaving from Home ends the group on this phone.
+  // Leaving from Home ends the team on this phone.
   await ben.goto('/?debug=1');
-  await ben.getByRole('button', { name: 'Leave group' }).click();
-  await expect(ben.getByRole('button', { name: 'Create group' })).toBeVisible();
+  await ben.getByRole('button', { name: 'Leave team' }).click();
+  await expect(ben.getByRole('button', { name: 'Play as a team' })).toBeVisible();
   for (const p of [ann, ben, late, host]) await p.context().close();
 });
 
@@ -312,29 +302,30 @@ test('main phone drops: teammates pause, then the next player takes over after 2
   await joinByLink(ben, code, 'Ben');
   await ann.getByRole('button', { name: 'Start' }).click();
   await ann.getByRole('button', { name: 'Start the mission' }).click();
-  // Stage 1 belongs to Ben (P2); Ann supports.
-  await expect(ann.getByTestId('support-screen')).toHaveAttribute('data-stage', '1');
+  // Stage 1 belongs to Ben (P2); Ann waits.
+  await expect(ann.getByTestId('waiting-screen')).toHaveAttribute('data-stage', '1');
 
   await ben.context().close();
   await expect(ann.getByTestId('paused')).toContainText("Waiting for Ben's phone");
   // Ann is next in the rotation: she takes the main phone and resumes stage 1.
-  await expect(ann.getByTestId('support-screen')).toHaveCount(0, { timeout: 30_000 });
+  await expect(ann.getByTestId('waiting-screen')).toHaveCount(0, { timeout: 30_000 });
   await expect(ann.locator('.debug-panel')).toContainText('stage 1');
   await ann.context().close();
 });
 
-test('?fakePeers=2: bots join the lobby, this phone plays main and can preview a support view', async ({ page }) => {
+test('?fakePeers=2: bots join the lobby, this phone plays every turn and can preview the waiting screen', async ({ page }) => {
   await page.goto('/?debug=1&fakePeers=2');
-  await page.getByRole('button', { name: 'Create group' }).click();
+  await page.getByRole('button', { name: 'Play as a team' }).click();
+  await page.getByRole('button', { name: 'Create a team' }).click();
   await page.getByLabel('Your nickname').fill('Dev');
-  await page.getByRole('button', { name: 'Create group' }).click();
+  await page.getByRole('button', { name: 'Create team' }).click();
   await expect(page.getByTestId('member')).toHaveCount(3);
   await expect(page.getByTestId('member').nth(1)).toContainText('Bot Ana');
   await page.getByRole('button', { name: 'Start' }).click();
   await expect(page.getByTestId('prologue-heading')).toBeVisible();
-  await page.getByRole('button', { name: 'Support 1', exact: true }).click();
-  await expect(page.getByTestId('support-screen')).toBeVisible();
-  await expect(page.getByTestId('supporting')).toContainText("You're supporting Dev");
+  await page.getByRole('button', { name: 'Waiting', exact: true }).click();
+  await expect(page.getByTestId('waiting-screen')).toBeVisible();
+  await expect(page.getByTestId('now-playing')).toContainText('Dev is starting the mission');
   await page.getByRole('button', { name: 'Main', exact: true }).click();
   await expect(page.getByTestId('prologue-heading')).toBeVisible();
   // Cut the connection: the reconnecting pill shows; play carries on.
@@ -357,7 +348,8 @@ test('hand-off: the next main player is named and taps Ready on their own phone'
   await ann.getByRole('button', { name: 'Start the mission' }).click();
   // Stage 1 belongs to Ben (P2).
   await ben.getByRole('button', { name: 'Start sorting' }).click();
-  for (const level of ['Tutorial', 'Keep or Trash', 'Keep, Fix or Trash']) {
+  await playCards(ben); // tutorial
+  for (const level of ['Keep or Trash', 'Keep, Fix or Trash']) {
     await expect(ben.getByRole('heading', { name: level, level: 1 })).toBeVisible();
     await ben.getByRole('button', { name: 'Start', exact: true }).click();
     await playCards(ben);
@@ -370,9 +362,9 @@ test('hand-off: the next main player is named and taps Ready on their own phone'
   await expect(ben.getByText(/Ann/).first()).toBeVisible();
   await expect(ann.getByTestId('up-next')).toBeVisible();
   await ann.getByTestId('up-next').getByRole('button').click();
-  // Ann now holds the main phone for stage 2; Ben supports.
-  await expect(ann.getByTestId('support-screen')).toHaveCount(0);
-  await expect(ben.getByTestId('support-screen')).toHaveAttribute('data-stage', '2');
+  // Ann now plays stage 2; Ben waits.
+  await expect(ann.getByTestId('waiting-screen')).toHaveCount(0);
+  await expect(ben.getByTestId('waiting-screen')).toHaveAttribute('data-stage', '2');
   for (const p of [ann, ben]) await p.context().close();
 });
 

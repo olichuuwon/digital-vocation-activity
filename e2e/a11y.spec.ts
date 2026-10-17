@@ -45,8 +45,7 @@ test('Stage 1 and Stage 2 play screens', async ({ page }) => {
   await page.goto('/?debug=1&stage=1');
   await axe(page, 'Stage 1 briefing');
   await page.getByRole('button', { name: 'Start sorting' }).click();
-  await axe(page, 'Stage 1 level intro');
-  await page.getByRole('button', { name: 'Start', exact: true }).click();
+  await expect(page.getByTestId('record-card')).toBeVisible();
   await axe(page, 'Stage 1 card');
   await page.goto('/?debug=1&stage=2');
   await page.getByRole('button', { name: 'Start labelling' }).click();
@@ -89,20 +88,23 @@ test('Finale: reveal, Live Ops, debrief', async ({ page }) => {
   await axe(page, 'Debrief');
 });
 
-test('Group: create, join, lobby, support card', async ({ page }) => {
+test('Team: create, join, lobby, waiting screen', async ({ page }) => {
   await page.goto('/?debug=1&fakePeers=2');
-  await page.getByRole('button', { name: 'Join group' }).click();
+  await page.getByRole('button', { name: 'Play as a team' }).click();
+  await axe(page, 'Play as a team');
+  await page.getByRole('button', { name: 'Join a team' }).click();
   await axe(page, 'Join');
   await page.goto('/?debug=1&fakePeers=2');
-  await page.getByRole('button', { name: 'Create group' }).click();
+  await page.getByRole('button', { name: 'Play as a team' }).click();
+  await page.getByRole('button', { name: 'Create a team' }).click();
   await axe(page, 'Create');
   await page.getByLabel('Your nickname').fill('Dev');
-  await page.getByRole('button', { name: 'Create group' }).click();
+  await page.getByRole('button', { name: 'Create team' }).click();
   await expect(page.getByTestId('member')).toHaveCount(3);
   await axe(page, 'Lobby');
   await page.getByRole('button', { name: 'Start' }).click();
   await page.getByRole('button', { name: 'Start the mission' }).click();
-  await page.getByRole('button', { name: 'Support 1', exact: true }).click();
-  await expect(page.getByTestId('support-screen')).toBeVisible();
-  await axe(page, 'Support stage 1');
+  await page.getByRole('button', { name: 'Waiting', exact: true }).click();
+  await expect(page.getByTestId('waiting-screen')).toBeVisible();
+  await axe(page, 'Waiting stage 1');
 });

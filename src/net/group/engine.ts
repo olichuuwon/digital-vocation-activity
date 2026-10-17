@@ -1,6 +1,6 @@
 import type { RunPayload } from '../leaderboard';
 import { newRun } from '../../state/store';
-import type { GameState, Mode, Stage } from '../../state/types';
+import type { GameState, Stage } from '../../state/types';
 import { generateCode, groupChannel } from './codes';
 import {
   BEAT_MS,
@@ -30,7 +30,7 @@ import type { Channel, ChannelStatus, GroupTransport } from './transport';
  * channel and decides who runs the game. See ./index.ts for the sync model (the contract).
  *
  * Replicated keys (last-writer-wins on a Lamport version):
- *   session  written by the leader: name, code, mode, rotation, status, start time, run token
+ *   session  written by the leader: name, code, rotation, status, start time, run token
  *   run      the shared GameState, written by the main phone
  *   ov:<n>   takeover for stage n (the main phone dropped; the next in the rotation claims it)
  *   result   the leaderboard result (row id + today's rank), written by the submitting device
@@ -173,7 +173,7 @@ export class GroupEngine {
   // -------------------------------------------------------------------------------------
 
   /** Leader: create a lobby. */
-  create(opts: { name: string; mode: Mode; nick: string }) {
+  create(opts: { name: string; nick: string }) {
     this.reset();
     this.me = this.deps.uuid();
     this.nick = opts.nick;
@@ -182,7 +182,6 @@ export class GroupEngine {
       sid: this.deps.uuid(),
       code: generateCode(this.random),
       name: opts.name,
-      mode: opts.mode,
       leaderId: this.me,
       rotation: [this.me],
       status: 'lobby',
@@ -263,7 +262,7 @@ export class GroupEngine {
     const session: Session = { ...s, rotation, status: 'playing', startedAt, sizeAtStart: rotation.length };
     this.putLocal('session', session);
     this.status = 'playing';
-    const run = newRun(s.mode, startedAt);
+    const run = newRun(startedAt);
     this.held = run;
     this.heldBy = this.me;
     this.putLocal('run', run);
@@ -822,7 +821,6 @@ export function runPayload(s: Session, run: GameState): RunPayload {
     groupToken: s.token,
     groupName: s.name,
     groupSize: s.sizeAtStart ?? s.rotation.length,
-    mode: s.mode,
     families: Math.max(0, Math.min(1200, Math.round(run.scores.finale.familiesReached))),
     durationSec: Math.max(0, Math.min(3600, Math.round(((run.finishedAt ?? Date.now()) - (s.startedAt ?? run.startedAt)) / 1000))),
   };

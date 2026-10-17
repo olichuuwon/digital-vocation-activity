@@ -18,7 +18,6 @@ const payload = (n: number): RunPayload => ({
   groupToken: `1b4e28ba-2fa1-4d3b-a3f5-${String(n).padStart(12, '0')}`,
   groupName: `Group ${n}`,
   groupSize: 3,
-  mode: 'booth',
   families: 900,
   durationSec: 700,
 });

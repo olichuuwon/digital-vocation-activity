@@ -6,7 +6,6 @@ const count = z.number().int().min(0);
 const star = z.union([z.literal(0), z.literal(1), z.literal(2), z.literal(3)]);
 
 export const gameStateSchema = z.object({
-  mode: z.enum(['booth', 'full']),
   stage: z.union([z.literal(0), z.literal(1), z.literal(2), z.literal(3), z.literal(4), z.literal(5)]),
   levelIndex: count,
   scores: z.object({

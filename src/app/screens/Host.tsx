@@ -7,7 +7,6 @@ import { watchHost, type HostGroup } from '../../net/group/hostChannel';
 import { sharedTransport } from '../../net/group/store';
 import { hostListRecent, LeaderboardError, setHidden, type HostRow, type HostStatus } from '../../net/leaderboard';
 import { formatSgtTime } from '../../net/sgtTime';
-import type { Mode } from '../../state/types';
 import { gameUrl, parseParams } from '../params';
 import { useScreenHeading } from '../screenFocus';
 import ui from '../ui.module.css';
@@ -19,10 +18,10 @@ const t = copy.host;
 const POLL_MS = 10_000;
 
 /** `/host` booth screen (§3.5.1): QR to the game, live Today board, facilitator panel. */
-export default function Host({ mode }: { mode: Mode | null }) {
+export default function Host() {
   const headingRef = useScreenHeading<HTMLHeadingElement>(t.heading);
   const board = useBoard({ kind: 'today' }, POLL_MS);
-  const url = gameUrl(window.location.origin, import.meta.env.BASE_URL, mode, parseParams(window.location.search).relaxed);
+  const url = gameUrl(window.location.origin, import.meta.env.BASE_URL, parseParams(window.location.search).relaxed);
   const [qr, setQr] = useState<string | null>(null);
 
   useEffect(() => {
@@ -87,7 +86,7 @@ function PlayingNow() {
       : x.stage === 5
         ? groupCopy.host.finale
         : x.stage === 0
-          ? groupCopy.support.lobbyStage
+          ? groupCopy.host.prologue
           : fill(groupCopy.host.stage, { n: x.stage, title: stageContent(x.stage)?.title ?? '' });
   return (
     <section className={ui.card} aria-labelledby="host-playing" data-testid="host-playing">

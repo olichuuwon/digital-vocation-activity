@@ -94,29 +94,6 @@ test('Stage 2 Covered Up: tiles lift over time and Reveal uses a charge', async 
   await expect.poll(async () => Number(await board.getAttribute('data-shown'))).toBeGreaterThan(first + 1);
 });
 
-test('Stage 2 full mode: Draw the Box with buttons only, then the answer outline after 3 misses', async ({ page }) => {
-  await page.goto('/?debug=1&mode=full&stage=2');
-  await page.getByRole('button', { name: 'Start labelling' }).click();
-  for (let i = 0; i < 2; i++) {
-    await page.getByRole('button', { name: 'Start', exact: true }).click();
-    await playLabels(page);
-  }
-  await page.getByRole('button', { name: 'Start', exact: true }).click();
-  await playCovered(page);
-  await expect(page.getByRole('heading', { name: 'Draw the Box', level: 1 })).toBeVisible();
-  await page.getByRole('button', { name: 'Start', exact: true }).click();
-  // Shrink the box into a corner so it misses, three times.
-  for (let i = 0; i < 3; i++) {
-    for (let k = 0; k < 6; k++) await page.getByRole('button', { name: 'Narrower' }).click();
-    for (let k = 0; k < 6; k++) await page.getByRole('button', { name: 'Shorter' }).click();
-    for (let k = 0; k < 8; k++) await page.getByRole('button', { name: 'Move left' }).click();
-    for (let k = 0; k < 8; k++) await page.getByRole('button', { name: 'Move up' }).click();
-    await page.getByRole('button', { name: 'Lock it in' }).click();
-  }
-  await expect(page.getByTestId('truth-box')).toBeAttached();
-  await expect(page.getByTestId('hint')).toContainText('dashed outline');
-});
-
 test('Stage 2: Settings pauses the level timer, and a reload after the last level resumes there', async ({ page }) => {
   await page.goto('/?debug=1&stage=2');
   await page.getByRole('button', { name: 'Start labelling' }).click();

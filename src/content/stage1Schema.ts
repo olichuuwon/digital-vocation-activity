@@ -139,6 +139,8 @@ export const stage1CopySchema = z.object({
   answerFix: words(15),
   suggested: txt,
   nextCard: words(10),
+  /** Running total on screen while sorting: people in households sent good data. */
+  counter: words(6),
   timeUp: words(8),
   outlier: z.object({
     instruction: words(20),
@@ -166,6 +168,7 @@ export const stage1CopySchema = z.object({
     heading0: txt,
     accuracy: txt,
     fixed: txt,
+    reached: txt,
     automated: txt,
   }),
   learned: words(25),

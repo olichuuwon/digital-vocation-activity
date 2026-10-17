@@ -34,20 +34,17 @@ const snap = (over: Partial<GroupSnapshot>): GroupSnapshot => ({
 });
 
 describe('group view', () => {
-  it('derives main, supports in rotation order and my support index', () => {
+  it('derives who is playing this stage', () => {
     const v = deriveView(snap({}));
     expect(v.active).toBe(true);
     expect(v.role).toBe('member');
     expect(v.main?.nick).toBe('Ben');
     expect(v.amMain).toBe(false);
-    expect(v.supports.map((m) => m.nick)).toEqual(['Cai', 'Ann']);
-    expect(v.mySupportIndex).toBe(0);
-    expect(v.supportCount).toBe(2);
   });
 
-  it('leaves out teammates gone 30 s+, and shows the pause while the main phone is missing', () => {
+  it('marks teammates gone 30 s+, and shows the pause while the player is missing', () => {
     const v = deriveView(snap({ gone: ['member-a'], mainLostSince: 123 }));
-    expect(v.supports.map((m) => m.nick)).toEqual(['Cai']);
+    expect(v.members.find((m) => m.nick === 'Ann')?.gone).toBe(true);
     expect(v.paused).toEqual({ name: 'Ben', since: 123 });
   });
 
@@ -56,11 +53,9 @@ describe('group view', () => {
     expect(v.members.map((m) => m.nick)).toEqual(['Player 1', 'Player 2', 'Cai']);
   });
 
-  it('fakePeers: this phone plays a bot’s turn and can preview a support view', () => {
+  it('fakePeers: this phone plays a bot’s turn and can preview the waiting screen', () => {
     expect(deriveView(snap({}), ['member-b']).amMain).toBe(true);
-    const preview = deriveView(snap({}), ['member-b'], 1);
-    expect(preview.amMain).toBe(false);
-    expect(preview.mySupportIndex).toBe(1);
+    expect(deriveView(snap({}), ['member-b'], 0).amMain).toBe(false);
   });
 
   it('names the next main phone for the hand-off, skipping someone missing 20 s+', () => {

@@ -21,7 +21,7 @@ Try it: https://digital-vocation-activity.vercel.app/?debug=1&stage=1
 - [ ] **6. Rules per level:** the spec says one new rule per level, but levels 1 and 2 each show two (2+3, then 4+5). *Default: two.*
 - [ ] **7. Stars:** 1★ at 30%, 2★ at 65%, 3★ at 88%. A careful player gets about 3★ and a first-timer about 2★. *Default: keep.*
 - [ ] **8. Automate question:** "Which rule would you turn into code first?" The correct answer is "trash repeated household IDs". The wrong answers are "trash households over 12 people" and "trash every typo". *Default: keep.*
-- [ ] **9. Full mode is short:** Stage 1 takes about 2.6 min against the 5–6 min budget. *Default: add content after the M8 playtests.*
+- [x] **9. Full mode is short:** Stage 1 takes about 2.6 min against the 5–6 min budget. *Default: add content after the M8 playtests.* *Closed 2026-10-17: Solo/Team simplification (no full mode / no support cards).*
 - [ ] **10. Extra Rulebook examples:** these aren't in the spec: "People: 0", "Water: 900 L", "ID 1042 (second time)". *Default: keep.*
 
 ## C. Branding and look
@@ -73,7 +73,7 @@ Try it: open the site on 2–3 phones, Create group on one, scan its QR with the
 - [x] **36. Who plays the finale:** ✅ Decided 2026-10-08: player 1 is the IC and always plays the finale (done).
 - [ ] **37. Live group names on `/host`:** groups playing now (name, size, stage) appear on the booth screen. A custom name shows there before a facilitator could hide it from the board. Show only generated names there, or hide the list? *Default: show all names.*
 - [ ] **38. Joining replaces a solo run:** a phone that creates or joins a group drops any unfinished solo run on it. *Default: keep (booth phones play one run at a time).*
-- [ ] **39. Quiet support cards:** in some booth levels a support card has little to do (e.g. Reveal has only 2 charges; Manifest matters mostly in full mode). Play a 3–4 phone group and note any phone that sat idle for a whole level. *Default: re-balance after playtests (M8).*
+- [x] **39. Quiet support cards:** in some booth levels a support card has little to do (e.g. Reveal has only 2 charges; Manifest matters mostly in full mode). Play a 3–4 phone group and note any phone that sat idle for a whole level. *Default: re-balance after playtests (M8).* *Closed 2026-10-17: Solo/Team simplification (no full mode / no support cards).*
 - [ ] **40. Two-phone check on the live site:** ✅ *2026-10-08: Claude ran two simulated phones (Chrome, Pixel 5 size) against the live site and real Supabase Realtime: create, join by code, both see each other, Start gives one main and one support screen. Then full live runs with **2, 3 and 4 phones** passed all 18 checks each (rotation, support cards every stage, rejoin after reload, late join refused, co-op finale, debrief), and a Start-too-soon bug was found and fixed. Rerun any time with `npm run live:groups` and `npm run live:race`. Still worth one real iPhone + Android run before the event.* Original note: group play uses Supabase Realtime, which Claude couldn't test from the cloud sandbox (no WebSockets there; the e2e tests use a local relay). Please create a group on one phone and join from another on the live site. If they never see each other: Supabase → Project Settings → Realtime → make sure public channels are allowed (not "private channels only"). *Default: n/a, needs your check.*
 
 ## K. Polish (M7)
@@ -81,7 +81,7 @@ Try it: open the site on 2–3 phones, Create group on one, scan its QR with the
 - [ ] **42. Sound:** off by default; Settings → Sound plays a soft two-note chime for right and a low two-note tone for wrong. Keep, change, or remove? *Default: keep.*
 
 ## L. From the screenshot walkthrough (`docs/GAME_FLOWS.md`)
-- [ ] **44. Prologue support phones:** during the prologue (about 1 min) support phones only say "Your support card appears here." Give them something (e.g. the mission goal, or "you'll lead stage X")? *Default: leave until M8 playtests.*
+- [x] **44. Prologue support phones:** during the prologue (about 1 min) support phones only say "Your support card appears here." Give them something (e.g. the mission goal, or "you'll lead stage X")? *Default: leave until M8 playtests.* *Closed 2026-10-17: Solo/Team simplification (no full mode / no support cards).*
 
 ## I. Setup notes (no answer needed)
 - Supabase keys: Claude keeps them in `.env.local` (git-ignored) and never commits them. The live site reads them from Vercel → Project → Settings → Environment Variables (`VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`).

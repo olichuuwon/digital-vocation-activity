@@ -8,7 +8,7 @@
  *   Nothing is stored server-side. Nicknames live only in channel presence and on the device
  *   that typed them (§3.5.4). The one stored row is the leaderboard submission.
  * - Replicated state: a few keys, last-writer-wins on a Lamport version, every value zod-checked:
- *     session  (leader)     name, code, mode (the leader's length applies to all), rotation,
+ *     session  (leader)     name, code, rotation,
  *                           status lobby → playing → closed, startedAt, sizeAtStart, run token
  *     run      (main phone) the shared GameState (src/state/types.ts), i.e. the one run
  *     ov:<n>   (claimant)   takeover of stage n's main phone after a drop
@@ -38,9 +38,8 @@
  *   is gone, the finale's main phone) queues one submit_run (retrying, idempotent per token).
  *   The result (rank today) is broadcast so every phone shows "You're #3 today!".
  */
-export { useGroup, useTopic, useActions, useDealtCards, useHandOff, useHandOffSync, deriveView, nextMain, HANDOFF_TOPIC, HANDOFF_READY } from './hooks';
+export { useGroup, useTopic, useActions, useHandOff, useHandOffSync, deriveView, nextMain, HANDOFF_TOPIC, HANDOFF_READY } from './hooks';
 export type { GroupView, Member, HandOffInfo } from './hooks';
 export { publish, sendAction, onAction, groupActions, groupAvailable, useGroupStore } from './store';
-export { dealCards, mainFor, nominalMainIndex, stagesLedBy } from './rotation';
-export { registerBotBehaviour, type BotApi, type BotBehaviour } from './bots';
+export { mainFor, nominalMainIndex, stagesLedBy } from './rotation';
 export type { ActionEvent, GroupSnapshot } from './engine';

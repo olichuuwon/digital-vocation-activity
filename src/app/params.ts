@@ -1,9 +1,8 @@
-import type { Mode, Stage } from '../state/types';
+import type { Stage } from '../state/types';
 
-// URL params from spec §2 and §11: ?mode=booth|full|quick, ?debug=1, ?stage=N, ?relaxed=1, ?fakePeers=N,
+// URL params from spec §11: ?debug=1, ?stage=N, ?relaxed=1, ?fakePeers=N,
 // and ?join=CODE (the group lobby QR, §3.5.1).
 export interface UrlParams {
-  mode: Mode | null;
   debug: boolean;
   stage: Stage | null;
   relaxed: boolean;
@@ -17,10 +16,6 @@ const truthy = (v: string | null) => v === '1' || v === 'true';
 export function parseParams(search: string): UrlParams {
   const p = new URLSearchParams(search);
 
-  const rawMode = p.get('mode');
-  const mode: Mode | null =
-    rawMode === 'booth' || rawMode === 'quick' ? 'booth' : rawMode === 'full' ? 'full' : null;
-
   const rawStage = p.get('stage');
   const n = rawStage === null || rawStage === '' ? NaN : Number(rawStage);
   const stage = Number.isInteger(n) && n >= 0 && n <= 5 ? (n as Stage) : null;
@@ -31,7 +26,7 @@ export function parseParams(search: string): UrlParams {
   const rawJoin = (p.get('join') ?? '').trim().toUpperCase();
   const join = /^[A-HJ-NP-Z2-9]{4}$/.test(rawJoin) ? rawJoin : null;
 
-  return { mode, debug: truthy(p.get('debug')), stage, relaxed: truthy(p.get('relaxed')), fakePeers, join };
+  return { debug: truthy(p.get('debug')), stage, relaxed: truthy(p.get('relaxed')), fakePeers, join };
 }
 
 /** True on the booth screen route (`/host`), respecting a deploy sub-path (BASE_PATH). */
@@ -46,10 +41,9 @@ export const isHostPath = (pathname: string, base = '/') => isAppPath(pathname, 
 /** `/dev/components`: the shared-component gallery (M1). */
 export const isDevComponentsPath = (pathname: string, base = '/') => isAppPath(pathname, base, 'dev/components');
 
-/** The game link the booth QR opens; passes a facilitator `?mode=` through. */
-export function gameUrl(origin: string, base: string, mode: Mode | null, relaxed = false): string {
+/** The game link the booth QR opens; passes a facilitator `?relaxed=1` through. */
+export function gameUrl(origin: string, base: string, relaxed = false): string {
   const url = new URL(base, origin);
-  if (mode) url.searchParams.set('mode', mode);
   if (relaxed) url.searchParams.set('relaxed', '1');
   return url.toString();
 }

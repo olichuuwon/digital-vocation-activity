@@ -1,3 +1,4 @@
+import { m } from 'framer-motion';
 import { useEffect, useMemo, useReducer, useRef, useState } from 'react';
 import { useScreenHeading } from '../../app/screenFocus';
 import { BriefingCard } from '../../components/BriefingCard';
@@ -31,6 +32,7 @@ import {
   outcomeOf,
   outlierBonus,
   outlierHintLevel,
+  peopleReached,
   SCORED_LEVEL_IDS,
   stageScore,
   STREAK_MIN,
@@ -42,12 +44,16 @@ import {
 } from './logic';
 import { OutlierBoard } from './OutlierLevel';
 import { stage1For, useStage1Progress } from './progress';
-import { publish } from '../../net/group';
-import { sc } from '../support/content';
-import { S1, useCoop } from '../support/topics';
 import { RecordCard, CardActions, type CardAction } from './RecordCard';
 
 type Phase = 'briefing' | 'intro' | 'play' | 'reality' | 'automate' | 'result' | 'handoff';
+
+/** Cards dealt across the scored levels (the Reality Check's fallback count). */
+const SCORED_CARDS = stage1.levels.filter((l) => (SCORED_LEVEL_IDS as readonly string[]).includes(l.id)).reduce((n, l) => n + l.count, 0);
+const recordsById = new Map(records.map((r) => [r.id, r]));
+/** People reached across the levels already finished in this run. */
+const reachedSoFar = (startedAt: number) =>
+  stage1For(startedAt).outcomes.reduce((n, o) => n + peopleReached(o.results, recordsById), 0);
 
 const ruleShort = (r: number) => c.ruleShort[String(r) as keyof typeof c.ruleShort];
 
@@ -57,7 +63,7 @@ const ruleShort = (r: number) => c.ruleShort[String(r) as keyof typeof c.ruleSho
  */
 export function DataStage({ run, debug }: { run: GameState; debug: boolean }) {
   const stage = stageContent(1)!;
-  const levels = levelsFor(stage, run.mode);
+  const levels = levelsFor(stage);
   const levelId = levels[run.levelIndex]?.id ?? 'data-tutorial';
   const isLast = run.levelIndex === levels.length - 1;
   const saved = stage1For(run.startedAt);
@@ -74,7 +80,10 @@ export function DataStage({ run, debug }: { run: GameState; debug: boolean }) {
 
   const finishLevel = () => (isLast ? setPhase('reality') : completeLevel());
 
-  if (phase === 'briefing') return <BriefingCard briefing={briefingFor(1)!} stage={stage} onGo={() => setPhase('intro')} />;
+  // The tutorial starts straight from the briefing: the hand hint teaches rule 1, so the first
+  // swipe comes within seconds (the hook).
+  if (phase === 'briefing')
+    return <BriefingCard briefing={briefingFor(1)!} stage={stage} onGo={() => setPhase(levelId === 'data-tutorial' ? 'play' : 'intro')} />;
 
   if (phase === 'intro' || phase === 'play') {
     if (levelId === 'data-l3') {
@@ -97,7 +106,7 @@ export function DataStage({ run, debug }: { run: GameState; debug: boolean }) {
     return (
       <RealityCheck
         check={realityCheck('data')}
-        vars={{ handCleaned: handCleaned || 20 }}
+        vars={{ handCleaned: handCleaned || SCORED_CARDS }}
         onDone={() => setPhase('automate')}
       />
     );
@@ -116,12 +125,13 @@ export function DataStage({ run, debug }: { run: GameState; debug: boolean }) {
 
   if (phase === 'result') {
     const accuracy = dataAccuracy(progress.outcomes);
-    const score = stageScore({ accuracy, ruleChosen, outlier: run.mode === 'full' ? (progress.outlier ?? 0) : null });
+    const score = stageScore({ accuracy, ruleChosen, outlier: null });
     const stars = dataStars(score, stage1.stars);
     const scores = toDataScores(progress.outcomes, ruleChosen);
     const heading = [c.result.heading0, c.result.heading1, c.result.heading2, c.result.heading3][stars]!;
     const lines = [
       fill(c.result.accuracy, { pct: Math.round(scores.accuracy * 100) }),
+      fill(c.result.reached, { n: reachedSoFar(run.startedAt) }),
       fill(c.result.fixed, { n: scores.fixedCount }),
       ...(ruleChosen ? [c.result.automated] : []),
     ];
@@ -214,21 +224,10 @@ function CardPlay({ run, level, debug, onDone }: { run: GameState; level: CardLe
   const [tutorialSeen, setTutorialSeen] = useState(0);
   const headingRef = useScreenHeading<HTMLHeadingElement>(stageContent(1)!.levels.find((l) => l.id === level.id)!.name);
   const isTutorial = level.id === 'data-tutorial';
+  const [before] = useState(() => reachedSoFar(run.startedAt));
+  const reached = before + peopleReached(state.results, recordsById);
   const record: DataRecord | undefined = state.deck[state.index];
   const answer = currentAnswer(state);
-  // Group mode (§3.5.2): the Rulebook, kept IDs and the right fix live on the support phones.
-  const coop = useCoop();
-  useEffect(() => {
-    if (!coop) return;
-    const byId = new Map(state.deck.map((r) => [r.id, r]));
-    const kept = state.results
-      .filter((r) => r.kind === 'wrongKeep' || r.kind === 'keepUnfixed' || (r.correct && r.expected !== 'trash'))
-      .map((r) => byId.get(r.recordId)?.household)
-      .filter((h): h is string => !!h);
-    const fix = record?.fix && level.allowFix ? (record.fix.options[record.fix.correct] ?? null) : null;
-    publish(S1, { kept: [...new Set(kept)], fix, rules: level.rules });
-  }, [coop, state.index, state.results, state.deck, record, level]);
-  useEffect(() => () => publish(S1, null), []);
 
   const decide = (action: Action) => {
     const next = levelReducer(state, { type: 'decide', action });
@@ -283,25 +282,29 @@ function CardPlay({ run, level, debug, onDone }: { run: GameState; level: CardLe
         <span className={s.progress}>
           {state.index + 1} / {state.deck.length}
         </span>
+        <m.span
+          key={reached}
+          className={s.reached}
+          data-testid="people-reached"
+          initial={{ scale: reached > before ? 1.35 : 1 }}
+          animate={{ scale: 1 }}
+          transition={{ type: 'spring', stiffness: 400, damping: 15 }}
+        >
+          <span aria-hidden="true">💧 </span>
+          {fill(c.counter, { n: reached })}
+        </m.span>
         {state.streak >= STREAK_MIN && (
           <span className={s.streak}>
             <span aria-hidden="true">🔥 </span>
             {fill(c.toast.streak, { n: state.streak })}
           </span>
         )}
-        {coop ? (
-          <p className={s.progress} data-testid="ask-rulebook">
-            <span aria-hidden="true">📘 </span>
-            {sc.main.askRulebook}
-          </p>
-        ) : (
-          <RulebookButton rulesInPlay={level.rules} newRuleId={level.newRules[level.newRules.length - 1]} onOpenChange={setRulebookOpen} />
-        )}
+        <RulebookButton rulesInPlay={level.rules} newRuleId={level.newRules[level.newRules.length - 1]} onOpenChange={setRulebookOpen} />
       </div>
       {level.seconds !== null && (
         <Timer
           seconds={level.seconds}
-          running={!(rulebookOpen && !coop) && !state.done}
+          running={!rulebookOpen && !state.done}
           onExpire={() => {
             const next = levelReducer(state, { type: 'timeUp' });
             dispatch({ type: 'timeUp' });

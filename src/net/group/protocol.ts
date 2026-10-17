@@ -44,7 +44,6 @@ export const sessionSchema = z
     sid: z.uuid(),
     code: z.string().regex(/^[A-Z2-9]{4}$/),
     name: z.string().min(1).max(MAX_GROUP_NAME),
-    mode: z.enum(['booth', 'full']),
     leaderId: memberIdSchema,
     /** Main-phone order; also the member list. */
     rotation: z.array(memberIdSchema).min(1).max(MAX_MEMBERS),
