@@ -256,3 +256,50 @@
   min-height: 1.5em;
 }
 
+
+/* Guided help: the ghost "next step" row and the tutorial's highlighted block. */
+.ghost {
+  flex: 1;
+  min-height: var(--tap);
+  border: 2px dashed var(--logic-ink);
+  border-radius: 10px;
+  background: var(--logic-soft, var(--surface));
+  color: var(--text);
+  font-size: 0.9375rem;
+  font-weight: 800;
+  text-align: left;
+  padding: 4px 10px;
+  cursor: pointer;
+  animation: guidePulse 1.6s ease-in-out infinite;
+}
+
+.coach {
+  margin: 0 0 6px;
+  font-weight: 800;
+  color: var(--logic-ink);
+}
+
+.paletteBtn[data-guide='true'],
+.runBtn[data-guide='true'] {
+  outline: 3px solid var(--logic-ink);
+  outline-offset: 2px;
+  animation: guidePulse 1.6s ease-in-out infinite;
+}
+
+@keyframes guidePulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 transparent;
+  }
+  50% {
+    box-shadow: 0 0 0 6px color-mix(in srgb, var(--logic) 35%, transparent);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ghost,
+  .paletteBtn[data-guide='true'],
+  .runBtn[data-guide='true'] {
+    animation: none;
+  }
+}

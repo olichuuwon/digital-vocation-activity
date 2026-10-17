@@ -1,4 +1,4 @@
-import { m } from 'framer-motion';
+import { m, useReducedMotion } from 'framer-motion';
 import { useEffect } from 'react';
 import { useAnnouncer, useScreenHeading } from '../app/screenFocus';
 import { copy, fill } from '../content';
@@ -22,6 +22,8 @@ export function StarResult({
   const headingRef = useScreenHeading<HTMLHeadingElement>(heading);
   const announce = useAnnouncer((a) => a.announce);
   const label = fill(t.starsLabel, { n: stars });
+  // Reduced motion: all stars at once (the staggered pop is decoration).
+  const still = useReducedMotion();
   useEffect(() => announce(label), [announce, label]);
 
   return (
@@ -35,9 +37,9 @@ export function StarResult({
           <m.span
             key={n}
             className={n <= stars ? s.starOn : s.starOff}
-            initial={{ scale: 0.3, opacity: 0 }}
+            initial={still ? false : { scale: 0.3, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
-            transition={{ delay: 0.15 * n, type: 'spring', stiffness: 400, damping: 15 }}
+            transition={still ? { duration: 0 } : { delay: 0.15 * n, type: 'spring', stiffness: 400, damping: 15 }}
           >
             {n <= stars ? '★' : '☆'}
           </m.span>

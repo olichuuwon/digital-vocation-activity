@@ -54,7 +54,7 @@ test('Finale: reveal, route every incident, debrief card fits one screen, then a
   await expect(page.getByRole('heading', { name: 'Teach the machine to see' })).toBeVisible();
 });
 
-test('Finale: wrong routes cost families; Play again goes Home with no Resume', async ({ page }) => {
+test('Finale: wrong routes cost families; New run goes Home with no Resume', async ({ page }) => {
   test.setTimeout(150_000);
   await page.goto('/?debug=1&stage=5');
   await page.getByRole('button', { name: 'Go live' }).click();
@@ -63,7 +63,7 @@ test('Finale: wrong routes cost families; Play again goes Home with no Resume', 
   await playLiveOps(page, false);
   const n = (s: string | null) => Number(/[\d,]+/.exec(s ?? '')?.[0]?.replace(/,/g, '') ?? NaN);
   expect(n(await page.getByTestId('families').textContent())).toBeLessThan(n(before));
-  await page.getByRole('button', { name: 'Play again' }).click();
+  await page.getByRole('button', { name: 'New run' }).click();
   await expect(page.getByRole('button', { name: 'Play solo' })).toBeVisible();
   await expect(page.getByRole('button', { name: 'Resume run' })).toHaveCount(0);
 });
@@ -84,6 +84,6 @@ test('Finale: a reload right after the last incident still reaches the debrief (
   await page.getByRole('button', { name: 'Resume run' }).click();
   await expect(page.getByRole('heading', { name: 'Mission complete' })).toBeVisible();
   // Home now offers free play with bonus levels (§8.3).
-  await page.getByRole('button', { name: 'Play again' }).click();
+  await page.getByRole('button', { name: 'New run' }).click();
   await expect(page.getByRole('button', { name: 'Replay with bonus levels' })).toBeVisible();
 });

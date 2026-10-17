@@ -117,7 +117,7 @@ export function RealityVisualView({ visual, vars = {} }: { visual: RealityVisual
             animate={{ pathLength: 1 }}
             transition={{ duration: 1.8 }}
           />
-          <text x="110" y="70" fontSize="12" fill="currentColor">
+          <text x="196" y="80" fontSize="12" fill="currentColor" textAnchor="end">
             accuracy ↑ with labels
           </text>
           <m.g initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: reduce ? 0 : 1.2 }}>
@@ -216,7 +216,7 @@ export function RealityVisualView({ visual, vars = {} }: { visual: RealityVisual
       return (
         <Box>
           <span style={{ fontSize: '2.5rem' }}>📱🔕</span>
-          <span>automation fixed 99 issues · 1 alert</span>
+          <span>most problems fixed automatically · only the rare one wakes a human</span>
         </Box>
       );
   }

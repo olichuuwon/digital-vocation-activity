@@ -64,6 +64,9 @@ export const finaleCopySchema = z.object({
     timeout: words(12),
     families: txt,
     done: words(10),
+    /** Skip the feedback pause: the next incident, or the debrief after the last. */
+    next: words(3),
+    finish: words(3),
   }),
   /** Incident text keyed by finale.json incident id (§8.2 table + more). */
   incidents: z.record(z.string().regex(/^inc\d{2}$/), z.object({ text: words(14), why: words(16) })),

@@ -49,7 +49,6 @@ test('Stage 1 and Stage 2 play screens', async ({ page }) => {
   await axe(page, 'Stage 1 card');
   await page.goto('/?debug=1&stage=2');
   await page.getByRole('button', { name: 'Start labelling' }).click();
-  await page.getByRole('button', { name: 'Start', exact: true }).click();
   const gotIt = page.getByRole('button', { name: 'Got it' });
   if (await gotIt.count()) await gotIt.click();
   await axe(page, 'Stage 2 label');
@@ -58,12 +57,11 @@ test('Stage 1 and Stage 2 play screens', async ({ page }) => {
 test('Stage 3 and Stage 4 play screens', async ({ page }) => {
   await page.goto('/?debug=1&stage=3');
   await page.getByRole('button', { name: 'Start building' }).click();
-  await page.getByRole('button', { name: 'Start', exact: true }).click();
   const gotIt = page.getByRole('button', { name: 'Got it' });
   if (await gotIt.count()) await gotIt.click();
   await axe(page, 'Stage 3 editor');
   await page.goto('/?debug=1&stage=4');
-  await page.getByRole('button', { name: 'Go live' }).click();
+  await page.getByRole('button', { name: 'Launch the app' }).click();
   await page.getByRole('button', { name: 'Start', exact: true }).click();
   await page.getByRole('button', { name: 'Got it' }).click();
   await page.getByRole('button', { name: 'Pause' }).click();

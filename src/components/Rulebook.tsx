@@ -10,7 +10,7 @@ function RuleItem({ rule, isNew }: { rule: Rule; isNew: boolean }) {
     <li className={`${s.rule} ${isNew ? s.ruleNew : ''}`} data-testid="rule">
       <p className={s.ruleTitle}>
         <span>
-          {rule.id}. {rule.title}
+          {rule.title}
         </span>
         {isNew && <span className={s.newTag}>{t.newRule}</span>}
       </p>

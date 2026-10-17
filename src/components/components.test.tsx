@@ -3,7 +3,7 @@ import { realityCheck, rulebook, stageContent } from '../content';
 import { useGame } from '../state/store';
 import { HandOff } from './HandOff';
 import { HintBox } from './HintBox';
-import { RealityCheck } from './RealityCheck';
+import { READ_MS, RealityCheck } from './RealityCheck';
 import { NewRuleCard, RulebookButton } from './Rulebook';
 import { StarResult } from './StarResult';
 import { Timer } from './Timer';
@@ -79,19 +79,22 @@ describe('StarResult', () => {
 });
 
 describe('RealityCheck', () => {
-  it('steps through every card, then calls onDone', () => {
+  beforeEach(() => vi.useFakeTimers());
+  afterEach(() => vi.useRealTimers());
+
+  it('shows every card (no Skip), each for a moment before Next works, then calls onDone', () => {
     const check = realityCheck('cloud-k8s');
     const onDone = vi.fn();
     render(<RealityCheck check={check} onDone={onDone} />);
-    for (let i = 1; i < check.cards.length; i++) fireEvent.click(screen.getByRole('button', { name: 'Next' }));
+    expect(screen.queryByRole('button', { name: 'Skip' })).toBeNull();
+    for (let i = 1; i < check.cards.length; i++) {
+      const next = screen.getByRole('button', { name: 'Next' });
+      expect(next).toBeDisabled();
+      act(() => void vi.advanceTimersByTime(READ_MS));
+      fireEvent.click(next);
+    }
+    act(() => void vi.advanceTimersByTime(READ_MS));
     fireEvent.click(screen.getByRole('button', { name: 'Continue' }));
-    expect(onDone).toHaveBeenCalledTimes(1);
-  });
-
-  it('Skip leaves straight away', () => {
-    const onDone = vi.fn();
-    render(<RealityCheck check={realityCheck('ai')} onDone={onDone} />);
-    fireEvent.click(screen.getByRole('button', { name: 'Skip' }));
     expect(onDone).toHaveBeenCalledTimes(1);
   });
 });
@@ -123,12 +126,14 @@ describe('Rulebook', () => {
 });
 
 describe('HandOff', () => {
-  it('names the next main player in a group, and the next team when solo', () => {
+  it('names the next player (shown for teams), and solo goes straight on', () => {
     const stage = stageContent(3)!;
-    const { rerender } = render(<HandOff stage={stage} nextName="Sam" onReady={() => {}} />);
+    render(<HandOff demo stage={stage} nextName="Sam" onReady={() => {}} />);
     expect(screen.getByText(/Sam, it's your turn: Software Development/)).toBeInTheDocument();
-    rerender(<HandOff stage={stage} onReady={() => {}} />);
-    expect(screen.getByText(/Next team: Software Development/)).toBeInTheDocument();
+    const onReady = vi.fn();
+    const { container } = render(<HandOff stage={stage} onReady={onReady} />);
+    expect(onReady).toHaveBeenCalledTimes(1);
+    expect(container).toBeEmptyDOMElement();
   });
 });
 

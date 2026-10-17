@@ -34,6 +34,21 @@ const pct = (x: number) => Math.floor(x * 100 + 1e-9);
 const TEAM_ICON: Record<Team, string> = { data: '📊', ai: '🧠', logic: '🧩', cloud: '☁️' };
 
 /**
+ * A caption under a big number: the number itself is shown big just above, so the caption
+ * says it for screen readers only ("{n} families reached" reads "families reached" on screen).
+ */
+function UnderBigNumber({ template, n }: { template: string; n: string }) {
+  const [before, after = ''] = template.split('{n}');
+  return (
+    <>
+      {before}
+      <span className="visually-hidden">{n} </span>
+      {after.trimStart()}
+    </>
+  );
+}
+
+/**
  * Finale "Mission Live" (§8): pipeline reveal → Live Ops incidents → debrief. Progress is saved,
  * so a reload resumes where the player was and Live Ops can't be replayed for a better score.
  */
@@ -52,9 +67,8 @@ export default function FinaleStage({
   const saved = finaleFor(finaleKey(run));
   const [phase, setPhaseState] = useState(saved.phase);
   const p = useMemo(() => pipeline(run), [run]);
-  // Group mode: the finale's main phone plays Live Ops; once it finishes, every phone shows
-  // the debrief (their local finale progress never saw the earlier phases).
-  const groupActive = useGroup().active;
+  // A finished run always shows its debrief: a teammate's phone (its local finale progress never
+  // saw the earlier phases) and the end of a one-stage replay.
   const patch = (x: Parameters<ReturnType<typeof useFinaleProgress.getState>['patch']>[1]) =>
     useFinaleProgress.getState().patch(finaleKey(run), x);
   const go = (ph: typeof phase) => {
@@ -62,7 +76,7 @@ export default function FinaleStage({
     setPhaseState(ph);
   };
 
-  if (groupActive && run.finishedAt && phase !== 'debrief') return <Debrief run={run} onHome={onHome} onLeaderboard={onLeaderboard} onReplay={onReplay} />;
+  if (run.finishedAt && phase !== 'debrief') return <Debrief run={run} onHome={onHome} onLeaderboard={onLeaderboard} onReplay={onReplay} />;
   if (phase === 'reveal') return <Reveal p={p} logicPlayed={played(run).logic} onGo={() => go('intro')} />;
   if (phase === 'intro') return <LiveIntro onStart={() => go('live')} />;
   if (phase === 'live')
@@ -127,7 +141,7 @@ function Reveal({ p, logicPlayed, onGo }: { p: ReturnType<typeof pipeline>; logi
         <CountUp to={p.families} />
       </p>
       <p className={ui.muted} style={{ textAlign: 'center' }}>
-        {fill(c.reveal.families, { n: nf.format(p.families) })}
+        <UnderBigNumber template={c.reveal.families} n={nf.format(p.families)} />
       </p>
       <div className={ui.actions}>
         <button type="button" className={`${ui.btn} ${ui.primary}`} onClick={onGo}>
@@ -179,6 +193,8 @@ function LiveOps({ run, base, onDone }: { run: GameState; base: number; onDone: 
   const [feedback, setFeedback] = useState<{ ok: boolean; text: string; why: string } | null>(null);
   /** The item already settled (guards a route and a time-out landing together). */
   const settled = useRef(-1);
+  /** Ends the feedback pause (timer or the Next button), whichever comes first. */
+  const advance = useRef<(() => void) | null>(null);
   const headingRef = useScreenHeading<HTMLHeadingElement>(c.liveOps.heading);
   // While feedback shows, keep the incident just answered on screen (also for the last one).
   const shown = feedback ? Math.max(0, results.length - 1) : results.length;
@@ -215,10 +231,17 @@ function LiveOps({ run, base, onDone }: { run: GameState; base: number; onDone: 
     announce(spoken);
     // Capped at 4 s (×1.5 relaxed) so the run doesn't drag; +30 s is there if more is needed.
     const gap = Math.max(finale.liveOps.gapMs * (relaxed ? 1.5 : 1), Math.min(4000 * (relaxed ? 1.5 : 1), toastMs(spoken, relaxed) * 0.5));
-    setTimeout(() => {
+    let done = false;
+    const go = () => {
+      if (done) return;
+      done = true;
+      clearTimeout(id);
+      advance.current = null;
       setFeedback(null);
       if (last) onDone(next);
-    }, gap);
+    };
+    const id = setTimeout(go, gap);
+    advance.current = go;
   };
   const route = (team: Team | null) => {
     if (incident) settle(routeResult({ id: incident.id, team: incident.team }, team));
@@ -266,6 +289,11 @@ function LiveOps({ run, base, onDone }: { run: GameState; base: number; onDone: 
         </div>
       ) : (
         <p className={s.question}>{c.liveOps.route}</p>
+      )}
+      {feedback && (
+        <button type="button" className={`${ui.btn} ${ui.primary}`} data-testid="next-incident" onClick={() => advance.current?.()}>
+          {results.length >= dealt.length ? c.liveOps.finish : c.liveOps.next}
+        </button>
       )}
       <div className={s.teams} role="group" aria-label={c.liveOps.route} data-waiting={feedback ? true : undefined}>
         {TEAMS.map((team) => (
@@ -353,7 +381,7 @@ function Debrief({
           {nf.format(families)}
         </p>
         <p className={s.of} data-testid="families">
-          {fill(c.debrief.familiesOf, { n: nf.format(families) })}
+          <UnderBigNumber template={c.debrief.familiesOf} n={nf.format(families)} />
         </p>
         <p className={s.rank}>{fill(c.debrief.rankLabel, { rank: c.debrief.ranks[rank] ?? rank })}</p>
         {saved.newBest && (
@@ -429,14 +457,15 @@ function Debrief({
         </p>
       )}
       <div className={s.buttons}>
-        <button type="button" className={`${ui.btn} ${ui.primary}`} onClick={onHome}>
-          {c.debrief.playAgain}
-        </button>
+        {/* The replay (there's more!) leads; a new run starts over from the beginning. */}
         {canReplay && (
-          <button type="button" className={ui.btn} data-testid="replay-stage" onClick={() => setChapters(true)}>
+          <button type="button" className={`${ui.btn} ${ui.primary}`} data-testid="replay-stage" onClick={() => setChapters(true)}>
             {copy.home.replayStage}
           </button>
         )}
+        <button type="button" className={`${ui.btn} ${canReplay ? '' : ui.primary}`} onClick={onHome}>
+          {c.debrief.playAgain}
+        </button>
         <button type="button" className={ui.btn} onClick={onLeaderboard}>
           {c.debrief.leaderboard}
         </button>

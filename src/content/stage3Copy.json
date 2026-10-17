@@ -3,7 +3,7 @@
     "logic-tutorial": "A program is a list of steps. Tap blocks to build one: drive to the house, then drop supplies. Tap Run to go!",
     "logic-l1": "Two houses need supplies, and order matters. Plan which one to visit first so your program fits the block limit.",
     "logic-l2": "Same kind of trip, fewer blocks allowed. The Repeat block does the steps inside it several times. Use it to say it shorter.",
-    "logic-l3": "One of two roads floods, and which one changes every run. Use “If road ahead is flooded” and “Otherwise” to pick the dry road.",
+    "logic-l3": "One of two roads floods, and it changes every run. The If block is already in place: fill in both roads.",
     "logic-l4": "Bonus! This program has a bug (a mistake in the steps). Run it, watch where the truck goes wrong, then swap the bad block.",
     "logic-l5": "Bonus! Each house needs water, food or a medical kit. “Ask the AI” uses the model you trained earlier to pick the right one."
   },
@@ -46,7 +46,13 @@
     "selected": "{block} selected",
     "swapPrompt": "Now pick a block to swap in.",
     "editsLeft": "Swaps left: {n}",
-    "tutorialHint": "Tap a block to add it, then tap Run.",
+    "guideStep": "Step {n} of {total}: tap {block}",
+    "guideRun": "Your program is ready. Tap ▶ Run!",
+    "ghostAdd": "Tap to add {block}",
+    "ghostSwap": "Tap to change this to {block}",
+    "ghostCount": "Tap to set Repeat ×{n}",
+    "ghostRemove": "Tap to remove this block",
+    "ghostLabel": "Suggested next step",
     "pickBlockFirst": "First tap the block in your program you want to change."
   },
   "run": {
@@ -97,7 +103,7 @@
     "heading1": "Supplies on the move. Good start!",
     "heading0": "Logic is tricky. Have another go!",
     "solved": "{n} of {total} puzzles solved",
-    "hints": "Hints used: {n}",
+    "hints": "Help used: {n}",
     "blocks": "Extra blocks: {n}",
     "tests": "{passed} of {total} test maps passed"
   },

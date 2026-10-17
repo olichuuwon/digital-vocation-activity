@@ -176,3 +176,53 @@ export function blocksChanged(original: Program, now: Program): number {
   for (let i = 0; i < Math.min(a.length, b.length); i++) if (a[i] !== b[i]) n++;
   return n;
 }
+
+/**
+ * The one change that moves `program` towards `solution` (the guided hint's ghost block):
+ * add the next block, change a block, set a Repeat count, or remove an extra block. Walks both
+ * programs in reading order and stops at the first difference; null when they match.
+ */
+export type NextStep =
+  | { kind: 'add'; at: Cursor; block: Block }
+  | { kind: 'swap'; addr: BlockAddr; op: BlockOp }
+  | { kind: 'count'; addr: BlockAddr; n: number }
+  | { kind: 'remove'; addr: BlockAddr };
+
+/** An empty copy of a solution block: containers come without their contents (added one by one). */
+const shell = (b: Block): Block => (b.op === 'repeat' ? { op: 'repeat', n: b.n, body: [] } : b.op === 'ifFlooded' ? { op: 'ifFlooded', then: [], else: [] } : b);
+
+export function nextStep(program: Program, solution: Program, list: ListPath = []): NextStep | null {
+  // `program` and `solution` here are the lists at `list`; addresses are built from the top.
+  for (let i = 0; i < Math.max(program.length, solution.length); i++) {
+    const addr = { list, index: i };
+    const p = program[i];
+    const s = solution[i];
+    if (!s) return { kind: 'remove', addr };
+    if (!p) return { kind: 'add', at: addr, block: shell(s) };
+    if (p.op !== s.op) return { kind: 'swap', addr, op: s.op };
+    if (p.op === 'repeat' && s.op === 'repeat') {
+      if (p.n !== s.n) return { kind: 'count', addr, n: s.n };
+      const inner = nextStep(p.body, s.body, childList(addr, 'body'));
+      if (inner) return inner;
+    }
+    if (p.op === 'ifFlooded' && s.op === 'ifFlooded') {
+      const inner = nextStep(p.then, s.then, childList(addr, 'then')) ?? nextStep(p.else, s.else, childList(addr, 'else'));
+      if (inner) return inner;
+    }
+  }
+  return null;
+}
+
+/** Applies a NextStep (nested lists are addressed from the top of `program`). */
+export function applyStep(program: Program, step: NextStep): Program {
+  switch (step.kind) {
+    case 'add':
+      return insertAt(program, step.at, step.block);
+    case 'swap':
+      return swapOp(program, step.addr, step.op);
+    case 'count':
+      return setRepeat(program, step.addr, step.n);
+    case 'remove':
+      return removeAt(program, step.addr);
+  }
+}

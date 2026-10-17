@@ -90,7 +90,7 @@ describe('stageScore / logicStars', () => {
     expect(logicScore(s.hintsUsed, s.extraBlocks)).toBeCloseTo(0.9);
   });
 
-  it('nextAssist: hint after 2 failed runs, answer after 3', () => {
-    expect([0, 1, 2, 3, 7].map(nextAssist)).toEqual(['none', 'none', 'hint', 'answer', 'answer']);
+  it('nextAssist (guided): hint after 1 failed run, answer after 3', () => {
+    expect([0, 1, 2, 3, 7].map(nextAssist)).toEqual(['none', 'hint', 'hint', 'answer', 'answer']);
   });
 });

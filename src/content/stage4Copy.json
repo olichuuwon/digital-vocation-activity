@@ -2,7 +2,7 @@
   "levelIntro": {
     "cloud-manual": "Traffic surges to ×10! Keep 3 servers (computers running your app) alive: Boost busy ones, Restart crashed ones, Roll back bad updates. Good luck!",
     "cloud-configure": "Now let Kubernetes do the work. Pick your settings and keep the cost under budget.",
-    "cloud-replay": "Same storm, new setup. Sit back and watch Kubernetes handle it. You can still tap Restart or Roll back if needed."
+    "cloud-replay": "Same storm, new setup. Sit back and watch Kubernetes handle it. You can still Roll back a bad update."
   },
   "tutorialHint": "Tap Boost on the busiest server. Tap Restart the moment one crashes.",
   "manual": {
@@ -90,7 +90,7 @@
   "hint": "Turn on all three switches. Keep Min pods low, allow enough Max pods, and add pods at around 60–70% busy.",
   "timeUp": "Time's up! Let's see how it held up.",
   "result": {
-    "heading3": "Unshakeable! Nothing kept your app down.",
+    "heading3": "Unshakeable!",
     "heading2": "Strong and steady!",
     "heading1": "Still standing. Good start!",
     "heading0": "Storms are tough. Have another go!",

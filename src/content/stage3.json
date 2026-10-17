@@ -34,7 +34,7 @@
         "......"
       ],
       "startDir": "W",
-      "seconds": 60,
+      "seconds": 90,
       "blockLimit": 8,
       "par": 7,
       "palette": ["forward", "left", "right", "drop"],
@@ -60,7 +60,7 @@
         "......"
       ],
       "startDir": "N",
-      "seconds": 75,
+      "seconds": 105,
       "blockLimit": 5,
       "par": 5,
       "palette": ["forward", "left", "right", "drop", "repeat"],
@@ -84,11 +84,12 @@
         "....~~"
       ],
       "startDir": "S",
-      "seconds": 90,
+      "seconds": 120,
       "blockLimit": 9,
       "par": 8,
       "palette": ["forward", "left", "right", "drop", "repeat", "ifFlooded"],
       "floodGroups": ["a", "b"],
+      "starter": [{ "op": "ifFlooded", "then": [], "else": [] }],
       "solution": [
         {
           "op": "ifFlooded",
@@ -111,7 +112,7 @@
         "......."
       ],
       "startDir": "S",
-      "seconds": 75,
+      "seconds": 105,
       "blockLimit": null,
       "par": 7,
       "palette": ["forward", "left", "right", "drop", "repeat"],
@@ -150,7 +151,7 @@
         "......."
       ],
       "startDir": "W",
-      "seconds": 75,
+      "seconds": 105,
       "blockLimit": 8,
       "par": 7,
       "palette": ["forward", "left", "right", "repeat", "askAi"],
@@ -168,5 +169,5 @@
     }
   ],
   "testMaps": 100,
-  "stars": { "one": 0.2, "two": 0.6, "three": 0.9 }
+  "stars": { "one": 0.2, "two": 0.6, "three": 0.8 }
 }

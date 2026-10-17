@@ -59,7 +59,7 @@ One length for everyone: **≈ 16 min of play** (core levels). It fits the 20-mi
 | Prologue | 1 min | ~0.5 min | Mission briefing, 10-sec "how to play" |
 | Stage 1: Data | 3 min | ~2.5–3 min (estimate) | §4 |
 | Stage 2: AI | 3 min | ~2–2.5 min (QA measured 127 s) | §5 |
-| Stage 3: Problem solving | 3 min | ~4 min (QA measured 241 s; the long one) | §6 |
+| Stage 3: Problem solving | 3 min | ~3.5–4 min (QA measured 241 s before the guided help; the 💡 ghost should shorten it) | §6 |
 | Stage 4: Cloud/SRE | 3 min | ~3 min (estimate after the 45 s storms) | §7 |
 | Finale: Mission Live | 2 min | ~2 min | §8 |
 | Debrief & roles | 1 min | ~1 min | §8.3 |
@@ -70,11 +70,13 @@ Replays with bonus levels add roughly: Stage 1 +1 min, Stage 2 +1 min, Stage 3 +
 Each stage follows the same rhythm, so players learn the pattern:
 
 ```
-Briefing card (≤25 words) → Tutorial (interactive, 20–30s) → Level 1 → Level 2 → [Bonus level: replays only]
-→ REALITY CHECK (animated reveal, ≤40s, tap to advance) → Stage result (stars) → Hand-off card to next team
+Briefing card (≤25 words) → Tutorial (starts straight from the briefing, 20–30s) → Level 1 → Level 2
+→ [Bonus level: replays only] → REALITY CHECK (≤40s; every card shown, no skipping) → Stage result (stars)
+→ Team: hand-off card to the next player · Solo: straight on to the next briefing
 ```
 
-Every level is **timeboxed** (timer shown). A stuck player can always progress: after 2 failed attempts, show a hint, and after 3 show the answer with reduced score. **No dead ends.**
+- **Key learning points can't be skipped.** The Reality Check shows every card; Next unlocks after a short read time (about 1 s, ×1.5 relaxed).
+- Every level is **timeboxed** (timer shown). A stuck player can always progress: after 2 failed attempts, show a hint, and after 3 show the answer with reduced score (Stage 3 is gentler: §6). **No dead ends.**
 
 ---
 
@@ -144,7 +146,7 @@ Simple on purpose. Teammates stand together, so the talking happens in person.
 - **Rotation:** player 1 (the leader) plays the prologue and the finale; stages 1–4 rotate from player 2, so turns are as even as possible.
 - **Hand-off:** at the end of a stage, the next player's phone shows "You're up next!" with an **I'm ready** button.
 - **Drops:** if the player's phone goes quiet for 20 s, the next connected member takes over from the start of that level.
-- **Free play:** once the team is on the board, every member can pick any stage to replay solo on their own phone, with the bonus levels (not ranked).
+- **Free play:** once the team is on the board, every member can pick any stage to replay solo on their own phone, with the bonus levels (not ranked). A replay is just that one stage, then back to the results.
 
 #### 3.5.3 Team score & ranking
 - The team shares one score per stage (the player's result), then §3.2 for `groupFamilies`.
@@ -248,17 +250,18 @@ A small top-down grid map (6×6 to 8×8) with a depot, roads, flooded tiles and 
 `Move forward` · `Turn left` · `Turn right` · `Drop supplies` · `Repeat ×N { }` · `If road ahead is flooded { } else { }` · `Ask the AI: what does this house need?` (uses the Stage 2 model)
 
 ### 6.3 Levels
-| Level | Concept | Twist that makes it tricky | Block limit |
-|---|---|---|---|
-| Tutorial | Sequence | Get to one house | none |
-| L1 Order the Steps | Sequence | Two houses, one optimal order | 8 |
-| L2 Say It Shorter | Loops | Same route must fit in fewer blocks, so a `Repeat` is needed | 5 |
-| L3 Choose the Road | Conditions | Flooding is **random each run**, so one fixed route fails. Must use `If flooded`. | 7 |
-| Bonus L4 Debug It | Debugging | A pre-built program fails. Press Run, watch where the truck goes wrong, tap the bad block and swap it. | fix 1–2 blocks |
-| Bonus L5 Ask the AI | Integration | Houses need different supplies. Use the AI block. Low modelAccuracy leads to some wrong drops (tied to Stage 2). | 8 |
+| Level | Concept | Twist that makes it tricky | Block limit | Time |
+|---|---|---|---|---|
+| Tutorial | Sequence | Get to one house. **Step-by-step:** each block to tap is highlighted, then Run. | none | untimed |
+| L1 Order the Steps | Sequence | Two houses, one optimal order | 8 | 90 s |
+| L2 Say It Shorter | Loops | Same route must fit in fewer blocks, so a `Repeat` is needed | 5 | 105 s |
+| L3 Choose the Road | Conditions | Flooding is **random each run**, so one fixed route fails. The `If flooded` block **starts in place**; fill in both roads. | 9 | 120 s |
+| Bonus L4 Debug It | Debugging | A pre-built program fails. Press Run, watch where the truck goes wrong, tap the bad block and swap it. | fix 1–2 blocks | 105 s |
+| Bonus L5 Ask the AI | Integration | Houses need different supplies. Use the AI block. Low modelAccuracy leads to some wrong drops (tied to Stage 2). | 8 | 105 s |
 
-- **Run** animates the truck step by step. **Step** button available. Unlimited attempts; hints after 2 fails.
-- Scoring: solved + under block limit = 3★. Each hint lowers the score.
+- **Run** animates the truck step by step. **Step** button available. Unlimited attempts.
+- **Guided help:** after **1** failed run, a hint plus a dashed **💡 ghost "next step"** in the program (add this block / change this one / set Repeat ×N / remove this one); one tap applies it. After 3 failed runs, **Show me** loads a working program.
+- Scoring: solved + under block limit = 3★. Tapping the ghost counts as a hint and Show me as an answer; **3★ at 80%**, so one hint still earns 3★.
 - Tap-to-add and tap-to-remove are required. Drag-to-reorder is a nice-to-have. Must work one-handed on 360px width.
 
 ### 6.4 Reality Check: "That was programming"
@@ -285,7 +288,9 @@ An interstitial explains, one card each, with a tiny animation:
 
 Plain language, ≤20 words per card.
 
-### 7.3 Phase B: Configure the Cluster ~60s
+### 7.3 Phase B: Configure the Cluster ~45s
+Starts straight after the "Meet Kubernetes" cards (labelled *How it works*), with no extra intro screen; "Replay the storm" likewise starts Phase C directly.
+
 The player sets:
 - `Load balancer`: on/off toggle
 - `Min pods` / `Max pods` steppers (1–12)
@@ -295,7 +300,7 @@ The player sets:
 
 Show a live **cost meter** (credits per minute) against a **budget**.
 
-### 7.4 Phase C: Replay the same traffic storm ~60–90s
+### 7.4 Phase C: Replay the same traffic storm ~45s (×3 fast-forward)
 The player watches (with the option to intervene) the **same traffic pattern** from Phase A. Show the pods count graph, the uptime % and the cost at the same time.
 - Goal: **≥ 99% uptime AND under budget** = 3★.
 - Bad configs fail in teachable ways. Max pods too low means crashes under peak. Threshold too high means scaling too late. Everything maxed means over budget.
@@ -330,7 +335,7 @@ A live dashboard runs. Incidents pop up; the player routes each to the right tea
 | "Duplicate families getting double supplies" | Data |
 | "New update causing errors" | Cloud/SRE (roll back) |
 
-~8 incidents, shuffled. Each correct route adds families, and each miss costs families. This makes the point: **one team can't do it alone.**
+~8 incidents, shuffled. Each correct route adds families, and each miss costs families. After each answer a short "why" shows; **Next incident** moves on straight away. This makes the point: **one team can't do it alone.**
 
 Use the specialisation names on the routing buttons: Data Science · AI Engineering · Software Development · Cloud Engineering.
 
@@ -346,7 +351,7 @@ Use the specialisation names on the routing buttons: Data Science · AI Engineer
 - **What you learned** (one line per stage, based on what they actually did), e.g. *"You cleaned 20 records by hand and saw how one rule cleans millions."*
 - **Why digital matters to DIS**: 2–3 short cards on how data, AI, software and cloud work *together* to support defence and missions like disaster relief. Drafted, then **approved by the project owner** before release.
 - Team mode: a leaderboard rank reveal ("You're #3 today!") on every phone.
-- "Play again" and **"Replay with bonus levels"**: a "🔓 There's more!" callout, then a stage picker that shows how many bonus levels each stage adds. Also on Home while the last run is finished.
+- **"Replay with bonus levels"** (the main button) and **"New run"**: a "🔓 There's more!" callout, then a stage picker that shows how many bonus levels each stage adds. A replay plays that one stage, then returns to these results. Also on Home while the last run is finished.
 - End card designed to be **screenshot-friendly** (fits one screen, shows name-free score, rank, date).
 
 ---
@@ -383,7 +388,7 @@ Use the specialisation names on the routing buttons: Data Science · AI Engineer
 ### 11.2 Backend (free tier)
 - **Supabase**: a `runs` table (fields in §3.5.4) plus Realtime channels for lobbies, team sync and hand-offs.
 - Row Level Security: anonymous clients may **insert** one run per team token and **select** non-hidden rows only. Hide/unhide goes through a server-side function that checks the facilitator PIN.
-- Basic anti-cheat: a server-side check rejects families > 1200 or implausibly short durations (< 8 min). Rate-limit submissions.
+- Basic anti-cheat: a server-side check rejects families > 1200 or implausibly short runs (< 3 min, migration `0002`). Rate-limit submissions. A rejected run tells the team why (too quick, name not allowed).
 - Daily board = `board_date = (now() at time zone 'Asia/Singapore')::date`.
 - Keys in env vars (`VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`), with a committed `.env.example`. Never commit secrets.
 - The static frontend deploys to Vercel.

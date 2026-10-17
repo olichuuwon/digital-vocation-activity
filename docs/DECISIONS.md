@@ -7,9 +7,11 @@ How the game is built and why, where the spec (`docs/GAME_SPEC.md`) left room fo
 ## 1. The run
 
 - **One run length** (≈ 16 min of play). The first play-through plays the core levels only. Levels flagged `bonus: true` in `src/content/stages.json` unlock on **replays**.
-- **Replays (free play).** After the debrief, any stage can be replayed (`run.replays > 0`). The run continues from that stage to a new debrief, with every level, bonus ones included. Replays are never submitted to the leaderboard. The debrief shows "🔓 There's more!", and the shared picker (`src/components/ReplayPicker.tsx`, used on Home and the debrief) tags each stage with "+N bonus levels". Bonus level names start with "Bonus: ".
+- **Replays (free play).** After the debrief, any stage can be replayed (`run.replays > 0`), with every level, bonus ones included. A replay is **one stage**: when it ends (`run.replaying`), the run goes straight back to its debrief, keeping the other scores and the families. Replays are never submitted to the leaderboard. The debrief shows "🔓 There's more!", and the shared picker (`src/components/ReplayPicker.tsx`, used on Home and the debrief) tags each stage with "+N bonus levels". Bonus level names start with "Bonus: ".
 - **Saved progress.** The run is saved to `localStorage` after every level and validated with zod on load (`src/state/schema.ts`). A bad run is dropped, bad settings fall back to defaults, and `levelIndex` is clamped. Reopening lands on Home with **Resume run** (never auto-resumes). A finished run isn't resumed. Each stage also saves its end step (Reality Check, stars…), so a reload resumes there and stars can't be re-rolled.
-- **Hints.** In every stage: a hint after 2 wrong answers, the answer after 3, at reduced score. No dead ends.
+- **Hints.** A hint after 2 wrong answers, the answer after 3, at reduced score (Stage 3 is gentler: below). No dead ends.
+- **Key learning points can't be skipped.** Reality Check cards have no Skip and don't advance on a stray tap; each card's Next unlocks after `READ_MS` (1.2 s, ×1.5 relaxed). Stage 4's "Meet Kubernetes" cards are labelled *How it works*.
+- **Flow.** Every stage's briefing goes straight into its tutorial (no extra intro screen). Solo players skip the hand-off card (straight to the next briefing); teams keep it. Stage 4's Configure and Replay start without intro screens, and the manual storm ends with a "Storm over. Uptime N%" line. Toasts left over from a previous screen are cleared when a new screen appears (one that has just appeared is kept). Stars appear at once under reduced motion.
 - **Timers.** Relaxed mode gives ×1.5 time. From 20 s left, a free "+30 seconds" button appears (up to 10 times), for WCAG 2.2.1. Timers pause while Settings, the Rulebook or the Field guide is open, and while the tab is hidden.
 - **Debug params.** `?debug=1` shows a stage-jump panel; `?stage=N` only works together with `?debug=1`. `?simSpeed=N` speeds up Stage 4 storms (debug only). `?relaxed=1` applies for one page load only, so a shared phone doesn't stay relaxed.
 
@@ -32,9 +34,10 @@ How the game is built and why, where the spec (`docs/GAME_SPEC.md`) left room fo
 
 ### Stage 3: Build the Logic
 - **Maps.** Text grids in `stage3.json`. Driving off the road is a crash, driving into water gets you stuck, and a drop where there's no house fails. Every block counts as 1, containers included.
-- **Levels.** Tutorial: 4 blocks. **Order the Steps:** par 7, limit 8, 60 s. **Say It Shorter:** 5/5, 75 s, needs Repeat. **Choose the Road:** par 8, limit 9, 90 s, needs If (the solver proved no kid-friendly 7-block answer exists). **Bonus Debug It** (replays): a 9-block program with 2 bugs, 2 swaps. **Bonus Ask the AI** (replays): uses the Stage 2 model, so a weaker model makes wrong drops.
+- **Levels.** Tutorial: 4 blocks, **step by step** (the next block is highlighted with "Step n of 4: tap …", then Run). **Order the Steps:** par 7, limit 8, 90 s. **Say It Shorter:** 5/5, 105 s, needs Repeat. **Choose the Road:** par 8, limit 9, 120 s, needs If; the If block **starts in place** (`starter` in `stage3.json`) and new blocks go inside it. **Bonus Debug It** (replays): a 9-block program with 2 bugs, 2 swaps, 105 s. **Bonus Ask the AI** (replays): uses the Stage 2 model, so a weaker model makes wrong drops, 105 s.
+- **Guided help.** After **1** failed run: the level hint plus a dashed **💡 ghost** in the program, the one next change towards the level's solution (`nextStep` in `src/stages/logic/program.ts`: add a block, change one, set a Repeat count, or remove one). One tap applies it. After 3 failed runs, **Show me** loads the solution. Unit tests prove following the ghost reaches the solution from any start.
 - **Luck doesn't count.** In Choose the Road the flood is hidden until Run. A program that only works on this run's flood counts as a failed run.
-- **Scoring.** (solved ÷ dealt) × (0.95 + 0.05·efficiency) × max(0.4, 1 − 0.12·hints). Stars at 0.2 / 0.6 / 0.9.
+- **Scoring.** (solved ÷ dealt) × (0.95 + 0.05·efficiency) × max(0.4, 1 − 0.12·hints). A hint counts only when the ghost is tapped (Show me counts 2). Stars at 0.2 / 0.6 / **0.8**: one hint still earns 3★.
 - **Proofs.** `src/sim/grid.content.test.ts` proves every puzzle is solvable within its block limit, and that each level needs the block it teaches.
 
 ### Stage 4: Keep It Alive
@@ -44,9 +47,9 @@ How the game is built and why, where the spec (`docs/GAME_SPEC.md`) left room fo
 - **Scoring.** 3★ means ≥ 99% uptime and under budget. A 60–70% scale-up threshold is the sweet spot, and the hint says so. The score falls to 0 at 80% uptime.
 
 ### Finale
-- **Pipeline reveal**, then **Live Ops:** 8 of 16 incidents (at least 1 per team), 8 s each, +15 families right and −12 wrong or time-out. Families are clamped to 0–1200.
+- **Pipeline reveal**, then **Live Ops:** 8 of 16 incidents (at least 1 per team), 8 s each, +15 families right and −12 wrong or time-out. Families are clamped to 0–1200. After each answer the "why" shows with a **Next incident** button (the pause also ends on its own).
 - **Ranks:** Relief rookie 0, Rapid responder 500, Supply coordinator 700, Ops commander 900, Mission lead 1100.
-- **Debrief:** a screenshot card that fits 360×740, the C4X match, what you learned, and why digital matters. Stages skipped by a debug jump say "You skipped this stage" rather than inventing numbers. In a team, teammates' phones show count-free lines ("Your team cleaned records…").
+- **Debrief:** a screenshot card that fits 360×740, the C4X match, what you learned, and why digital matters. The big number isn't repeated in its caption (screen readers still hear it). Buttons: **Replay with bonus levels** (main) and **New run**. Stages skipped by a debug jump say "You skipped this stage" rather than inventing numbers. In a team, teammates' phones show count-free lines ("Your team cleaned records…").
 
 ## 3. Team play
 
@@ -67,7 +70,8 @@ How the game is built and why, where the spec (`docs/GAME_SPEC.md`) left room fo
 
 - **Stored.** One row per team run: name, size, families, duration, finish time, board date, hidden flag, plus a private retry token. Nicknames, device data and IPs are never stored. Nicknames travel only in ephemeral channel presence and stay in the storage of the device that typed them.
 - **Writes** go only through `submit_run()`: validated, one row per token, server-set finish time. Anonymous clients can't insert, update or delete directly, and can't read the token, duration or hidden columns.
-- **Anti-cheat.** Families 0–1200; duration 8–60 min. The database still has a `mode` column from an earlier design; the client always sends `booth`.
+- **Anti-cheat.** Families 0–1200; duration **3–60 min** (`supabase/migrations/0002_min_duration.sql`; it was 8 min, which rejected quick genuine team runs). The database still has a `mode` column from an earlier design; the client always sends `booth`.
+- **Rejected runs say why.** The debrief shows "Too quick for the board…" or "That team name can't go on the board" instead of a generic message (`rejectReason` in `src/net/group/submit.ts`).
 - **Rate limit.** 30 new runs per 60 s, globally (no per-device data, for privacy). The facilitator hide is the backstop.
 - **Facilitator PIN.** 6–8 digits, bcrypt-hashed. Lockout after 20 wrong PINs in 10 min. Set with `select private.set_facilitator_pin('…')`.
 - **Submission.** The leader's phone (or the finale player if the leader is gone) queues one submission with retries (2 s → 60 s, dropped after 24 h). The result is broadcast so every phone shows the rank and highlights "Your team".
@@ -109,4 +113,5 @@ These all have working defaults; they're worth revisiting after playtests.
 
 - **Oct 2026, first build.** Milestones M0–M7 (spec §12): scaffold, backend, shared components, Stages 1–4, finale, group play with support cards, polish.
 - **8 Oct 2026, owner playtest.** Stage 4 storms shortened to 45 s; player 1 leads; no digits in names; the lobby warns about players still connecting.
+- **17 Oct 2026, guided Stage 3 and flow polish.** Stage 3 tutorial step by step, 💡 ghost hint after 1 failed run, +30 s per level, pre-placed If, 3★ at 80%. No skipping Reality Checks. Solo hand-off and extra intro screens removed; Live Ops "Next incident"; replays play one stage then return to the results; leaderboard minimum 3 min with clear rejection reasons; copy and layout fixes from a full playthrough audit.
 - **17 Oct 2026, simplification.** Booth/full lengths and stage select removed. Team play became turn-taking with a Waiting screen (support cards, split controls and "all hands" calls removed). Bonus levels moved to replays. Stage 1 made easier: rule strip, more time, fewer cards, no duplicates or outliers in the core run, blank-field automate question. Player-facing "group" became "team".

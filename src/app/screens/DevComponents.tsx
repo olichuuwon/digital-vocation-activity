@@ -107,7 +107,7 @@ function DemoView({ demo, onBack }: { demo: Demo; onBack: () => void }) {
         />
       );
     case 'handoff':
-      return <HandOff stage={stageContent(2)!} nextName={demo.group ? 'Alex' : undefined} onReady={onBack} />;
+      return <HandOff demo stage={stageContent(2)!} nextName={demo.group ? 'Alex' : undefined} onReady={onBack} />;
     case 'tutorial':
       return (
         <DemoShell title="Tutorial overlay" onBack={onBack}>

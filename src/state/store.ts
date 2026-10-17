@@ -67,8 +67,8 @@ interface Store {
   /** Debrief reached: record families and best score. Idempotent per run. */
   finishRun: (families: number, incidentsRouted?: number) => void;
   /**
-   * Free play after a finished run: replay from a stage, with the bonus levels unlocked (keeps
-   * earlier scores; the run continues from there to a new debrief). Never ranked.
+   * Free play after a finished run: replay one stage, with the bonus levels unlocked. When it
+   * ends the run goes straight back to its debrief (keeping the other scores). Never ranked.
    */
   replayFrom: (stage: Stage) => void;
   quitRun: () => void;
@@ -86,7 +86,17 @@ export const useGame = create<Store>()(
       settingsOpen: false,
       startRun: () => set((s) => ({ run: { ...newRun(), bestFamilies: s.bestFamilies } })),
       completeLevel: () =>
-        set((s) => (s.run ? { run: { ...s.run, ...nextPosition(s.run) } } : s)),
+        set((s) => {
+          if (!s.run) return s;
+          const next = nextPosition(s.run);
+          // A one-stage replay ends when that stage does: back to the run's debrief.
+          if (s.run.replaying !== undefined && next.stage !== s.run.stage) {
+            const { replaying: _r, ...rest } = s.run;
+            void _r;
+            return { run: { ...rest, stage: 5, levelIndex: 0, finishedAt: Date.now() } };
+          }
+          return { run: { ...s.run, ...next } };
+        }),
       recordStage: (d, scores, stars) =>
         set((s) =>
           s.run ? { run: { ...s.run, scores: { ...s.run.scores, [d]: scores }, stars: { ...s.run.stars, [d]: stars } } } : s,
@@ -110,7 +120,7 @@ export const useGame = create<Store>()(
           if (!s.run) return s;
           const { finishedAt: _done, ...rest } = s.run;
           void _done;
-          return { run: { ...rest, stage, levelIndex: 0, replays: (rest.replays ?? 0) + 1 } };
+          return { run: { ...rest, stage, levelIndex: 0, replays: (rest.replays ?? 0) + 1, replaying: stage } };
         }),
       quitRun: () => set({ run: null }),
       updateSettings: (patch) => set((s) => ({ settings: { ...s.settings, ...patch } })),

@@ -4,7 +4,7 @@
 //
 // Usage (against a local build that has .env.local):
 //   npm run build && npx vite preview --port 4173 &
-//   LIVE_URL=http://localhost:4173 node e2e-live/capture-flows.mjs [solo|replay|board|2|3|4 ...]
+//   LIVE_URL=http://localhost:4173 node e2e-live/capture-flows.mjs [solo|stage3|replay|board|2|3|4|drop ...]
 // Without LIVE_URL it runs against the deployed site.
 import { createRequire } from 'node:module';
 import fs from 'node:fs';
@@ -141,22 +141,24 @@ async function solo() {
   await strip('solo-stage1', s1);
   const end = [];
   await finishStage1(p, end);
-  end.push({ file: await shot(p, 's1-handoff'), label: 'Hand-off to Stage 2' });
+  end.push({ file: await shot(p, 's1-next'), label: 'Straight on to Stage 2 (solo: no hand-off)' });
   await strip('solo-stage1-end', end);
 
   const steps = {
     2: ['Start labelling', 'Stage 2: Teach the Machine to See'],
     3: ['Start building', 'Stage 3: Build the Logic'],
-    4: ['Go live', 'Stage 4: Keep It Alive'],
+    4: ['Launch the app', 'Stage 4: Keep It Alive'],
   };
   for (const [stage, [go, title]] of Object.entries(steps)) {
     await jump(p, stage);
     const st = [{ file: await shot(p, `s${stage}-briefing`), label: `${title}: briefing` }];
     await click(p, go);
-    st.push({ file: await shot(p, `s${stage}-intro`), label: 'Level intro' });
-    await click(p, 'Start');
+    if (stage === '4') {
+      st.push({ file: await shot(p, `s${stage}-intro`), label: 'Level intro' });
+      await click(p, 'Start');
+    }
+    st.push({ file: await shot(p, `s${stage}-play`), label: stage === '4' ? 'Playing' : 'Tutorial, straight from the briefing' });
     await gotIt(p);
-    st.push({ file: await shot(p, `s${stage}-play`), label: 'Playing' });
     await strip(`solo-stage${stage}`, st);
   }
 
@@ -183,6 +185,44 @@ async function solo() {
   await p.getByTestId('more-teaser').scrollIntoViewIfNeeded();
   f.push({ file: await shot(p, 'f-more'), label: "🔓 There's more! (replays)" });
   await strip('solo-finale', f);
+  await p.context().close();
+}
+
+// ------------------------------------------------------------------------------------------
+// STAGE 3 GUIDED: step-by-step tutorial, the 💡 ghost after a failed run, the pre-placed If
+// ------------------------------------------------------------------------------------------
+const block = (p, name) => p.getByRole('group', { name: 'Blocks' }).getByRole('button', { name, exact: false });
+async function runAndWait(p) {
+  await p.getByRole('button', { name: /▶ Run/ }).click();
+  await expect(p.getByRole('button', { name: /Running/ })).toHaveCount(0, { timeout: 15_000 });
+}
+async function stage3() {
+  log('stage3');
+  const p = await newPhone();
+  await p.goto(SITE + '/?debug=1');
+  await p.evaluate(() => localStorage.clear());
+  await p.goto(SITE + '/?debug=1&stage=3');
+  await click(p, 'Start building');
+  const g = [{ file: await shot(p, 's3-guide-1'), label: 'Tutorial: tap the highlighted block' }];
+  for (const b of ['Move forward', 'Turn right', 'Move forward', 'Drop supplies']) await block(p, b).click();
+  g.push({ file: await shot(p, 's3-guide-run'), label: 'Program ready: tap ▶ Run' });
+  await runAndWait(p);
+  await click(p, 'Continue');
+  await click(p, 'Start');
+  await block(p, 'Turn left').click();
+  await runAndWait(p);
+  await p.waitForTimeout(2600);
+  g.push({ file: await shot(p, 's3-ghost'), label: '1 failed run: 💡 tap the next step' });
+  // Choose the Road, with the If block already in place.
+  await p.evaluate(() => {
+    const saved = JSON.parse(localStorage.getItem('ship-it'));
+    saved.state.run.levelIndex = 3;
+    localStorage.setItem('ship-it', JSON.stringify(saved));
+  });
+  await p.goto(SITE + '/?debug=1&stage=3');
+  await click(p, 'Start');
+  g.push({ file: await shot(p, 's3-if'), label: 'Choose the Road: If already placed' });
+  await strip('solo-stage3-guided', g);
   await p.context().close();
 }
 
@@ -301,9 +341,9 @@ async function team(n) {
     cur = stage;
     await main.getByTestId('waiting-screen').waitFor({ state: 'detached', timeout: 20_000 });
     await expect(ps[(m + 1) % n].getByTestId('waiting-screen')).toHaveAttribute('data-stage', String(stage), { timeout: 20_000 });
-    const go = { 1: 'Start sorting', 2: 'Start labelling', 3: 'Start building', 4: 'Go live' }[stage];
+    const go = { 1: 'Start sorting', 2: 'Start labelling', 3: 'Start building', 4: 'Launch the app' }[stage];
     await click(main, go);
-    if (stage > 1) await click(main, 'Start'); // Stage 1's tutorial starts from the briefing
+    if (stage === 4) await click(main, 'Start'); // stages 1–3: the tutorial starts from the briefing
     await gotIt(main);
     await strip(`team${n}-stage${stage}`, await all(`s${stage}`, (i) => (i === m ? `plays Stage ${stage}` : 'watches + helps')));
     if (stage === 1 && n === 3) {
@@ -378,6 +418,7 @@ async function drop() {
 
 try {
   if (want('solo')) await solo();
+  if (want('stage3')) await stage3();
   if (want('replay')) await replay();
   if (want('board')) await board();
   for (const n of [2, 3, 4]) if (want(String(n))) await team(n);

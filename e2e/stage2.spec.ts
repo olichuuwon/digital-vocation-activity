@@ -42,11 +42,11 @@ async function playAudit(page: Page) {
 test('Stage 2 booth: perfect play earns 3 stars and hands off to Stage 3', async ({ page }) => {
   await page.goto('/?debug=1&stage=2');
   await page.getByRole('button', { name: 'Start labelling' }).click();
-  for (const level of ['Tutorial', 'Build the Training Set']) {
-    await expect(page.getByRole('heading', { name: level, level: 1 })).toBeVisible();
-    await page.getByRole('button', { name: 'Start', exact: true }).click();
-    await playLabels(page);
-  }
+  // The briefing goes straight into the tutorial.
+  await playLabels(page);
+  await expect(page.getByRole('heading', { name: 'Build the Training Set', level: 1 })).toBeVisible();
+  await page.getByRole('button', { name: 'Start', exact: true }).click();
+  await playLabels(page);
   await expect(page.getByRole('heading', { name: 'Covered Up', level: 1 })).toBeVisible();
   await page.getByRole('button', { name: 'Start', exact: true }).click();
   await playCovered(page);
@@ -60,7 +60,6 @@ test('Stage 2 booth: perfect play earns 3 stars and hands off to Stage 3', async
   await page.getByRole('button', { name: 'Continue' }).click();
   await expect(page.getByText('3 of 3 stars').first()).toBeAttached();
   await page.getByRole('button', { name: 'Continue' }).click();
-  await page.getByRole('button', { name: 'Ready' }).click();
   await expect(page.getByRole('heading', { name: 'Build the logic' })).toBeVisible();
   await page.getByText('Debug').click();
   await expect(page.locator('.debug-panel')).toContainText('"ai": 3');
@@ -69,7 +68,6 @@ test('Stage 2 booth: perfect play earns 3 stars and hands off to Stage 3', async
 test('Stage 2: wrong labels lead to a hint, then the answer is marked', async ({ page }) => {
   await page.goto('/?debug=1&stage=2');
   await page.getByRole('button', { name: 'Start labelling' }).click();
-  await page.getByRole('button', { name: 'Start', exact: true }).click();
   await playLabels(page); // tutorial
   await page.getByRole('button', { name: 'Start', exact: true }).click();
   for (let i = 0; i < 3; i++) {
@@ -83,7 +81,6 @@ test('Stage 2: wrong labels lead to a hint, then the answer is marked', async ({
 test('Stage 2 Covered Up: tiles lift over time and Reveal uses a charge', async ({ page }) => {
   await page.goto('/?debug=1&stage=2');
   await page.getByRole('button', { name: 'Start labelling' }).click();
-  await page.getByRole('button', { name: 'Start', exact: true }).click();
   await playLabels(page);
   await page.getByRole('button', { name: 'Start', exact: true }).click();
   await playLabels(page);
@@ -98,7 +95,6 @@ test('Stage 2 Covered Up: tiles lift over time and Reveal uses a charge', async 
 test('Stage 2: Settings pauses the level timer, and a reload after the last level resumes there', async ({ page }) => {
   await page.goto('/?debug=1&stage=2');
   await page.getByRole('button', { name: 'Start labelling' }).click();
-  await page.getByRole('button', { name: 'Start', exact: true }).click();
   await playLabels(page);
   await page.getByRole('button', { name: 'Start', exact: true }).click();
   await page.getByRole('button', { name: 'Settings' }).click();
@@ -121,10 +117,9 @@ test('Stage 2: Settings pauses the level timer, and a reload after the last leve
 test('Stage 2 replay: Bonus: Draw the Box with buttons only, then the answer outline after 3 misses', async ({ page }) => {
   await startReplay(page, 2);
   await page.getByRole('button', { name: 'Start labelling' }).click();
-  for (let i = 0; i < 2; i++) {
-    await page.getByRole('button', { name: 'Start', exact: true }).click();
-    await playLabels(page);
-  }
+  await playLabels(page); // tutorial
+  await page.getByRole('button', { name: 'Start', exact: true }).click();
+  await playLabels(page);
   await page.getByRole('button', { name: 'Start', exact: true }).click();
   await playCovered(page);
   await expect(page.getByRole('heading', { name: 'Bonus: Draw the Box', level: 1 })).toBeVisible();

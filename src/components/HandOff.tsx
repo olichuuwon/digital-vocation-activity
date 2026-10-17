@@ -1,18 +1,24 @@
-import type { CSSProperties } from 'react';
+import { useEffect, type CSSProperties } from 'react';
 import { useScreenHeading } from '../app/screenFocus';
 import { copy, fill } from '../content';
 import type { StageContent } from '../content/schemas';
-import { useHandOff, useHandOffSync } from '../net/group';
+import { useGroup, useHandOff, useHandOffSync } from '../net/group';
 import type { Stage } from '../state/types';
 import s from './components.module.css';
 
 const t = copy.components;
 
 /**
- * Between stages (§2, §3.5.2). In a group, the main-player role rotates: name the next main
- * player (nickname stays on the device). Solo: just name the next team. One "Ready" tap.
+ * Between stages in a team (§2, §3.5.2): names the next player (nickname stays on the device),
+ * whose own phone shows "You're up next" + I'm ready. Solo there's nobody to hand to, so it
+ * continues straight to the next stage's briefing (`demo` forces the card, for /dev/components).
  */
-export function HandOff({ stage, nextName: demoName, onReady }: { stage: StageContent; nextName?: string; onReady: () => void }) {
+export function HandOff({ stage, nextName: demoName, onReady, demo = false }: { stage: StageContent; nextName?: string; onReady: () => void; demo?: boolean }) {
+  const inTeam = useGroup().active;
+  const skip = !inTeam && !demo;
+  useEffect(() => {
+    if (skip) onReady();
+  }, [skip]); // eslint-disable-line react-hooks/exhaustive-deps
   // Group mode: `stage` is the next team, so the hand-off is from the stage before it. The next
   // main player's phone shows "You're up next" with a Ready button (§2); either Ready continues.
   const from = (stage.stage - 1) as Stage;
@@ -22,6 +28,7 @@ export function HandOff({ stage, nextName: demoName, onReady }: { stage: StageCo
   const heading = nextName ? t.handoffHeading : t.handoffSoloHeading;
   const headingRef = useScreenHeading<HTMLHeadingElement>(heading);
   const style = { '--c': `var(--${stage.discipline})`, '--ink': `var(--${stage.discipline}-ink)` } as CSSProperties;
+  if (skip) return null;
   return (
     <section className={s.screen} style={style}>
       <div className={s.briefing}>

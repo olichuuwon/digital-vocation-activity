@@ -271,7 +271,7 @@ function CardPlay({ run, level, debug, onDone }: { run: GameState; level: CardLe
       ? c.answerKeep
       : fixOption
         ? fill(c.answerFix, { option: fixOption })
-        : fill(c.answer, { action: c.actions[answer.expected].toLowerCase(), rule: answer.rule });
+        : fill(c.answer, { action: c.actions[answer.expected].toLowerCase(), short: ruleShort(answer.rule) });
 
   return (
     <section className={s.level}>

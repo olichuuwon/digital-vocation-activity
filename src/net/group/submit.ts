@@ -19,6 +19,13 @@ export function onGroupSubmitResult(fn: Listener) {
 
 const notify = (token: string, r: GroupResult) => listeners.forEach((l) => l(token, r));
 
+/** The server's exception names (supabase/migrations) mapped to what the debrief says. */
+export function rejectReason(message: string): 'tooQuick' | 'name' | 'other' {
+  if (message.includes('invalid_duration')) return 'tooQuick';
+  if (message.includes('invalid_group_name')) return 'name';
+  return 'other';
+}
+
 export function getGroupSubmitQueue(): SubmitQueue {
   if (queue) return queue;
   const q = createSubmitQueue({
@@ -26,8 +33,8 @@ export function getGroupSubmitQueue(): SubmitQueue {
       try {
         return await submitRun(p);
       } catch (e) {
-        // A permanent rejection (e.g. anti-cheat) ends the attempt: tell the group.
-        if (e instanceof LeaderboardError && !isRetryable(e.kind)) notify(p.groupToken, { kind: 'rejected' });
+        // A permanent rejection (e.g. anti-cheat) ends the attempt: tell the team why.
+        if (e instanceof LeaderboardError && !isRetryable(e.kind)) notify(p.groupToken, { kind: 'rejected', reason: rejectReason(e.message) });
         throw e;
       }
     },

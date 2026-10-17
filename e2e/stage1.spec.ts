@@ -39,7 +39,6 @@ test('Stage 1: perfect play earns 3 stars and hands off to Stage 2', async ({ pa
   await page.getByRole('button', { name: 'Continue' }).click();
   await expect(page.getByText('3 of 3 stars').first()).toBeAttached();
   await page.getByRole('button', { name: 'Continue' }).click();
-  await page.getByRole('button', { name: 'Ready' }).click();
   await expect(page.getByRole('heading', { name: 'Teach the machine to see' })).toBeVisible();
   await page.getByText('Debug').click();
   await expect(page.locator('.debug-panel')).toContainText('"data": 3');

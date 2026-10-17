@@ -1,4 +1,5 @@
 import { mulberry32 } from '../../stages/data/logic';
+import { rejectReason } from './submit';
 import { CODE_ALPHABET, generateCode, normaliseCode } from './codes';
 import { allGeneratedNames, checkGroupName, checkNickname, generateNames, isBlocked } from './moderation';
 import { MAX_MESSAGE_CHARS, newer, parseEntryData, parseMessage, parsePresence, PROTOCOL } from './protocol';
@@ -175,5 +176,13 @@ describe('protocol validation', () => {
   it('keeps only valid presence, one per member', () => {
     const list = parsePresence([{ id: 'member-1', nick: ' Ann ' }, { id: 'member-1', nick: 'Ann' }, { id: 'x', nick: 'Bad' }, { nick: 'none' }, 7]);
     expect(list).toEqual([{ id: 'member-1', nick: 'Ann' }]);
+  });
+});
+
+describe('rejectReason (debrief: why a run was not recorded)', () => {
+  it('maps the server exception names', () => {
+    expect(rejectReason('invalid_duration')).toBe('tooQuick');
+    expect(rejectReason('invalid_group_name')).toBe('name');
+    expect(rejectReason('invalid_families')).toBe('other');
   });
 });

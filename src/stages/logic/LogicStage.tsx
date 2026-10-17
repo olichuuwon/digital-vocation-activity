@@ -8,7 +8,6 @@ import { RealityCheck } from '../../components/RealityCheck';
 import { StarResult } from '../../components/StarResult';
 import { Timer } from '../../components/Timer';
 import { toast } from '../../components/toastStore';
-import { TutorialOverlay } from '../../components/TutorialOverlay';
 import ui from '../../components/components.module.css';
 import { briefingFor, fill, hasBonus, levelsFor, realityCheck, stageContent } from '../../content';
 import type { LogicLevel, LogicLevelId, Program } from '../../content/stage3Schema';
@@ -21,7 +20,7 @@ import { mulberry32 } from '../data/logic';
 import { c, stage3, t } from './content';
 import { GridMap } from './GridMap';
 import { logicStars, nextAssist, SCORED_LEVEL_IDS, stageScore, toLogicScores, type LevelOutcome } from './logic';
-import { blockCount, blocksChanged, flatten, getBlock } from './program';
+import { blockCount, blocksChanged, flatten, getBlock, nextStep } from './program';
 import { blockText, ICON } from './blocks';
 import { ProgramEditor } from './ProgramEditor';
 import { stage3For, useStage3Progress, type EndPhase } from './progress';
@@ -58,7 +57,8 @@ export default function LogicStage({ run, debug }: { run: GameState; debug: bool
     else completeLevel();
   };
 
-  if (phase === 'briefing') return <BriefingCard briefing={briefingFor(3)!} stage={stage} onGo={() => setPhase('intro')} />;
+  // Like Stage 1, the briefing goes straight into the (guided) tutorial: no extra intro screen.
+  if (phase === 'briefing') return <BriefingCard briefing={briefingFor(3)!} stage={stage} onGo={() => setPhase('play')} />;
   if (phase === 'intro') return <LevelIntro levelId={levelId} onStart={() => setPhase('play')} />;
   if (phase === 'play')
     return (
@@ -231,7 +231,7 @@ function PlayLevel({
   const isDebug = level.id === 'logic-l4';
   const map = useMemo(() => parseMap(level), [level]);
   const [seed] = useState(() => Date.now());
-  const [program, setProgramState] = useState<Program>(() => level.prebuilt ?? []);
+  const [program, setProgramState] = useState<Program>(() => level.prebuilt ?? level.starter ?? []);
   /** After a "lucky" L3 run, the next run uses a flood the program fails on, so the player sees it. */
   const [forcedFlood, setForcedFlood] = useState<RunResult['flood']>(null);
   /** Debug It: the last block a run stopped at. A new stop is progress (bug found), not a fail. */
@@ -242,7 +242,8 @@ function PlayLevel({
   /** The run on screen: trace position, auto-play, and whether its result has been judged yet. */
   const [running, setRunning] = useState<{ result: RunResult; i: number; auto: boolean; judged: boolean } | null>(null);
   const [solved, setSolved] = useState<RunResult | null>(null);
-  const [tutorialSeen, setTutorialSeen] = useState(!isTutorial);
+  /** The player tapped the ghost next step at least once (counts as a hint). */
+  const [ghostUsed, setGhostUsed] = useState(false);
   const headingRef = useScreenHeading<HTMLHeadingElement>(levelName(level.id));
   const announce = useAnnouncer((a) => a.announce);
   const relaxed = useRelaxed();
@@ -261,6 +262,18 @@ function PlayLevel({
   }, []);
   const assist: Assist = answerShown ? 'answer' : nextAssist(failedRuns);
   const used = blockCount(program);
+  // Guided help: the next step towards the level's solution. The tutorial walks through every
+  // block (palette highlight + coach line); other levels show the ghost once the hint is on.
+  const next = !solved && !answerShown ? nextStep(program, level.solution) : null;
+  const guideOp = isTutorial && next?.kind === 'add' ? next.block.op : null;
+  const showGhost = !!next && !guideOp && (isTutorial || assist === 'hint');
+  const coach = isTutorial && !solved
+    ? next
+      ? guideOp
+        ? fill(c.editor.guideStep, { n: Math.min(used + 1, blockCount(level.solution)), total: blockCount(level.solution), block: `${ICON[guideOp]} ${c.blocks[guideOp]}` })
+        : undefined
+      : c.editor.guideRun
+    : undefined;
 
   const setProgram = (p: Program) => {
     setProgramState(p);
@@ -270,7 +283,7 @@ function PlayLevel({
   const outcome = (ok: boolean, res?: RunResult): LevelOutcome => ({
     levelId: level.id,
     solved: ok,
-    assist: answerShown ? 'answer' : failedRuns >= 2 ? 'hint' : 'none',
+    assist: answerShown ? 'answer' : ghostUsed ? 'hint' : 'none',
     blocks: used,
     par: level.par,
     failedRuns,
@@ -425,9 +438,6 @@ function PlayLevel({
           <li key={y}>{fill(c.a11y.row, { n: y + 1, tiles: [...row].map((ch, x) => describeTile(ch, x, y)).join(', ') })}</li>
         ))}
       </ol>
-      {!tutorialSeen && (
-        <TutorialOverlay gesture="tap" text={c.editor.tutorialHint} onDismiss={() => setTutorialSeen(true)} />
-      )}
       <HintBox quiet level={assist} hint={c.levelHint[level.id]} answer={answerShown ? c.answer : c.answerReady} />
       <ProgramEditor
         program={program}
@@ -438,6 +448,10 @@ function PlayLevel({
         activeAddr={shownStep?.addr ?? null}
         failedAddr={failStep?.addr ?? null}
         swap={isDebug ? { maxEdits: level.maxEdits ?? 2, changed: (p) => blocksChanged(level.prebuilt ?? [], p) } : undefined}
+        ghost={showGhost ? next : null}
+        onGhost={() => setGhostUsed(true)}
+        guideOp={guideOp}
+        coach={coach}
         dock={
           <>
       {isDebug && <p className={ui.muted}>{fill(c.editor.editsLeft, { n: Math.max(0, (level.maxEdits ?? 2) - blocksChanged(level.prebuilt ?? [], program)) })}</p>}
@@ -459,6 +473,7 @@ function PlayLevel({
                     ref={runBtnRef}
                     className={s.runBtn}
                     data-primary="true"
+                    data-guide={(isTutorial && !next && !isRunning) || undefined}
                     aria-disabled={isRunning || program.length === 0 || undefined}
                     onClick={() => !isRunning && program.length > 0 && start(true)}
                   >

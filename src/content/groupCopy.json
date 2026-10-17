@@ -85,7 +85,9 @@
     "rank": "You're #{rank} today!",
     "onBoard": "You're on the board!",
     "notRanked": "This run couldn't go on the board.",
-    "retrying": "No connection yet. We'll keep trying."
+    "retrying": "No connection yet. We'll keep trying.",
+    "notRankedQuick": "Too quick for the board: the run was under the minimum time.",
+    "notRankedName": "That team name can't go on the board."
   },
   "host": {
     "none": "No teams playing right now.",

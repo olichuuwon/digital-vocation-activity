@@ -261,3 +261,11 @@
   background: var(--bg);
   padding: 8px 0 calc(8px + env(safe-area-inset-bottom));
 }
+
+/* Fix picker Back: one line ("← Back"), unlike the stacked Keep/Trash/Fix buttons. */
+.back {
+  flex-direction: row;
+  justify-content: center;
+  gap: 4px;
+  white-space: nowrap;
+}

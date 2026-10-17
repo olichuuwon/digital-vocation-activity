@@ -123,7 +123,8 @@ export default function AiStage({ run, debug }: { run: GameState; debug: boolean
     else completeLevel();
   };
 
-  if (phase === 'briefing') return <BriefingCard briefing={briefingFor(2)!} stage={stage} onGo={() => setPhase('intro')} />;
+  // Like Stage 1, the briefing goes straight into the tutorial: no extra intro screen.
+  if (phase === 'briefing') return <BriefingCard briefing={briefingFor(2)!} stage={stage} onGo={() => setPhase('play')} />;
 
   if (phase === 'intro') return <LevelIntro levelId={levelId} onStart={() => setPhase('play')} />;
 

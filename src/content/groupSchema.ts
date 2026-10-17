@@ -36,7 +36,7 @@ export const groupCopySchema = z.object({
   ),
   pill: section(['reconnecting', 'sending'], 10),
   ended: section(['closed', 'lobbyExpired', 'runExpired', 'left', 'ok']),
-  debrief: section(['groupLine', 'submitting', 'rank', 'onBoard', 'notRanked', 'retrying'], 12),
+  debrief: section(['groupLine', 'submitting', 'rank', 'onBoard', 'notRanked', 'notRankedQuick', 'notRankedName', 'retrying'], 12),
   host: section(['none', 'lobby', 'prologue', 'stage', 'finale', 'size']),
 });
 export type GroupCopy = z.infer<typeof groupCopySchema>;

@@ -20,7 +20,9 @@
     "wrong": "Not quite. {team} fixes this one.",
     "timeout": "Too slow! {team} would have fixed it.",
     "families": "{n} families",
-    "done": "Shift over. Every team played its part!"
+    "done": "Shift over. Every team played its part!",
+    "next": "Next incident",
+    "finish": "See results"
   },
   "incidents": {
     "inc01": {
@@ -132,7 +134,7 @@
     ],
     "soloNote": "Solo runs aren't ranked. Team up to get on the board.",
     "date": "Played {date}",
-    "playAgain": "Play again",
+    "playAgain": "New run",
     "leaderboard": "Leaderboard",
     "home": "Home",
     "back": "Back to results",

@@ -223,7 +223,7 @@ test('3 phones: create, join by QR link and by code, reorder, play a team run, r
   expect(stored).not.toMatch(/Ann|Cai/);
 
   // Play again leaves the team.
-  await ann.getByRole('button', { name: 'Play again' }).click();
+  await ann.getByRole('button', { name: 'New run' }).click();
   await expect(ann.getByRole('button', { name: 'Play solo' })).toBeVisible();
 
   // Free play: once ranked, any member replays a stage solo on their own phone.

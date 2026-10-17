@@ -1,5 +1,7 @@
-import type { Program } from '../../content/stage3Schema';
+import stage3Json from '../../content/stage3.json';
+import { stage3FileSchema, type Program } from '../../content/stage3Schema';
 import {
+  applyStep,
   blocksChanged,
   childList,
   flatten,
@@ -8,6 +10,7 @@ import {
   isInside,
   moveBy,
   newBlock,
+  nextStep,
   removeAt,
   ROOT_CURSOR,
   sameAddr,
@@ -83,5 +86,46 @@ describe('blocksChanged (Debug It swaps)', () => {
     expect(blocksChanged(p, one)).toBe(1);
     expect(blocksChanged(p, swapOp(one, { list: [], index: 2 }, 'left'))).toBe(0);
     expect(blocksChanged(p, setRepeat(p, { list: [], index: 1 }, 3))).toBe(1);
+  });
+});
+
+describe('nextStep (the guided hint)', () => {
+  const levels = stage3FileSchema.parse(stage3Json).levels;
+  /** Follows the ghost until the program matches; fails if it doesn't converge. */
+  const follow = (start: Program, solution: Program) => {
+    let p = start;
+    for (let k = 0; k < 60; k++) {
+      const step = nextStep(p, solution);
+      if (!step) return p;
+      p = applyStep(p, step);
+    }
+    throw new Error('ghost did not converge');
+  };
+
+  it('builds every level solution from an empty program, one block at a time', () => {
+    for (const l of levels) expect(follow([], l.solution), l.id).toEqual(l.solution);
+  });
+
+  it('fixes prebuilt, starter and wrong programs', () => {
+    for (const l of levels) {
+      if (l.prebuilt) expect(follow(l.prebuilt, l.solution), l.id).toEqual(l.solution);
+      if (l.starter) expect(follow(l.starter, l.solution), l.id).toEqual(l.solution);
+      const wrong: Program = [{ op: 'left' }, { op: 'repeat', n: 9, body: [{ op: 'drop' }] }, { op: 'drop' }, { op: 'drop' }];
+      expect(follow(wrong, l.solution), l.id).toEqual(l.solution);
+    }
+  });
+
+  it('suggests the right kind of step', () => {
+    const sol: Program = [{ op: 'forward' }, { op: 'repeat', n: 3, body: [{ op: 'left' }] }];
+    expect(nextStep([], sol)).toEqual({ kind: 'add', at: { list: [], index: 0 }, block: { op: 'forward' } });
+    expect(nextStep([{ op: 'right' }], sol)).toEqual({ kind: 'swap', addr: { list: [], index: 0 }, op: 'forward' });
+    expect(nextStep([{ op: 'forward' }, { op: 'repeat', n: 2, body: [] }], sol)).toEqual({ kind: 'count', addr: { list: [], index: 1 }, n: 3 });
+    expect(nextStep([{ op: 'forward' }, { op: 'repeat', n: 3, body: [] }], sol)).toEqual({
+      kind: 'add',
+      at: { list: [1, 'body'], index: 0 },
+      block: { op: 'left' },
+    });
+    expect(nextStep([...sol, { op: 'drop' }], sol)).toEqual({ kind: 'remove', addr: { list: [], index: 2 } });
+    expect(nextStep(sol, sol)).toBeNull();
   });
 });

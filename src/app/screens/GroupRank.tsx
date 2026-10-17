@@ -21,7 +21,11 @@ export function GroupRank() {
         ? fill(t.rank, { rank: r.rankToday })
         : t.onBoard
       : r?.kind === 'rejected'
-        ? t.notRanked
+        ? r.reason === 'tooQuick'
+          ? t.notRankedQuick
+          : r.reason === 'name'
+            ? t.notRankedName
+            : t.notRanked
         : g.connected
           ? t.submitting
           : t.retrying;

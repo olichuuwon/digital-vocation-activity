@@ -75,6 +75,8 @@ export const logicLevelSchema = z
     floodGroups: z.array(z.enum(['a', 'b', 'c'])).default([]),
     /** L4 Debug It: the broken program the player starts with. */
     prebuilt: programSchema.optional(),
+    /** A head start already in the program (Choose the Road: the If block, so players fill it in). */
+    starter: programSchema.optional(),
     /** L4: most blocks the player may swap. */
     maxEdits: z.number().int().min(1).max(3).optional(),
     /** A known-good program (shown as the answer after 3 failed runs; checked by tests). */
@@ -121,7 +123,7 @@ const perLevel = <T extends z.ZodTypeAny>(t: T) =>
 
 export const stage3CopySchema = z.object({
   levelIntro: perLevel(words(25)),
-  /** Shown after 2 failed runs, per level. */
+  /** Shown after 1 failed run, per level, with the ghost next step. */
   levelHint: perLevel(words(20)),
   /** Plain-language block names (no code syntax on screen, §6). `{n}` = repeat count. */
   blocks: z.object({
@@ -155,7 +157,15 @@ export const stage3CopySchema = z.object({
     selected: txt,
     swapPrompt: words(12),
     editsLeft: txt,
-    tutorialHint: words(12),
+    /** Guided tutorial: the next block to tap, then Run. */
+    guideStep: txt,
+    guideRun: words(8),
+    /** The ghost "next step" shown after a failed run (one per kind of change). */
+    ghostAdd: txt,
+    ghostSwap: txt,
+    ghostCount: txt,
+    ghostRemove: words(6),
+    ghostLabel: words(4),
     pickBlockFirst: words(12),
   }),
   run: z.object({

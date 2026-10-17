@@ -258,6 +258,12 @@
   flex-direction: column;
 }
 
+.stormOver {
+  margin: 0;
+  font-weight: 800;
+  text-align: center;
+}
+
 .goStack .meter {
   padding: 6px 10px;
   gap: 4px;
@@ -347,6 +353,7 @@
 .barButtons {
   display: flex;
   gap: 8px;
+  white-space: nowrap;
 }
 
 .barButtons > * {

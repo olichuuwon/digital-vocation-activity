@@ -7,6 +7,7 @@ import { toast } from '../../components/toastStore';
 import { blockText, ICON } from './blocks';
 import { c } from './content';
 import {
+  applyStep,
   blockCount,
   childList,
   flatten,
@@ -23,6 +24,7 @@ import {
   type BlockAddr,
   type Cursor,
   type ListPath,
+  type NextStep,
 } from './program';
 import s from './logic.module.css';
 
@@ -60,6 +62,9 @@ function cursorLabel(program: Program, cur: Cursor): string {
  * - Tap a program block: select it, then Move up / Move down / Remove / More or fewer times.
  * - Tap an "Add blocks here" slot to add inside a Repeat or If.
  * Debug It (`swap`): tap a block, then a palette block to swap it in (limited swaps).
+ * Guided help: `ghost` shows the suggested next step as a dashed "💡 Tap to…" row in the program
+ * (one tap applies it); `guideOp` highlights a palette block and `coach` says what to tap
+ * (the step-by-step tutorial).
  * Every edit is announced once (one live region), and focus never falls back to <body> (§10).
  */
 export function ProgramEditor({
@@ -72,6 +77,10 @@ export function ProgramEditor({
   failedAddr,
   swap,
   dock,
+  ghost,
+  onGhost,
+  guideOp,
+  coach,
 }: {
   program: Program;
   onChange: (p: Program) => void;
@@ -85,8 +94,19 @@ export function ProgramEditor({
   swap?: { maxEdits: number; changed: (p: Program) => number };
   /** Run/Step/Reset etc., shown in the sticky bottom dock under the palette. */
   dock?: ReactNode;
+  /** Suggested next step (guided hint); tapping it applies it. */
+  ghost?: NextStep | null;
+  onGhost?: () => void;
+  /** Tutorial: the palette block to tap next (highlighted). */
+  guideOp?: BlockOp | null;
+  /** Tutorial: what to do next, above the palette. */
+  coach?: string;
 }) {
-  const [cursor, setCursor] = useState<Cursor>({ list: [], index: program.length });
+  // A pre-placed If (Choose the Road) starts with new blocks going inside it.
+  const [cursor, setCursor] = useState<Cursor>(() => {
+    const i = program.findIndex((b) => b.op === 'ifFlooded' && b.then.length === 0);
+    return i >= 0 ? { list: [i, 'then'], index: 0 } : { list: [], index: program.length };
+  });
   const [selected, setSelected] = useState<BlockAddr | null>(null);
   const announce = useAnnouncer((a) => a.announce);
   const used = blockCount(program);
@@ -177,6 +197,49 @@ export function ProgramEditor({
     announce(fill(c.a11y.repeatSet, { n }));
   };
 
+  const ghostText = (g: NextStep) =>
+    g.kind === 'add'
+      ? fill(c.editor.ghostAdd, { block: `${ICON[g.block.op]} ${blockText(g.block)}` })
+      : g.kind === 'swap'
+        ? fill(c.editor.ghostSwap, { block: `${ICON[g.op]} ${c.blocks[g.op]}` })
+        : g.kind === 'count'
+          ? fill(c.editor.ghostCount, { n: g.n })
+          : c.editor.ghostRemove;
+  const takeGhost = () => {
+    if (!ghost || locked) return;
+    const next = applyStep(program, ghost);
+    if (swap && swap.changed(next) > swap.maxEdits) return toast(fill(c.editor.editsLeft, { n: 0 }), 'error');
+    if (ghost.kind === 'add') {
+      const addr = ghost.at;
+      const op = ghost.block.op;
+      const inside = op === 'repeat' ? childList(addr, 'body') : op === 'ifFlooded' ? childList(addr, 'then') : null;
+      commit(next, null, inside ? { list: inside, index: 0 } : { list: addr.list, index: addr.index + 1 });
+    } else commit(next, null);
+    onGhost?.();
+    announce(ghostText(ghost));
+  };
+  /** The ghost row, placed where its change happens (depth = how deep its list is). */
+  const ghostRow = (depth: number) =>
+    ghost ? (
+      <li key="ghost" className={s.row} style={{ paddingLeft: `${depth * 18}px` }}>
+        <button type="button" className={s.ghost} data-testid="ghost" data-kind={ghost.kind} aria-disabled={locked || undefined} onClick={takeGhost}>
+          <span aria-hidden="true">💡 </span>
+          <span className="visually-hidden">{c.editor.ghostLabel}: </span>
+          {ghostText(ghost)}
+        </button>
+      </li>
+    ) : null;
+  // When a ghost step appears (or moves on), bring it into view above the sticky dock.
+  const ghostKey = ghost ? JSON.stringify(ghost) : '';
+  useEffect(() => {
+    if (!ghostKey) return;
+    const el = boxRef.current?.querySelector<HTMLElement>('[data-testid="ghost"]');
+    const reduce = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+    el?.scrollIntoView?.({ block: 'nearest', behavior: reduce ? 'auto' : 'smooth' });
+  }, [ghostKey]);
+  const ghostAt = (list: ListPath, index: number) => ghost?.kind === 'add' && sameList(ghost.at.list, list) && ghost.at.index === index;
+  const ghostAfter = (addr: BlockAddr) => !!ghost && ghost.kind !== 'add' && sameAddr(ghost.addr, addr);
+
   const rootEnd: Cursor = { list: [], index: program.length };
   const cursorIsRootEnd = !selected && cursor.list.length === 0;
 
@@ -193,7 +256,7 @@ export function ProgramEditor({
         </div>
         {program.length === 0 && <p className={s.empty}>{c.editor.empty}</p>}
         <ul className={s.rows} role="list" data-testid="program">
-          {rows.map((r) => {
+          {rows.flatMap((r) => {
             const pad = { paddingLeft: `${r.depth * 18}px` };
             if (r.kind === 'label')
               return (
@@ -204,7 +267,8 @@ export function ProgramEditor({
             if (r.kind === 'end') {
               const list = r.list!;
               const on = !selected && sameList(cursor.list, list);
-              return swap ? null : (
+              const before = ghostAt(list, getList(program, list)?.length ?? 0) ? [ghostRow(r.depth)] : [];
+              return swap ? before : [...before, (
                 <li key={`e-${list.join('.')}`} className={s.row} style={pad}>
                   <button
                     type="button"
@@ -222,14 +286,15 @@ export function ProgramEditor({
                     {on ? cursorLabel(program, cursor) : c.editor.addHere}
                   </button>
                 </li>
-              );
+              )];
             }
             const b = r.block!;
             const isSel = sameAddr(selected, r.addr);
             const active = sameAddr(activeAddr, r.addr);
             const failedHere = sameAddr(failedAddr, r.addr);
             const where = insideText(program, r.addr.list);
-            return (
+            return [
+              ...(ghostAt(r.addr.list, r.addr.index) ? [ghostRow(r.depth)] : []),
               <li key={`b-${r.addr.list.join('.')}-${r.addr.index}`} className={s.row} style={pad}>
                 <button
                   type="button"
@@ -250,9 +315,11 @@ export function ProgramEditor({
                   {where && <span className="visually-hidden">, {where}</span>}
                   {failedHere && <span className="visually-hidden">, {c.a11y.stoppedHere}</span>}
                 </button>
-              </li>
-            );
+              </li>,
+              ...(ghostAfter(r.addr) ? [ghostRow(r.depth)] : []),
+            ];
           })}
+          {ghostAt([], program.length) && ghostRow(0)}
           {!swap && (
             <li className={s.row}>
               <button
@@ -323,6 +390,11 @@ export function ProgramEditor({
       )}
 
       {/* Hidden while the truck runs or once solved, so the map and the run controls have the room. */}
+      {coach && !locked && (
+        <p className={s.coach} data-testid="coach" aria-live="polite">
+          {coach}
+        </p>
+      )}
       <div className={s.palette} role="group" aria-label={c.editor.palette} hidden={locked}>
         {palette.map((op) => (
           <button
@@ -330,6 +402,7 @@ export function ProgramEditor({
             type="button"
             className={s.paletteBtn}
             data-op={op}
+            data-guide={guideOp === op || undefined}
             aria-disabled={locked || (!swap && full) || (swap && !selected) || undefined}
             onClick={() => add(op)}
           >

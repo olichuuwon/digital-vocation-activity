@@ -132,6 +132,22 @@ describe('finishRun / replayFrom', () => {
     expect(r.levelIndex).toBe(0);
     expect(r.finishedAt).toBeUndefined();
     expect(r.scores.finale.familiesReached).toBe(700);
-    expect(r.replays).toBe(1);
+        expect(r.replays).toBe(1);
+    expect(r.replaying).toBe(2);
+  });
+
+  it('a one-stage replay goes back to the debrief when that stage ends (bonus levels included)', () => {
+    useGame.getState().startRun();
+    useGame.getState().finishRun(700);
+    useGame.getState().replayFrom(1);
+    // Stage 1 on a replay: tutorial, L1, L2 and the bonus Spot the Outlier.
+    for (let i = 0; i < 3; i++) useGame.getState().completeLevel();
+    expect(useGame.getState().run!).toMatchObject({ stage: 1, levelIndex: 3 });
+    useGame.getState().completeLevel();
+    const r = useGame.getState().run!;
+    expect(r.stage).toBe(5);
+    expect(r.finishedAt).toBeTypeOf('number');
+    expect(r.replaying).toBeUndefined();
+    expect(r.scores.finale.familiesReached).toBe(700);
   });
 });

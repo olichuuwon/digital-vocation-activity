@@ -27,6 +27,6 @@ test('after the first visit, a later stage opens offline', async ({ page, contex
   await page.goto('/?debug=1&stage=3');
   await expect(page.getByRole('button', { name: 'Start building' })).toBeVisible();
   await page.getByRole('button', { name: 'Start building' }).click();
-  await expect(page.getByRole('button', { name: 'Start', exact: true })).toBeVisible();
+  await expect(page.getByTestId('coach')).toBeVisible();
   await context.setOffline(false);
 });

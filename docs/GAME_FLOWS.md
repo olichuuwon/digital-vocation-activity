@@ -27,7 +27,7 @@ Prologue → Stage 1 Data → Stage 2 AI → Stage 3 Software → Stage 4 Cloud 
 | Who plays | You play everything | One player per stage, turns rotate |
 | Everyone else | — | **Waiting screen**: who's playing, level, team stars, your next turn |
 | Leaderboard | Not ranked | One row per team, daily board |
-| After the debrief | Replay any stage with bonus levels | Everyone replays any stage solo on their own phone |
+| After the debrief | Replay any one stage with bonus levels, then back to the results | Everyone can do the same on their own phone |
 
 ---
 
@@ -40,19 +40,24 @@ Home → **Play solo** → the mission → the Stage 1 briefing → the first ca
 ### Stage 1: Clean the Data (the hook)
 The tutorial opens on a clean card, so the first swipe is a win. Level 1 teaches **one** new rule (numbers must make sense). Every good card adds to the **💧 people reached** counter. Level 2 adds just one thing: the **Fix** button. The rules in play always show as chips above the card.
 ![Stage 1](flows/solo-stage1.png)
+After the stars, a solo player goes straight on to the next stage's briefing (teams get a hand-off card instead). The Reality Check can't be skipped: every card shows, and Next unlocks after a moment.
 ![Stage 1 end](flows/solo-stage1-end.png)
 
 ### Stages 2–4
+Every briefing goes straight into its tutorial.
 ![Stage 2](flows/solo-stage2.png)
 ![Stage 3](flows/solo-stage3.png)
+
+**Stage 3 is guided.** The tutorial highlights each block to tap ("Step 1 of 4"), then Run. After one failed run, a dashed **💡 next step** appears in the program; one tap adds it. In Choose the Road the If block is already in place. Every level has 30 s more than before, and 3★ needs 80%.
+![Stage 3 guided](flows/solo-stage3-guided.png)
 ![Stage 4](flows/solo-stage4.png)
 
 ### Finale and debrief
-The pipeline shows your numbers, then you route 8 live incidents to the right team. The debrief card fits one screen for a screenshot. Underneath, a **🔓 There's more!** callout invites a replay.
+The pipeline shows your numbers, then you route 8 live incidents to the right team (**Next incident** skips the pause after each answer). The debrief card fits one screen for a screenshot. Underneath, a **🔓 There's more!** callout and the main button, **Replay with bonus levels**, invite a replay; **New run** starts over.
 ![Finale](flows/solo-finale.png)
 
 ### Replays unlock the bonus levels
-After a finished run, Home and the debrief offer **Replay with bonus levels**. The picker tells players exactly what's new in each stage. Replays are never ranked.
+After a finished run, Home and the debrief offer **Replay with bonus levels**. The picker tells players exactly what's new in each stage. A replay is one stage: when it ends, the player is back on their results to pick another. Replays are never ranked.
 
 | Stage | Bonus levels on a replay |
 |---|---|
@@ -146,7 +151,8 @@ After a finished run, Home and the debrief offer **Replay with bonus levels**. T
 | The player's phone drops mid-stage | Teammates see a pause. After 20 s the next player takes over from the start of that level. | `group.spec`, screenshot below |
 | Weak or no connection | Play continues; a "Reconnecting…" pill shows; the score submission retries. | `offline.spec`, unit tests |
 | Rude team name | Profanity filter (English, Singlish, Hokkien, Malay). The facilitator can hide it from `/host`. | unit + `host.spec` |
-| Someone tries to cheat the board | The server rejects >1,200 families, too-short runs, direct edits and floods. Replays are never sent. | SQL tests (PGlite) |
+| Someone tries to cheat the board | The server rejects >1,200 families, runs under 3 minutes, direct edits and floods. Replays are never sent. | SQL tests (PGlite) |
+| A team run is rejected | The debrief says why ("Too quick for the board…", "That team name can't go on the board"). | unit tests |
 
 ![Team of 2: phone drops](flows/team2-drop.png)
 

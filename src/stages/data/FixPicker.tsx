@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react';
+import { copy } from '../../content';
 import type { DataRecord } from '../../content/stage1Schema';
 import { c } from './content';
 import s from './data.module.css';
@@ -35,8 +36,9 @@ export function FixPicker({
           {suggest === i && <strong> ✓ {c.suggested}</strong>}
         </button>
       ))}
-      <button type="button" className={s.action} onClick={onCancel}>
-        <span aria-hidden="true">←</span> Back
+      <button type="button" className={`${s.action} ${s.back}`} onClick={onCancel}>
+        <span aria-hidden="true">← </span>
+        {copy.home.back}
       </button>
     </section>
   );

@@ -9,7 +9,7 @@ import { Timer } from '../../components/Timer';
 import { toast, useToast } from '../../components/toastStore';
 import { TutorialOverlay } from '../../components/TutorialOverlay';
 import ui from '../../components/components.module.css';
-import { briefingFor, fill, hasBonus, levelsFor, realityCheck, stageContent } from '../../content';
+import { briefingFor, copy, fill, hasBonus, levelsFor, realityCheck, stageContent } from '../../content';
 import {
   BASE_RPS,
   CPU_MAX,
@@ -87,7 +87,9 @@ export default function CloudStage({ run, debug }: { run: GameState; debug: bool
     if (isLast && saved.endPhase) return saved.endPhase;
     if (levelId === 'cloud-manual') return 'briefing';
     if (levelId === 'cloud-configure' && !saved.cardsSeen) return 'k8s';
-    return 'intro';
+    // Configure and Replay start straight away: the Kubernetes cards and the "Replay the storm"
+    // button already said what comes next.
+    return 'play';
   });
   const completeLevel = useGame((g) => g.completeLevel);
   const traffic = useTraffic(run);
@@ -100,10 +102,11 @@ export default function CloudStage({ run, debug }: { run: GameState; debug: bool
   if (phase === 'k8s')
     return (
       <RealityCheck
+        kicker={copy.components.howItWorks}
         check={realityCheck('cloud-k8s')}
         onDone={() => {
           useStage4Progress.getState().patch(run.startedAt, { cardsSeen: true });
-          setPhase('intro');
+          setPhase('play');
         }}
       />
     );
@@ -420,7 +423,10 @@ function ManualPlay({ traffic, debug, onDone }: { traffic: Traffic; debug: boole
           ))}
       </ul>
       {state.done ? (
-        <div className={s.go}>
+        <div className={`${s.go} ${s.goStack}`}>
+          <p className={s.stormOver} data-testid="storm-over">
+            {fill(c.manual.stormOver, { pct: pct(uptime) })}
+          </p>
           <button ref={continueRef} type="button" className={`${ui.btn} ${ui.primary}`} onClick={() => onDone(uptime)}>
             {t.continue}
           </button>
@@ -588,7 +594,7 @@ function Configure({
 
   return (
     <section className={s.level}>
-      <h1 ref={headingRef} tabIndex={-1} style={{ fontSize: '1.375rem', margin: 0 }}>
+      <h1 ref={headingRef} tabIndex={-1} style={{ margin: 0 }}>
         {c.configure.heading}
       </h1>
       <Timer seconds={CONFIGURE_SECONDS} onExpire={() => onDone(config)} />
@@ -875,7 +881,7 @@ function ReplayResults({
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
   return (
     <section className={s.level}>
-      <h1 ref={compareRef} tabIndex={-1} style={{ margin: 0, fontSize: '1.25rem' }}>
+      <h1 ref={compareRef} tabIndex={-1} style={{ margin: 0 }}>
         {c.replay.compareHeading}
       </h1>
       <div className={s.compare} data-testid="compare">

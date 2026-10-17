@@ -21,8 +21,10 @@ export interface GameState {
   startedAt: number;
   /** Set when the run reaches the debrief (finished runs aren't resumed). */
   finishedAt?: number;
-  /** Chapter-select replays of this run (varies the Live Ops deal). */
+  /** Replays of this run (free play; unlocks bonus levels, varies the Live Ops deal). */
   replays?: number;
+  /** Set while replaying one stage: when it ends, the run goes back to its debrief. */
+  replaying?: Stage;
 }
 
 export type Theme = 'system' | 'light' | 'dark';

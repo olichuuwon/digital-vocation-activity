@@ -24,7 +24,7 @@ No coding knowledge needed. No account, no app to install, and no personal data 
 1. Open the link (or scan the QR code at the booth) on your phone. Hold it upright.
 2. Tap **Play solo** to start straight away, or **Play as a team** to play with 2–4 friends (see below). A run takes about 16 minutes.
 3. Each stage follows the same pattern: a short briefing, a quick tutorial, two or three timed levels, then a **Reality Check** that shows how professionals do the same job, and finally your stars (0–3).
-4. **There's more!** After the debrief, tap **Replay with bonus levels** to replay any stage. Replays add bonus levels you haven't seen (they aren't ranked).
+4. **There's more!** After the debrief, tap **Replay with bonus levels** to replay any one stage with bonus levels you haven't seen, then come back to your results. Replays aren't ranked.
 
 **Stuck?** You can't get stuck for long. After 2 wrong answers the game gives you a hint, and after 3 it shows you the answer.
 
@@ -36,7 +36,7 @@ No coding knowledge needed. No account, no app to install, and no personal data 
 
 **🧠 Stage 2: Teach the Machine to See.** Label pictures of relief supplies to train your AI. Then guess pictures hidden under tiles (guess early for more points) and audit your AI's answers. Being *sure* isn't the same as being *right*! The 📖 Field guide shows what each item looks like. *Bonus on replay: Draw the Box.*
 
-**🧩 Stage 3: Build the Logic.** Tap blocks (Move forward, Turn, Drop supplies, Repeat, If the road ahead is flooded…) to program a supply truck, then press Run and watch it go. Step runs one block at a time. At the end you see your blocks turned into real Python. *Bonus on replay: Debug It (fix a broken program) and Ask the AI (your Stage 2 AI works out what each house needs).*
+**🧩 Stage 3: Build the Logic.** Tap blocks (Move forward, Turn, Drop supplies, Repeat, If the road ahead is flooded…) to program a supply truck, then press Run and watch it go. Step runs one block at a time. The tutorial walks you through it block by block, and if a run fails, a 💡 next step appears in your program: tap it to add it. At the end you see your blocks turned into real Python. *Bonus on replay: Debug It (fix a broken program) and Ask the AI (your Stage 2 AI works out what each house needs).*
 
 **☁️ Stage 4: Keep It Alive.** Keep three servers alive by hand through a traffic storm: boost, restart, roll back a bad update. Then meet Kubernetes, choose its settings within a budget, and watch it handle the same storm.
 

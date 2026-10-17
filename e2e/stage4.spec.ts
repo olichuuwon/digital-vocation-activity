@@ -4,14 +4,15 @@ import { expect, test, type Page } from '@playwright/test';
 const URL = '/?debug=1&simSpeed=25&stage=4';
 
 async function manualPhase(page: Page) {
-  await page.getByRole('button', { name: 'Go live' }).click();
+  await page.getByRole('button', { name: 'Launch the app' }).click();
   await expect(page.getByRole('heading', { name: 'Manual Mode', level: 1 })).toBeVisible();
   await page.getByRole('button', { name: 'Start', exact: true }).click();
   await page.getByRole('button', { name: 'Got it' }).click();
   await expect(page.getByTestId('server')).toHaveCount(3);
   // Tap a few things like a player would; the storm finishes on its own.
   await page.getByRole('button', { name: /Boost: Server 1/ }).click();
-  await page.getByRole('button', { name: 'Continue' }).click({ timeout: 20_000 });
+  await expect(page.getByTestId('storm-over')).toBeVisible({ timeout: 20_000 });
+  await page.getByRole('button', { name: 'Continue' }).click();
 }
 
 async function kubernetesCards(page: Page) {
@@ -33,13 +34,11 @@ test('Stage 4: manual storm, Kubernetes, a sensible config beats manual and earn
   await page.goto(URL);
   await manualPhase(page);
   await kubernetesCards(page);
-  await page.getByRole('button', { name: 'Start', exact: true }).click();
   await expect(page.getByRole('heading', { name: 'Set up Kubernetes' })).toBeVisible();
   await expect(page.getByTestId('cost-meter')).toContainText('Budget');
   await setSensible(page);
   await expect(page.getByTestId('cost-meter')).toContainText('Under budget');
   await page.getByRole('button', { name: 'Replay the storm' }).click();
-  await page.getByRole('button', { name: 'Start', exact: true }).click();
   await expect(page.getByTestId('diagnosis')).toHaveAttribute('data-diagnosis', 'perfect', { timeout: 20_000 });
   const [manual, auto] = await page.getByTestId('compare').locator('strong').allTextContents();
   expect(parseInt(auto!)).toBeGreaterThan(parseInt(manual!));
@@ -56,13 +55,10 @@ test('Stage 4: the default config fails in a teachable way, and Tweak goes back 
   await page.goto(URL);
   await manualPhase(page);
   await kubernetesCards(page);
-  await page.getByRole('button', { name: 'Start', exact: true }).click();
   await page.getByRole('button', { name: 'Replay the storm' }).click();
-  await page.getByRole('button', { name: 'Start', exact: true }).click();
   await expect(page.getByTestId('diagnosis')).not.toHaveAttribute('data-diagnosis', 'perfect', { timeout: 20_000 });
   await page.getByRole('button', { name: 'Tweak settings' }).click();
-  // Back on Phase B without repeating the Kubernetes cards; the hint is now shown.
-  await page.getByRole('button', { name: 'Start', exact: true }).click();
+  // Back on Phase B without repeating the Kubernetes cards or an intro; the hint is now shown.
   await expect(page.getByRole('heading', { name: 'Set up Kubernetes' })).toBeVisible();
   await expect(page.getByTestId('hint')).toContainText(/Hint/);
 });
@@ -72,15 +68,12 @@ test('Stage 4: reloading after the replay shows the saved result, not another st
   await page.goto(URL);
   await manualPhase(page);
   await kubernetesCards(page);
-  await page.getByRole('button', { name: 'Start', exact: true }).click();
   await page.getByRole('button', { name: 'Replay the storm' }).click();
-  await page.getByRole('button', { name: 'Start', exact: true }).click();
   const diagnosis = page.getByTestId('diagnosis');
   await expect(diagnosis).toBeVisible({ timeout: 20_000 });
   const kind = await diagnosis.getAttribute('data-diagnosis');
   await page.goto('/');
   await page.getByRole('button', { name: 'Resume run' }).click();
-  await page.getByRole('button', { name: 'Start', exact: true }).click();
   await expect(page.getByTestId('diagnosis')).toHaveAttribute('data-diagnosis', kind ?? '');
   await expect(page.getByTestId('replay-stats')).toHaveCount(0);
 });

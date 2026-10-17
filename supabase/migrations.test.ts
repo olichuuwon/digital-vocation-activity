@@ -5,12 +5,14 @@ import { PGlite } from '@electric-sql/pglite';
 import { pgcrypto } from '@electric-sql/pglite/contrib/pgcrypto';
 
 /**
- * Applies supabase/migrations/0001_runs.sql to an in-process Postgres (PGlite) set up like
+ * Applies supabase/migrations/*.sql (in order) to an in-process Postgres (PGlite) set up like
  * a Supabase project, then acts as the `anon` role to prove what the public key can and
  * can't do. Default privileges are set to the WORST case (everything auto-granted to anon)
  * so the migration's explicit revokes are what keep the table safe.
  */
-const migration = readFileSync(fileURLToPath(new URL('./migrations/0001_runs.sql', import.meta.url)), 'utf8');
+const read = (f: string) => readFileSync(fileURLToPath(new URL(`./migrations/${f}`, import.meta.url)), 'utf8');
+/** Every migration, in order (as Supabase applies them). */
+const migration = ['0001_runs.sql', '0002_min_duration.sql'].map(read).join('\n');
 
 const SUPABASE_LIKE_SETUP = `
   create role anon nologin;
@@ -129,8 +131,8 @@ describe('submit_run', () => {
     ['negative families', { families: -1 }, 'invalid_families'],
     ['group size 5', { size: 5 }, 'invalid_group_size'],
     ['group size 1', { size: 1 }, 'invalid_group_size'],
-    ['booth under 8 min', { mode: 'booth', duration: 479 }, 'invalid_duration'],
-    ['full under 15 min', { mode: 'full', duration: 899 }, 'invalid_duration'],
+    ['under 3 min', { mode: 'booth', duration: 179 }, 'invalid_duration'],
+    ['under 3 min (legacy full mode)', { mode: 'full', duration: 179 }, 'invalid_duration'],
     ['over 60 min', { duration: 3601 }, 'invalid_duration'],
     ['21-char name', { name: 'A'.repeat(21) }, 'invalid_group_name'],
     ['blank name', { name: '   ' }, 'invalid_group_name'],
@@ -146,8 +148,8 @@ describe('submit_run', () => {
   });
 
   it('accepts the exact bounds', async () => {
-    await anonSubmit({ families: 1200, size: 4, mode: 'booth', duration: 480, name: 'B'.repeat(20) });
-    await anonSubmit({ families: 0, size: 2, mode: 'full', duration: 900 });
+    await anonSubmit({ families: 1200, size: 4, mode: 'booth', duration: 180, name: 'B'.repeat(20) });
+    await anonSubmit({ families: 0, size: 2, mode: 'full', duration: 3600 });
     expect(await today()).toHaveLength(2);
   });
 

@@ -10,10 +10,10 @@
 //   stageScore  = (solved ÷ dealt) × (0.95 + 0.05·efficiency) × max(0.4, 1 − 0.12·hintsUsed)
 // Why not logicScore() directly: §6.3 says "solved + under block limit = 3★", so blocks over par
 // but within the limit must not cost a star. Efficiency only moves the score inside 0.95–1, so
-// everything solved with no help scores ≥ 0.95 whatever the block count, while one hint costs
-// 12% (≈ one star with a 0.9 three-star threshold) and a shown answer 24%.
-// Suggested stage3.json thresholds: three 0.9, two 0.6, one 0.3.
-import { hintLevel, type HintLevel } from '../../state/hints';
+// everything solved with no help scores ≥ 0.95 whatever the block count. A hint counts only when
+// the player taps the ghost next block; it costs 12% (one hint still earns 3★ with the 0.8
+// threshold, two drop to 2★) and a shown answer 24%. stage3.json thresholds: 0.2 / 0.6 / 0.8.
+import type { HintLevel } from '../../state/hints';
 import { clamp } from '../../state/scoring';
 import type { Scores, StarCount } from '../../state/types';
 import type { LogicLevelId } from '../../content/stage3Schema';
@@ -88,7 +88,10 @@ export function toLogicScores(outcomes: readonly LevelOutcome[]): Scores['logic'
   };
 }
 
-/** Help to show after `failedRuns` failed runs: hint after 2, answer after 3 (CLAUDE.md rule 8). */
+/**
+ * Help to show after `failedRuns` failed runs. Stage 3 is guided: the hint (with the ghost next
+ * block) comes after 1 failed run, the full answer ("Show me") after 3.
+ */
 export function nextAssist(failedRuns: number): HintLevel {
-  return hintLevel(failedRuns);
+  return failedRuns >= 3 ? 'answer' : failedRuns >= 1 ? 'hint' : 'none';
 }

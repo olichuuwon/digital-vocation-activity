@@ -19,6 +19,13 @@ export const useAnnouncer = create<{ message: string; announce: (m: string) => v
 
 let firstScreen = true;
 
+/** Called whenever a new screen heading appears (e.g. to clear feedback left from the last one). */
+const screenListeners = new Set<() => void>();
+export function onScreenChange(fn: () => void): () => void {
+  screenListeners.add(fn);
+  return () => void screenListeners.delete(fn);
+}
+
 /**
  * Sets the tab title and, after the first screen, moves focus to the screen heading so
  * screen-reader users hear where they are when a screen swaps (WCAG 2.4.3).
@@ -28,6 +35,7 @@ export function useScreenHeading<T extends HTMLElement>(title: string) {
   useEffect(() => {
     // An empty title means "not a screen yet" (e.g. a level still showing its intro).
     if (!title) return;
+    screenListeners.forEach((fn) => fn());
     const game = copy.home.title;
     document.title = title === game ? game : `${title} · ${game}`;
     if (firstScreen) {
