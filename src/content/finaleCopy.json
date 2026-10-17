@@ -7,7 +7,6 @@
     "logic": "Logic score {pct}%",
     "uptime": "Uptime {pct}%",
     "families": "{n} families reached",
-    "go": "Go live",
     "notPlayed": "Logic score: not played"
   },
   "liveOps": {

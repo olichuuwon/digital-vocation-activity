@@ -18,13 +18,17 @@ const PATH: Record<Gesture, { x: number[]; y: number[] }> = {
 /**
  * Interactive tutorial hint (§2): an animated hand shows the gesture over the real control.
  * The player can do the gesture or tap "Got it". Reduced motion shows a still hand.
+ * `compact`: one row (hand, text, Got it) for screens with sticky buttons below, so the hint
+ * never ends up half hidden behind them.
  */
 export function TutorialOverlay({
   text,
   gesture,
   onDismiss,
   children,
+  compact = false,
 }: {
+  compact?: boolean;
   text: string;
   gesture: Gesture;
   onDismiss: () => void;
@@ -34,7 +38,7 @@ export function TutorialOverlay({
   const textId = useId();
   const p = PATH[gesture];
   return (
-    <section className={s.tutorial} aria-label={t.tutorialLabel}>
+    <section className={`${s.tutorial} ${compact ? s.tutorialCompact : ''}`} aria-label={t.tutorialLabel}>
       {children}
       <m.span
         className={s.hand}

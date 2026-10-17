@@ -18,7 +18,8 @@ export function PipelineStrip({ stage }: { stage: number }) {
           >
             <span className={styles.bar} aria-hidden="true" />
             <span className={styles.label}>
-              <span aria-hidden="true">{state === 'done' ? '✓ ' : state === 'current' ? '▶ ' : `${s.icon} `}</span>
+              {/* ✓ done / ▶ current; upcoming stages are just named, so every label fits on one line. */}
+              {state !== 'upcoming' && <span aria-hidden="true">{state === 'done' ? '✓ ' : '▶ '}</span>}
               {s.short}
               <span className="visually-hidden">
                 {state === 'done' ? ', done' : state === 'current' ? ', in progress' : ', not started'}

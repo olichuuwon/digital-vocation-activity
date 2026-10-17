@@ -50,7 +50,6 @@ export const finaleCopySchema = z.object({
     logic: txt,
     uptime: txt,
     families: txt,
-    go: words(4),
     notPlayed: txt,
   }),
   liveOps: z.object({

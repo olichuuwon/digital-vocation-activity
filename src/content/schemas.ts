@@ -67,7 +67,7 @@ export const copySchema = z.object({
   components: z.object({
     timeLeft: text, secondsLeft: text, timeUp: text, paused: text, starsLabel: text, continue: text,
     next: text, done: text, cardOf: text, gotIt: text, tutorialLabel: text, realityCheck: text, howItWorks: text,
-    handoffHeading: text, handoffSoloHeading: text, handoffBody: text, handoffSoloBody: text,
+    handoffHeading: text, handoffSoloHeading: text, handoffBody: text, handoffSoloBody: text, handoffWaiting: text, handoffTakeOver: text,
     ready: text, rulebook: text, newRule: text, rulesInPlay: text, close: text, hint: text,
     answer: text, devHeading: text, extend: text, extendLabel: text, extended: text,
     toastSuccess: text, toastError: text, tutorialHint: text,

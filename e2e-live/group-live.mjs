@@ -178,7 +178,6 @@ try {
   });
 
   await check('Live Ops: the leader routes every incident', async () => {
-    await ic.getByRole('button', { name: 'Go live' }).click();
     await ic.getByRole('button', { name: 'Start shift' }).click();
     let routed = 0;
     for (let g = 0; g < 20; g++) {

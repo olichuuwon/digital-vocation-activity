@@ -71,7 +71,6 @@ test('Stage 3 and Stage 4 play screens', async ({ page }) => {
 test('Finale: reveal, Live Ops, debrief', async ({ page }) => {
   await page.goto('/?debug=1&stage=5');
   await axe(page, 'Finale reveal');
-  await page.getByRole('button', { name: 'Go live' }).click();
   await page.getByRole('button', { name: 'Start shift' }).click();
   await axe(page, 'Live Ops');
   for (let guard = 0; guard < 20; guard++) {

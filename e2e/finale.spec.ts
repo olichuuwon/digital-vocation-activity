@@ -19,7 +19,6 @@ test('Finale: reveal, route every incident, debrief card fits one screen, then a
   await page.goto('/?debug=1&stage=5');
   await expect(page.getByRole('heading', { name: 'Mission live' })).toBeVisible();
   await expect(page.getByTestId('pipeline')).toContainText('Model accuracy');
-  await page.getByRole('button', { name: 'Go live' }).click();
   await page.getByRole('button', { name: 'Start shift' }).click();
   const before = await page.getByTestId('live-families').textContent();
   await playLiveOps(page, true);
@@ -57,7 +56,6 @@ test('Finale: reveal, route every incident, debrief card fits one screen, then a
 test('Finale: wrong routes cost families; New run goes Home with no Resume', async ({ page }) => {
   test.setTimeout(150_000);
   await page.goto('/?debug=1&stage=5');
-  await page.getByRole('button', { name: 'Go live' }).click();
   await page.getByRole('button', { name: 'Start shift' }).click();
   const before = await page.getByTestId('live-families').textContent();
   await playLiveOps(page, false);
@@ -71,7 +69,6 @@ test('Finale: wrong routes cost families; New run goes Home with no Resume', asy
 test('Finale: a reload right after the last incident still reaches the debrief (no dead end)', async ({ page }) => {
   test.setTimeout(150_000);
   await page.goto('/?debug=1&stage=5');
-  await page.getByRole('button', { name: 'Go live' }).click();
   await page.getByRole('button', { name: 'Start shift' }).click();
   for (let i = 0; i < 8; i++) {
     const card = page.getByTestId('incident');

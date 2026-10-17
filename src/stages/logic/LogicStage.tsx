@@ -165,8 +165,9 @@ function BlocksToPython({ program }: { program: Program }) {
   const rows = flatten(program).filter((r) => r.kind !== 'end');
   const py = toPython(program);
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: 8, width: '100%', fontSize: '0.8125rem' }}>
-      <ul aria-hidden="true" style={{ listStyle: 'none', margin: 0, padding: 0, display: 'flex', flexDirection: 'column', gap: 3 }}>
+    // Compact (small chips, ≤ 10 lines of code) so the card fits one phone screen with its text.
+    <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: 6, width: '100%', fontSize: '0.75rem' }}>
+      <ul aria-hidden="true" style={{ listStyle: 'none', margin: 0, padding: 0, display: 'flex', flexDirection: 'column', gap: 2 }}>
         {rows.slice(0, 10).map((r, i) => (
           <li
             key={i}
@@ -175,7 +176,7 @@ function BlocksToPython({ program }: { program: Program }) {
               background: 'var(--logic)',
               color: '#1a1200',
               borderRadius: 6,
-              padding: '1px 8px',
+              padding: '0 6px',
               fontWeight: 700,
               alignSelf: 'flex-start',
             }}
@@ -192,10 +193,10 @@ function BlocksToPython({ program }: { program: Program }) {
         initial={{ opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.6 }}
-        style={{ margin: 0, fontSize: '0.8125rem', textAlign: 'left', whiteSpace: 'pre-wrap', overflowWrap: 'anywhere', background: 'var(--surface-2)', padding: 8, borderRadius: 8 }}
+        style={{ margin: 0, fontSize: '0.75rem', textAlign: 'left', whiteSpace: 'pre-wrap', overflowWrap: 'anywhere', background: 'var(--surface-2)', padding: 6, borderRadius: 8 }}
         data-testid="python"
       >
-        {py.slice(0, 14).join('\n')}
+        {py.slice(0, 10).join('\n')}
       </m.pre>
     </div>
   );

@@ -374,7 +374,7 @@ function LabelPlay({
       </div>
       <p className={s.question}>{c.question}</p>
       {tutorial && !tutorialSeen && (
-        <TutorialOverlay gesture="tap" text={c.tutorialHint} onDismiss={() => setTutorialSeen(true)} />
+        <TutorialOverlay compact gesture="tap" text={c.tutorialHint} onDismiss={() => setTutorialSeen(true)} />
       )}
       <HintBox
         quiet

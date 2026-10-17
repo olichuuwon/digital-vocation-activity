@@ -252,6 +252,16 @@ export class GroupEngine {
     this.putLocal('session', { ...s, rotation });
   }
 
+  /**
+   * Hand-off fallback: this phone plays `stage` because the player whose turn it is isn't
+   * connected. Recorded like a drop takeover (`ov:<stage>`), so every phone agrees at once.
+   */
+  claim(stage: Stage) {
+    if (this.status !== 'playing' || !this.me) return;
+    this.putLocal(`ov:${stage}`, this.me);
+    this.emit();
+  }
+
   /** Leader: START. Joining closes; members still missing are left out. Needs 2+. */
   start(): boolean {
     const s = this.session;

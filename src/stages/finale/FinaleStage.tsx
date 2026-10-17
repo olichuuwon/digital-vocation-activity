@@ -77,8 +77,9 @@ export default function FinaleStage({
   };
 
   if (run.finishedAt && phase !== 'debrief') return <Debrief run={run} onHome={onHome} onLeaderboard={onLeaderboard} onReplay={onReplay} />;
-  if (phase === 'reveal') return <Reveal p={p} logicPlayed={played(run).logic} onGo={() => go('intro')} />;
-  if (phase === 'intro') return <LiveIntro onStart={() => go('live')} />;
+  // One tap from the reveal into Live Ops: the reveal also says how Live Ops works. ('intro' is
+  // an older saved phase, shown as the reveal.)
+  if (phase === 'reveal' || phase === 'intro') return <Reveal p={p} logicPlayed={played(run).logic} onGo={() => go('live')} />;
   if (phase === 'live')
     return (
       <LiveOps
@@ -109,6 +110,7 @@ function CountUp({ to }: { to: number }) {
 
 /** §8.1: the chain of the player's own numbers, then the families counter. */
 function Reveal({ p, logicPlayed, onGo }: { p: ReturnType<typeof pipeline>; logicPlayed: boolean; onGo: () => void }) {
+  const relaxed = useRelaxed();
   const reduce = useReducedMotion();
   const headingRef = useScreenHeading<HTMLHeadingElement>(c.reveal.heading);
   const links: [string, string][] = [
@@ -143,26 +145,12 @@ function Reveal({ p, logicPlayed, onGo }: { p: ReturnType<typeof pipeline>; logi
       <p className={ui.muted} style={{ textAlign: 'center' }}>
         <UnderBigNumber template={c.reveal.families} n={nf.format(p.families)} />
       </p>
+      <p className={ui.body} data-testid="liveops-intro">
+        <span aria-hidden="true">🚨 </span>
+        {fill(c.liveOps.intro, { s: levelSeconds(finale.liveOps.secondsEach, relaxed) })}
+      </p>
       <div className={ui.actions}>
         <button type="button" className={`${ui.btn} ${ui.primary}`} onClick={onGo}>
-          {c.reveal.go}
-        </button>
-      </div>
-    </section>
-  );
-}
-
-function LiveIntro({ onStart }: { onStart: () => void }) {
-  const relaxed = useRelaxed();
-  const headingRef = useScreenHeading<HTMLHeadingElement>(c.liveOps.heading);
-  return (
-    <section className={ui.screen}>
-      <h1 ref={headingRef} tabIndex={-1}>
-        {c.liveOps.heading}
-      </h1>
-      <p className={ui.body}>{fill(c.liveOps.intro, { s: levelSeconds(finale.liveOps.secondsEach, relaxed) })}</p>
-      <div className={ui.actions}>
-        <button type="button" className={`${ui.btn} ${ui.primary}`} onClick={onStart}>
           {c.liveOps.start}
         </button>
       </div>

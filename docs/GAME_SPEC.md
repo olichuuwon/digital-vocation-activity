@@ -144,7 +144,7 @@ Simple on purpose. Teammates stand together, so the talking happens in person.
 - **The player:** each stage, one member plays on their own phone, exactly as in solo (Rulebook, Field guide, every button). They hold it where the others can see.
 - **Everyone else:** their phone shows a **Waiting screen**: who is playing which stage and level, the team's stars so far, when their own turn comes, and a nudge to "watch and talk it through together". Nobody is idle: they read along and call out answers.
 - **Rotation:** player 1 (the leader) plays the prologue and the finale; stages 1–4 rotate from player 2, so turns are as even as possible.
-- **Hand-off:** at the end of a stage, the next player's phone shows "You're up next!" with an **I'm ready** button.
+- **Hand-off:** at the end of a stage, the next player's phone shows "You're up next!" with an **I'm ready** button. **Only that player can start their turn**: the finishing player's card just says "Waiting for {name}…". If the next player's phone isn't connected, the finishing phone can play their turn instead, so the game never gets stuck.
 - **Drops:** if the player's phone goes quiet for 20 s, the next connected member takes over from the start of that level.
 - **Free play:** once the team is on the board, every member can pick any stage to replay solo on their own phone, with the bonus levels (not ranked). A replay is just that one stage, then back to the results.
 
@@ -322,7 +322,7 @@ The player watches (with the option to intervene) the **same traffic pattern** f
 ## 8. Finale: "Mission Live" + Debrief
 
 ### 8.1 Pipeline reveal (~20s)
-Animated chain: 📊 data quality → 🧠 model accuracy → 🧩 logic score → ☁️ uptime, each showing the player's number. A family counter then ticks up.
+Animated chain: 📊 data quality → 🧠 model accuracy → 🧩 logic score → ☁️ uptime, each showing the player's number. A family counter then ticks up. The same screen says how Live Ops works, and its **Start shift** button starts it (one tap).
 
 ### 8.2 Live Ops (~90s): teamwork incidents
 A live dashboard runs. Incidents pop up; the player routes each to the right team (4 buttons) within 8 seconds:

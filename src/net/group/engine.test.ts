@@ -266,6 +266,24 @@ describe('run', () => {
     expect(members[0]!.snap().topics.load).toBe(10);
   });
 
+  it('hand-off fallback: the finishing player claims the next stage when that player is offline', async () => {
+    const { leader, members, all } = await lobbyOf(3);
+    leader.engine.start();
+    await flush();
+    leader.game.local((r) => ({ ...r, stage: 1 }));
+    await flush();
+    // Stage 1 player (members[0]) finishes; stage 2 belongs to members[1], who is offline.
+    hub.setOnline(members[1]!.client(), false);
+    await flush();
+    members[0]!.engine.claim(2);
+    members[0]!.game.local((r) => ({ ...r, stage: 2 }));
+    await flush();
+    for (const d of [leader, members[0]!]) expect(d.snap().mainId).toBe(members[0]!.snap().meId);
+    expect(members[0]!.engine.amMain()).toBe(true);
+    expect(leader.game.run?.stage).toBe(2);
+    expect(all.length).toBe(3);
+  });
+
   it('pauses when the main phone drops, then promotes the next player after 20 s', async () => {
     const { leader, members } = await lobbyOf(3);
     leader.engine.start();

@@ -2,6 +2,7 @@ import { z } from 'zod';
 import { create } from 'zustand';
 import { parseParams } from '../../app/params';
 import { useGame } from '../../state/store';
+import type { Stage } from '../../state/types';
 import { safeStorage } from '../../state/storage';
 import { supabaseConfig } from '../supabase';
 import { rememberOwnRun } from '../ownRuns';
@@ -214,6 +215,8 @@ export const groupActions = {
   },
   setRotation: (rotation: string[]) => engine?.setRotation(rotation),
   start: () => engine?.start() ?? false,
+  /** Hand-off fallback: play `stage` on this phone (the next player isn't connected). */
+  claim: (stage: Stage) => engine?.claim(stage),
   setViewAs: (viewAs: number | null) => useGroupStore.setState({ viewAs }),
   /** Test/debug: simulate this phone losing its connection. */
   debugDisconnect(offline: boolean) {

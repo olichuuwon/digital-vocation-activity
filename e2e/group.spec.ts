@@ -188,7 +188,6 @@ test('3 phones: create, join by QR link and by code, reorder, play a team run, r
     await expect(p.getByTestId('now-playing')).toContainText('Cai is playing');
   }
 
-  await cai.getByRole('button', { name: 'Go live' }).click();
   await cai.getByRole('button', { name: 'Start shift' }).click();
   await playLiveOps(cai);
 
@@ -335,7 +334,7 @@ test('?fakePeers=2: bots join the lobby, this phone plays every turn and can pre
   await expect(page.getByTestId('reconnecting')).toHaveCount(0);
 });
 
-test('hand-off: the next main player is named and taps Ready on their own phone', async ({ browser }, info) => {
+test('hand-off: only the next player can start their turn, from their own phone', async ({ browser }, info) => {
   test.setTimeout(150_000);
   const board = { submitted: null as string | null };
   const ann = await phone(browser, info);
@@ -358,8 +357,10 @@ test('hand-off: the next main player is named and taps Ready on their own phone'
   await ben.getByRole('button', { name: /blank field/i }).click();
   await ben.getByRole('button', { name: 'Continue' }).click();
   await ben.getByRole('button', { name: 'Continue' }).click();
-  // Ben's hand-off card names Ann; Ann's phone offers Ready.
-  await expect(ben.getByText(/Ann/).first()).toBeVisible();
+  // Ben's hand-off card names Ann and waits: only Ann's own phone can start her turn.
+  await expect(ben.getByTestId('handoff-waiting')).toContainText('Waiting for Ann');
+  await expect(ben.getByRole('button', { name: 'Ready' })).toHaveCount(0);
+  await expect(ben.getByTestId('handoff-takeover')).toHaveCount(0);
   await expect(ann.getByTestId('up-next')).toBeVisible();
   await ann.getByTestId('up-next').getByRole('button').click();
   // Ann now plays stage 2; Ben waits.

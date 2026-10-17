@@ -218,6 +218,27 @@
   background: var(--surface);
 }
 
+.tutorialCompact {
+  flex-direction: row;
+  padding: 8px 10px;
+  gap: 10px;
+}
+
+.tutorialCompact .body {
+  margin: 0;
+  flex: 1;
+  font-size: 0.9375rem;
+}
+
+.tutorialCompact .hand {
+  font-size: 1.5rem;
+}
+
+.tutorialCompact .btn {
+  flex: none;
+  padding: 8px 14px;
+}
+
 .hand {
   font-size: 2.5rem;
   line-height: 1;
@@ -362,4 +383,11 @@ dialog.sheet::backdrop {
 
 .hintBox strong {
   color: var(--logic-ink);
+}
+
+/* Team hand-off: the finishing player's phone waits for the next player's I'm ready. */
+.handoffWaiting {
+  margin: 0;
+  text-align: center;
+  font-weight: 700;
 }

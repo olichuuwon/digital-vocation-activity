@@ -175,8 +175,7 @@ async function solo() {
     localStorage.setItem('ship-it', JSON.stringify(saved));
   });
   await p.goto(SITE + '/?debug=1&stage=5');
-  const f = [{ file: await shot(p, 'f-reveal'), label: 'Finale: your pipeline' }];
-  await click(p, 'Go live');
+  const f = [{ file: await shot(p, 'f-reveal'), label: 'Finale: your pipeline + how Live Ops works' }];
   await click(p, 'Start shift');
   f.push({ file: await shot(p, 'f-live'), label: 'Live Ops: route each incident' });
   await playLiveOps(p);
@@ -367,7 +366,6 @@ async function team(n) {
 
   await jump(ps[mainIndex(cur, n)], 'F');
   await ann.getByRole('heading', { name: 'Mission live' }).waitFor({ timeout: 20_000 });
-  await click(ann, 'Go live');
   await click(ann, 'Start shift');
   await strip(`team${n}-finale`, await all('finale', (i) => (i === 0 ? 'Live Ops (leader)' : 'watches + calls out teams')));
   await playLiveOps(ann);

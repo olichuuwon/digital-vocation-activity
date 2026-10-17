@@ -79,7 +79,7 @@ After a finished run, Home and the debrief offer **Replay with bonus levels**. T
 - **Player 1 is the Leader.** They start the mission and play the finale. Stages 1–4 rotate from player 2.
 - **The player** plays on their own phone exactly as in solo: Rulebook, Field guide, every button.
 - **Everyone else** sees the **Waiting screen** and helps out loud, crowded round the player's phone.
-- **Hand-off:** the next player's phone shows **You're up next!** with an **I'm ready** button.
+- **Hand-off:** the next player's phone shows **You're up next!** with an **I'm ready** button. Only that player can start their turn; the finishing player's phone just waits (it can take the turn only if the next phone has disconnected).
 
 | Team size | Prologue | Stage 1 | Stage 2 | Stage 3 | Stage 4 | Finale |
 |---|---|---|---|---|---|---|

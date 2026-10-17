@@ -103,7 +103,7 @@
     "tutorialLabel": "How to play",
     "handoffHeading": "Nice work! Next turn",
     "handoffSoloHeading": "Next up",
-    "handoffBody": "{name}, it's your turn: {stage}. Tap I'm ready on your phone.",
+    "handoffBody": "{name}, it's your turn: {stage}.",
     "handoffSoloBody": "Next team: {stage}.",
     "ready": "Ready",
     "rulebook": "Rulebook",
@@ -120,7 +120,9 @@
     "toastError": "Wrong:",
     "tutorialHint": "Try it, or tap Got it.",
     "realityCheck": "Reality Check",
-    "howItWorks": "How it works"
+    "howItWorks": "How it works",
+    "handoffWaiting": "Waiting for {name} to tap I'm ready on their phone…",
+    "handoffTakeOver": "{name} isn't connected. Play their turn here"
   },
   "prologue": {
     "heading": "Mission: flood relief",
