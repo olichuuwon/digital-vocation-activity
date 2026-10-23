@@ -54,7 +54,10 @@ export const sessionSchema = z
     createdAt: z.number(),
     startedAt: z.number().nullable(),
     sizeAtStart: z.number().int().min(2).max(MAX_MEMBERS).nullable(),
-    /** submit_run token: makes the one leaderboard submission retry-safe. */
+    /**
+     * Legacy: older app versions require it. It is NOT the leaderboard token any more (that one
+     * stays on the submitting phone), so reading it off the channel gives nothing away.
+     */
     token: z.uuid(),
   })
   .refine((s) => new Set(s.rotation).size === s.rotation.length, { message: 'duplicate member' });

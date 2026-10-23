@@ -10,7 +10,7 @@
  *   that typed them (§3.5.4). The one stored row is the leaderboard submission.
  * - Replicated state: a few keys, last-writer-wins on a Lamport version, every value zod-checked:
  *     session  (leader)     name, code, rotation,
- *                           status lobby → playing → closed, startedAt, sizeAtStart, run token
+ *                           status lobby → playing → closed, startedAt, sizeAtStart
  *     run      (main phone) the shared GameState (src/state/types.ts), i.e. the one run
  *     ov:<n>   (claimant)   takeover of stage n's main phone after a drop
  *     result   (submitter)  leaderboard row id + today's rank
@@ -36,6 +36,8 @@
  *   phone's `useActions` handlers receive them (de-duplicated; queued up to 10 s while offline).
  * - Submission (§3.5.3): when the run reaches the debrief, the leader's phone (or, if the leader
  *   is gone, the finale's main phone) queues one submit_run (retrying, idempotent per token).
+ *   That token is the submitting phone's own and never goes over the channel, so someone who
+ *   joins with the code can't submit under it first.
  *   The result (rank today) is broadcast so every phone shows "You're #3 today!".
  */
 export { useGroup, useTopic, useActions, useHandOff, useHandOffSync, deriveView, nextMain, HANDOFF_TOPIC, HANDOFF_READY } from './hooks';

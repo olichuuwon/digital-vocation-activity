@@ -30,6 +30,7 @@ const storedSchema = z.object({
   nick: z.string().min(1).max(16),
   session: sessionSchema.nullable(),
   result: resultSchema.nullable(),
+  submitToken: z.uuid().optional(),
   savedAt: z.number(),
 });
 

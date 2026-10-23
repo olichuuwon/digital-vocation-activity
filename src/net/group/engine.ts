@@ -30,7 +30,7 @@ import type { Channel, ChannelStatus, GroupTransport } from './transport';
  * channel and decides who runs the game. See ./index.ts for the sync model (the contract).
  *
  * Replicated keys (last-writer-wins on a Lamport version):
- *   session  written by the leader: name, code, rotation, status, start time, run token
+ *   session  written by the leader: name, code, rotation, status, start time
  *   run      the shared GameState, written by the main phone
  *   ov:<n>   takeover for stage n (the main phone dropped; the next in the rotation claims it)
  *   result   the leaderboard result (row id + today's rank), written by the submitting device
@@ -52,6 +52,11 @@ export interface StoredGroup {
   nick: string;
   session: Session | null;
   result: GroupResult | null;
+  /**
+   * This device's own leaderboard token (submit_run is idempotent per token). Never sent over
+   * the channel, so nobody who joins it can submit under this team's token first.
+   */
+  submitToken?: string;
   savedAt: number;
 }
 
@@ -155,6 +160,8 @@ export class GroupEngine {
   private seenActions: string[] = [];
   private pending: { msg: OutMessage; at: number }[] = [];
   private submitted = false;
+  /** This device's own leaderboard token; never broadcast (see maybeSubmit). */
+  private submitToken: string | null = null;
   private joinDeadline = 0;
   private timer: ReturnType<typeof setInterval> | null = null;
   private unsubGame: (() => void) | null = null;
@@ -189,8 +196,11 @@ export class GroupEngine {
       createdAt: now,
       startedAt: null,
       sizeAtStart: null,
+      // Legacy field, still sent so older app versions accept the session. NOT the leaderboard
+      // token: that one stays on the submitting phone (submitToken).
       token: this.deps.uuid(),
     };
+    this.submitToken = this.deps.uuid();
     this.code = session.code;
     this.status = 'lobby';
     this.putLocal('session', session);
@@ -219,6 +229,7 @@ export class GroupEngine {
     this.me = stored.memberId;
     this.nick = stored.nick;
     this.code = stored.code;
+    this.submitToken = stored.submitToken ?? null;
     if (s) {
       this.entries.set('session', { k: 'session', v: 0, by: s.leaderId, d: s });
       this.status = s.status === 'playing' ? 'playing' : 'lobby';
@@ -329,7 +340,7 @@ export class GroupEngine {
 
   /** The leaderboard submission finished (from the submit queue). */
   submitResult(token: string, result: GroupResult) {
-    if (this.session?.token !== token) return;
+    if (!this.submitToken || this.submitToken !== token) return;
     this.putLocal('result', result);
     this.deps.onResult?.(result);
     this.save();
@@ -467,6 +478,7 @@ export class GroupEngine {
     this.promoted = null;
     this.pending = [];
     this.submitted = false;
+    this.submitToken = null;
     this.connected = false;
     this.lastSnap = '';
   }
@@ -544,6 +556,7 @@ export class GroupEngine {
       nick: this.nick,
       session: this.session,
       result: (this.entries.get('result')?.d as GroupResult | undefined) ?? null,
+      ...(this.submitToken ? { submitToken: this.submitToken } : {}),
       savedAt: this.now(),
     });
   }
@@ -811,7 +824,9 @@ export class GroupEngine {
   /**
    * Group submission (§3.5.3): once, automatically, when the run reaches the debrief. The
    * leader's device sends it; if the leader is gone, the finale's main phone does. submit_run
-   * is idempotent per token, so a double send is harmless.
+   * is idempotent per token, so a resend is harmless. The token is this device's own and is never
+   * broadcast (a stand-in submitter makes its own); the shared 'result' entry stops a second
+   * phone submitting.
    */
   private maybeSubmit() {
     const s = this.session;
@@ -820,15 +835,17 @@ export class GroupEngine {
     const submitter = this.alive(s.leaderId) || s.leaderId === this.me ? s.leaderId : this.mainFor(5);
     if (submitter !== this.me) return;
     this.submitted = true;
-    this.deps.submit?.(runPayload(s, run));
+    if (!this.submitToken) this.submitToken = this.deps.uuid();
+    this.save();
+    this.deps.submit?.(runPayload(s, run, this.submitToken));
     this.emit();
   }
 }
 
 /** The leaderboard row for a finished group run (§3.5.4). No nicknames. */
-export function runPayload(s: Session, run: GameState): RunPayload {
+export function runPayload(s: Session, run: GameState, token: string): RunPayload {
   return {
-    groupToken: s.token,
+    groupToken: token,
     groupName: s.name,
     groupSize: s.sizeAtStart ?? s.rotation.length,
     families: Math.max(0, Math.min(1200, Math.round(run.scores.finale.familiesReached))),

@@ -2,6 +2,7 @@ import type { RunPayload } from '../leaderboard';
 import type { GameState } from '../../state/types';
 import { GroupEngine, type GameAdapter, type GroupSnapshot, type StoredGroup, type TokenStore } from './engine';
 import { MemoryHub, memoryTransport, type MemoryClient } from './memoryTransport';
+import { groupChannel } from './codes';
 import { GONE_AFTER_MS, LOBBY_TTL_MS, PROMOTE_AFTER_MS, PROTOCOL, RUN_TTL_MS } from './protocol';
 
 // Engine behaviour over an in-memory channel with fake timers: lobby, START, hand-off sync,
@@ -357,6 +358,37 @@ describe('run', () => {
     expect(leader.submits).toHaveLength(1);
   });
 
+  it('never sends the leaderboard token over the channel', async () => {
+    const { leader, members, code } = await lobbyOf(2);
+    // An eavesdropper who joined the channel with the code sees every message.
+    const heard: string[] = [];
+    memoryTransport(hub).join(groupChannel(code), null, {
+      onMessage: (m) => void heard.push(JSON.stringify(m)),
+      onPresence: (p) => void heard.push(JSON.stringify(p)),
+      onStatus: () => {},
+    });
+    leader.engine.start();
+    await flush();
+    members[0]!.game.local((r) => ({ ...r, stage: 5 }));
+    leader.game.local((r) => ({ ...r, stage: 5 }));
+    await flush();
+    const main = [leader, members[0]!].find((d) => d.engine.amMain())!;
+    main.game.local((r) => ({ ...r, finishedAt: Date.now() }));
+    await flush();
+    expect(leader.submits).toHaveLength(1);
+    const token = leader.submits[0]!.groupToken;
+    expect(heard.some((h) => h.includes('"k":"session"'))).toBe(true);
+    expect(heard.some((h) => h.includes('"k":"run"'))).toBe(true);
+    expect(heard.join('\n')).not.toContain(token);
+    // Kept on the leader's phone only, so a reload resends with the same token.
+    expect(leader.stored()!.submitToken).toBe(token);
+    expect(members[0]!.stored()!.submitToken).toBeUndefined();
+    // A result for some other token is ignored.
+    leader.engine.submitResult(uuid(), { kind: 'ok', id: 1, rankToday: 1 });
+    await flush();
+    expect(leader.snap().result).toBeNull();
+  });
+
   it('the finale main submits if the leader is gone', async () => {
     const { leader, members } = await lobbyOf(3);
     leader.engine.setRotation(icFirst(leader, members));
@@ -370,6 +402,8 @@ describe('run', () => {
     members[0]!.game.local((r) => ({ ...r, finishedAt: Date.now() }));
     await vi.advanceTimersByTimeAsync(2_000);
     expect(members[0]!.submits).toHaveLength(1);
+    // A stand-in submitter uses a token of its own (it never saw the leader's).
+    expect(members[0]!.submits[0]!.groupToken).toBe(members[0]!.stored()!.submitToken);
   });
 
   it('a run expires after 60 minutes', async () => {
