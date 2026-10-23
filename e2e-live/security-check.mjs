@@ -1,9 +1,10 @@
 // Live security check against the deployed site (or LIVE_URL). Read-only: it writes nothing.
 //   1. The security headers from vercel.json are served on / and /host.
-//   2. Migration 0005 (server-side name filter) is applied. It calls submit_run with a numbered
-//      team name AND an impossible duration: the name is checked first, so an applied 0005
-//      answers invalid_group_name, an unapplied one invalid_duration. Both are refused before
-//      any insert or rate-limit count, so the leaderboard is never touched.
+//   2. Migrations 0005 (server-side name filter) and 0006 (blocklist refresh) are applied. It
+//      calls submit_run with a name the server should refuse ("Probe 42", then "fk") AND an
+//      impossible duration: the name is checked first, so an applied migration answers
+//      invalid_group_name, a missing one invalid_duration. Both are refused before any insert
+//      or rate-limit count, so the leaderboard is never touched.
 // The Supabase URL and public key are read from the site's own JavaScript (they ship in it).
 // Usage: node e2e-live/security-check.mjs   (runs in CI via the "Live security check" workflow)
 import { randomUUID } from 'node:crypto';
@@ -43,26 +44,40 @@ async function supabaseConfig() {
 }
 
 const sb = await supabaseConfig().catch(() => null);
-if (!sb) {
-  record('Migration 0005 (server name filter)', false, 'could not find the Supabase settings in the site bundle');
-} else {
+
+/** Sends a name the server should refuse, with an impossible duration so nothing can ever be stored. */
+async function probeName(name) {
   const res = await fetch(`${sb.url}/rest/v1/rpc/submit_run`, {
     method: 'POST',
     headers: { apikey: sb.key, authorization: `Bearer ${sb.key}`, 'content-type': 'application/json' },
     body: JSON.stringify({
       p_group_token: randomUUID(),
-      p_group_name: 'Probe 42',
+      p_group_name: name,
       p_group_size: 2,
       p_mode: 'booth',
       p_families: 0,
       p_duration_sec: 1,
     }),
   });
-  const text = await res.text();
   // (A network failure throws here and fails the run with its own message.)
-  if (text.includes('invalid_group_name')) record('Migration 0005 (server name filter)', true, 'applied: a numbered name is refused by the server');
-  else if (text.includes('invalid_duration')) record('Migration 0005 (server name filter)', false, 'NOT applied: run supabase/migrations/0005_name_filter.sql in the SQL Editor');
-  else record('Migration 0005 (server name filter)', false, `unexpected answer (HTTP ${res.status}): ${text.slice(0, 200)}`);
+  const text = await res.text();
+  if (text.includes('invalid_group_name')) return { ok: true };
+  if (text.includes('invalid_duration')) return { ok: false };
+  return { ok: false, unexpected: `unexpected answer (HTTP ${res.status}): ${text.slice(0, 200)}` };
+}
+
+const nameChecks = [
+  // 0005 adds the filter: digits are refused. 0006 adds "fk" to the word list.
+  { check: 'Migration 0005 (server name filter)', name: 'Probe 42', pass: 'applied: a numbered name is refused by the server', file: '0005_name_filter.sql' },
+  { check: 'Migration 0006 (blocklist refresh)', name: 'fk', pass: 'applied: "fk" is refused by the server', file: '0006_blocklist_refresh.sql' },
+];
+for (const c of nameChecks) {
+  if (!sb) {
+    record(c.check, false, 'could not find the Supabase settings in the site bundle');
+    continue;
+  }
+  const r = await probeName(c.name);
+  record(c.check, r.ok, r.ok ? c.pass : (r.unexpected ?? `NOT applied: run supabase/migrations/${c.file} in the SQL Editor`));
 }
 
 const failed = rows.filter((r) => !r[1]).length;
