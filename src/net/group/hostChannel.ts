@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { sgtDate } from '../sgtTime';
-import { MAX_GROUP_NAME } from './moderation';
+import { checkGroupName, MAX_GROUP_NAME } from './moderation';
 import type { Channel, GroupTransport } from './transport';
 
 // "Groups currently playing" on /host (§3.5.1), without storing anything: each group's main
@@ -11,7 +11,8 @@ export const hostChannelName = (date = sgtDate()) => `host:${date}`;
 
 export const hostMetaSchema = z.object({
   id: z.uuid(),
-  name: z.string().min(1).max(MAX_GROUP_NAME),
+  // Anyone can announce on the public channel: /host only lists names that pass the filter.
+  name: z.string().min(1).max(MAX_GROUP_NAME).refine((n) => checkGroupName(n) === null),
   size: z.number().int().min(1).max(4),
   /** null = still in the lobby. */
   stage: z.number().int().min(0).max(5).nullable(),

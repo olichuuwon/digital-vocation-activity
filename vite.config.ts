@@ -5,6 +5,7 @@ import type { Plugin } from 'vite';
 import { createHash } from 'node:crypto';
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { resolve } from 'node:path';
+import { allowConnect, siteHeaders } from './src/app/securityHeaders';
 
 /**
  * Lists every built file in precache.json, so the service worker can cache the whole game on its
@@ -34,10 +35,20 @@ function precacheList(): Plugin {
   };
 }
 
+/** vercel.json's security headers, plus this build's own backend origins (e2e/local). */
+function previewHeaders(): Record<string, string> {
+  const headers = siteHeaders(JSON.parse(readFileSync(resolve('vercel.json'), 'utf8')));
+  const csp = headers['Content-Security-Policy'];
+  if (csp) headers['Content-Security-Policy'] = allowConnect(csp, [process.env.VITE_SUPABASE_URL, process.env.VITE_GROUP_RELAY_URL]);
+  return headers;
+}
+
 // BASE_PATH lets the static host serve from a sub-path (e.g. GitHub Pages /ship-it/).
 export default defineConfig({
   base: process.env.BASE_PATH ?? '/',
   plugins: [react(), precacheList()],
+  preview: { headers: previewHeaders() },
+  resolve: { alias: [{ find: /^zod$/, replacement: resolve('src/zodConfig.ts') }] },
   test: {
     environment: 'jsdom',
     globals: true,

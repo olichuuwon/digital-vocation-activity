@@ -85,7 +85,7 @@ How the game is built and why, where the spec (`docs/GAME_SPEC.md`) left room fo
 - **Performance.** Everything past Home is lazy-loaded (Stage 1 prefetched while Home is idle). Framer Motion loads after first paint. Entry JS ≈ 89 KB gzipped. Lighthouse mobile: performance 92–96, 100 for the rest.
 - **Offline-ish.** A service worker precaches the build, so later stages open on flaky venue Wi-Fi; a failed lazy load shows "Reload". Supabase requests are never cached.
 - **Fonts and colours.** System font stacks (nothing downloaded). Discipline colours from spec §9, with darker "-ink" variants for 4.5:1 text contrast.
-- **Hosting.** Vercel, auto-deploying `main`. `vercel.json` adds the SPA rewrite for `/host`, no-cache on `sw.js` and immutable `/assets`.
+- **Hosting.** Vercel, auto-deploying `main`. `vercel.json` adds the SPA rewrite for `/host`, no-cache on `sw.js`, immutable `/assets` and the security headers (CSP, no framing, nosniff, Referrer-Policy, Permissions-Policy); `vite preview` serves the same headers so e2e runs under them.
 
 ## 6. Content awaiting approval
 
@@ -115,3 +115,4 @@ These all have working defaults; they're worth revisiting after playtests.
 - **8 Oct 2026, owner playtest.** Stage 4 storms shortened to 45 s; player 1 leads; no digits in names; the lobby warns about players still connecting.
 - **17 Oct 2026, guided Stage 3 and flow polish.** Stage 3 tutorial step by step, 💡 ghost hint after 1 failed run, +30 s per level, pre-placed If, 3★ at 80%. No skipping Reality Checks. Solo hand-off and extra intro screens removed; Live Ops "Next incident"; replays play one stage then return to the results; leaderboard minimum 3 min with clear rejection reasons; copy and layout fixes from a full playthrough audit.
 - **17 Oct 2026, simplification.** Booth/full lengths and stage select removed. Team play became turn-taking with a Waiting screen (support cards, split controls and "all hands" calls removed). Bonus levels moved to replays. Stage 1 made easier: rule strip, more time, fewer cards, no duplicates or outliers in the core run, blank-field automate question. Player-facing "group" became "team".
+- **23 Oct 2026, security fixes (vulnerability assessment).** Security headers in `vercel.json`, checked by e2e under the real CSP (zod runs `jitless` so it never probes `eval`). CI token limited to `contents: read`; actions pinned to commit SHAs. Migration `0005`: `submit_run` refuses digits and blocklisted names server-side. Team names arriving over Realtime (session, `/host` list) are re-checked against the filter. Still open by design: team channels are public to anyone with the code (fix would be private channels + anonymous auth), and the global rate limit/lockout can be griefed.

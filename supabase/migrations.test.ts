@@ -3,6 +3,8 @@ import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { PGlite } from '@electric-sql/pglite';
 import { pgcrypto } from '@electric-sql/pglite/contrib/pgcrypto';
+import blocklist from '../src/content/blocklist.json';
+import { allGeneratedNames, checkGroupName } from '../src/net/group/moderation';
 
 /**
  * Applies supabase/migrations/*.sql (in order) to an in-process Postgres (PGlite) set up like
@@ -12,7 +14,7 @@ import { pgcrypto } from '@electric-sql/pglite/contrib/pgcrypto';
  */
 const read = (f: string) => readFileSync(fileURLToPath(new URL(`./migrations/${f}`, import.meta.url)), 'utf8');
 /** Every migration, in order (as Supabase applies them). */
-const migration = ['0001_runs.sql', '0002_min_duration.sql', '0004_passphrase.sql'].map(read).join('\n');
+const migration = ['0001_runs.sql', '0002_min_duration.sql', '0004_passphrase.sql', '0005_name_filter.sql'].map(read).join('\n');
 
 const SUPABASE_LIKE_SETUP = `
   create role anon nologin;
@@ -321,15 +323,57 @@ describe('facilitator PIN', () => {
   });
 });
 
+describe('server-side name filter (0005)', () => {
+  const blocked = async (name: string) =>
+    (await db.query<{ b: boolean }>('select private.name_blocked($1) as b', [name])).rows[0]!.b;
+
+  it('holds exactly the blocklist the game uses', async () => {
+    const { rows } = await db.query<{ kind: string; term: string }>("select kind, term from private.blocked_terms where term = any($1)", [
+      [...blocklist.anywhere, ...blocklist.words],
+    ]);
+    expect(rows.filter((r) => r.kind === 'anywhere').map((r) => r.term).sort()).toEqual([...blocklist.anywhere].sort());
+    expect(rows.filter((r) => r.kind === 'words').map((r) => r.term).sort()).toEqual([...blocklist.words].sort());
+  });
+
+  it('agrees with the game filter', async () => {
+    const names = [
+      'fuuuuck squad', '$hit', 'Kan Ni Na', 'KNN', 'c b', 'C.B.', 'Pukimak', 'Lan Jiao Team', 'Nabeh', 'Big Cocks', 'sohai',
+      'Ass', 'bitches', 'Fück Team', 'ＦＵＣＫ', 'Team 42', 'Sh1t Happens', 'Rejoin ４',
+      'Grass Hoppers', 'Peacock Power', 'Snorkeling Squad', 'Crisis Crew', 'Thorny Otter', 'Bass Boosters', 'Cockatoo Crew',
+      'Scrapers', 'Kanbo', 'Scunthorpe', 'Bold Merlion', 'Class Act', 'Assist Squad', 'Kiwi', 'Durian',
+    ];
+    for (const name of names) expect([name, await blocked(name)]).toEqual([name, checkGroupName(name) !== null]);
+  });
+
+  it('accepts every generated team name', async () => {
+    const names = allGeneratedNames();
+    const { rows } = await db.query<{ n: string }>('select n from unnest($1::text[]) n where private.name_blocked(n)', [names]);
+    expect(rows).toEqual([]);
+  });
+
+  it('submit_run refuses a blocked or numbered name sent straight to the API', async () => {
+    for (const name of ['Big Cocks', 'Team 42']) {
+      const e = await errorOf(anonSubmit({ name }));
+      expect(e.message).toContain('invalid_group_name');
+    }
+    await expect(anonSubmit({ name: 'Peacock Crew' })).resolves.toHaveProperty('id');
+  });
+
+  it('keeps the filter and its terms out of reach of the public key', async () => {
+    const e = await errorOf(asAnon(() => db.query("select private.name_blocked('x')")));
+    expect(e.message).toMatch(/permission denied/);
+  });
+});
+
 describe('boards', () => {
   it('orders by families desc, then duration asc, then id', async () => {
-    await anonSubmit({ name: 'Slow 900', families: 900, duration: 900 });
-    await anonSubmit({ name: 'Fast 900', families: 900, duration: 600 });
+    await anonSubmit({ name: 'Slow Nine', families: 900, duration: 900 });
+    await anonSubmit({ name: 'Fast Nine', families: 900, duration: 600 });
     await anonSubmit({ name: 'Top', families: 1100, duration: 1200 });
     await anonSubmit({ name: 'Low', families: 100, duration: 480 });
-    await anonSubmit({ name: 'Fast 900 twin', families: 900, duration: 600 });
+    await anonSubmit({ name: 'Fast Nine Twin', families: 900, duration: 600 });
     const rows = await today();
-    expect(rows.map((r) => r.group_name)).toEqual(['Top', 'Fast 900', 'Fast 900 twin', 'Slow 900', 'Low']);
+    expect(rows.map((r) => r.group_name)).toEqual(['Top', 'Fast Nine', 'Fast Nine Twin', 'Slow Nine', 'Low']);
     expect(rows.map((r) => r.rank)).toEqual([1, 2, 3, 4, 5]);
     const lowId = rows[4]!.id;
     const rank = await asAnon(async () => (await db.query<{ rank: number }>('select * from public.run_rank($1)', [lowId])).rows);

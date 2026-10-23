@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { gameStateSchema } from '../../state/schema';
-import { MAX_GROUP_NAME, MAX_NICKNAME } from './moderation';
+import { checkGroupName, MAX_GROUP_NAME, MAX_NICKNAME } from './moderation';
 
 // Wire format for group play. Everything received is untrusted (anyone who knows a code can
 // send to its channel), so every message and every replicated value is zod-validated, and
@@ -43,7 +43,9 @@ export const sessionSchema = z
     /** Random per group: tells two groups apart if they ever share a code. */
     sid: z.uuid(),
     code: z.string().regex(/^[A-Z2-9]{4}$/),
-    name: z.string().min(1).max(MAX_GROUP_NAME),
+    // Re-checked on receipt: a session pushed by a modified client must not slip a name past
+    // the filter the create screen applies.
+    name: z.string().min(1).max(MAX_GROUP_NAME).refine((n) => checkGroupName(n) === null),
     leaderId: memberIdSchema,
     /** Main-phone order; also the member list. */
     rotation: z.array(memberIdSchema).min(1).max(MAX_MEMBERS),

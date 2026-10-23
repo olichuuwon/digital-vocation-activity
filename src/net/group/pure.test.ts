@@ -2,6 +2,7 @@ import { mulberry32 } from '../../stages/data/logic';
 import { rejectReason } from './submit';
 import { CODE_ALPHABET, generateCode, normaliseCode } from './codes';
 import { allGeneratedNames, checkGroupName, checkNickname, generateNames, isBlocked } from './moderation';
+import { parseHostGroups } from './hostChannel';
 import { MAX_MESSAGE_CHARS, newer, parseEntryData, parseMessage, parsePresence, PROTOCOL } from './protocol';
 import { mainFor, moveMember, nextMainCandidate, nominalMainIndex, shuffled, stagesLedBy } from './rotation';
 
@@ -164,6 +165,27 @@ describe('protocol validation', () => {
     expect(parseEntryData('ov:2', 'member-2')).toBe('member-2');
     expect(parseEntryData('ov:2', 5)).toBeUndefined();
     expect(parseEntryData('t:big', 'x'.repeat(5000))).toBeUndefined();
+  });
+
+  it('re-checks a received group name against the filter (a modified client could skip it)', () => {
+    const session = {
+      sid: '00000000-0000-4000-8000-000000000001',
+      code: 'K7QM',
+      name: 'Bold Merlion',
+      leaderId: 'member-1',
+      rotation: ['member-1', 'member-2'],
+      status: 'lobby',
+      createdAt: 1,
+      startedAt: null,
+      sizeAtStart: null,
+      token: '00000000-0000-4000-8000-000000000002',
+    };
+    expect(parseEntryData('session', session)).toMatchObject({ name: 'Bold Merlion' });
+    for (const name of ['Big Cocks', 'Team 42', 'Bold\u200bMerlion']) expect(parseEntryData('session', { ...session, name })).toBeUndefined();
+    const host = { id: session.sid, size: 2, stage: null };
+    expect(parseHostGroups([{ ...host, name: 'Sh1t Happens' }, { ...host, id: session.token, name: 'Bold Merlion' }])).toEqual([
+      { ...host, id: session.token, name: 'Bold Merlion' },
+    ]);
   });
 
   it('orders versions with a member-id tie-break', () => {
