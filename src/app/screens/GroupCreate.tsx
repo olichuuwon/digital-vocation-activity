@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from 'react';
+import { useLayoutEffect, useRef, useState, type FormEvent } from 'react';
 import { groupCopy } from '../../content/groupSchema';
 import { groupActions } from '../../net/group';
 import { checkGroupName, checkNickname, generateNames, MAX_GROUP_NAME, MAX_NICKNAME, tidy, type TextProblem } from '../../net/group/moderation';
@@ -20,6 +20,15 @@ export function GroupCreate({ onBack }: { onBack: () => void }) {
   const [custom, setCustom] = useState<string | null>(null);
   const [nick, setNick] = useState('');
   const [tried, setTried] = useState(false);
+  // Where focus goes after switching between the name list and the name field. Moved in a layout
+  // effect (same commit as the swap), never a later frame: a deferred focus could land while the
+  // player is already typing their nickname and pull those keystrokes into the team name.
+  const focusAfterSwap = useRef<string | null>(null);
+  useLayoutEffect(() => {
+    if (!focusAfterSwap.current) return;
+    document.querySelector<HTMLElement>(focusAfterSwap.current)?.focus();
+    focusAfterSwap.current = null;
+  }, [custom]);
 
   const name = custom ?? names[picked] ?? '';
   const nameProblem = checkGroupName(name);
@@ -68,9 +77,9 @@ export function GroupCreate({ onBack }: { onBack: () => void }) {
                 className={ui.btn}
                 data-own-name
                 onClick={() => {
-                  setCustom('');
                   // The button goes away: keep focus on the field that replaces it.
-                  requestAnimationFrame(() => document.getElementById('group-name')?.focus());
+                  focusAfterSwap.current = '#group-name';
+                  setCustom('');
                 }}
               >
                 {t.ownName} <span aria-hidden="true">✏️</span>
@@ -103,8 +112,8 @@ export function GroupCreate({ onBack }: { onBack: () => void }) {
               type="button"
               className={ui.btn}
               onClick={() => {
+                focusAfterSwap.current = '[data-own-name]';
                 setCustom(null);
-                requestAnimationFrame(() => document.querySelector<HTMLElement>('[data-own-name]')?.focus());
               }}
             >
               {t.useGenerated}
