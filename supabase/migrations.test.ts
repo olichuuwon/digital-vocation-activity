@@ -14,7 +14,7 @@ import { allGeneratedNames, checkGroupName } from '../src/net/group/moderation';
  */
 const read = (f: string) => readFileSync(fileURLToPath(new URL(`./migrations/${f}`, import.meta.url)), 'utf8');
 /** Every migration, in order (as Supabase applies them). */
-const migration = ['0001_runs.sql', '0002_min_duration.sql', '0004_passphrase.sql', '0005_name_filter.sql'].map(read).join('\n');
+const migration = ['0001_runs.sql', '0002_min_duration.sql', '0004_passphrase.sql', '0005_name_filter.sql', '0006_blocklist_refresh.sql'].map(read).join('\n');
 
 const SUPABASE_LIKE_SETUP = `
   create role anon nologin;
@@ -338,7 +338,7 @@ describe('server-side name filter (0005)', () => {
   it('agrees with the game filter', async () => {
     const names = [
       'fuuuuck squad', '$hit', 'Kan Ni Na', 'KNN', 'c b', 'C.B.', 'Pukimak', 'Lan Jiao Team', 'Nabeh', 'Big Cocks', 'sohai',
-      'Ass', 'bitches', 'Fück Team', 'ＦＵＣＫ', 'Team 42', 'Sh1t Happens', 'Rejoin ４',
+      'Ass', 'bitches', 'Fück Team', 'fk', 'FK Team', 'fk off', 'fking', 'fkin crew', 'fcuk', 'fuq', 'mofo', 'ＦＵＣＫ', 'Team 42', 'Sh1t Happens', 'Rejoin ４',
       'Grass Hoppers', 'Peacock Power', 'Snorkeling Squad', 'Crisis Crew', 'Thorny Otter', 'Bass Boosters', 'Cockatoo Crew',
       'Scrapers', 'Kanbo', 'Scunthorpe', 'Bold Merlion', 'Class Act', 'Assist Squad', 'Kiwi', 'Durian',
     ];

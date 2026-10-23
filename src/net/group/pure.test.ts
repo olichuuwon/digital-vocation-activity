@@ -53,6 +53,11 @@ describe('moderation', () => {
     'sohai',
     'Ass',
     'bitches',
+    'fk',
+    'FK Team',
+    'fking crew',
+    'fcuk',
+    'mofo',
   ])('blocks %j', (name) => expect(isBlocked(name)).toBe(true));
 
   it.each([

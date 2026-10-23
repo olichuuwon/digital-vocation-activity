@@ -15,6 +15,7 @@ the later files after it too (they replace some of its functions).
 | `migrations/0002_min_duration.sql` | Minimum run time 3 minutes (was 8), so quick but genuine team runs count |
 | `migrations/0004_passphrase.sql` | The facilitator secret becomes a passphrase: 12–64 characters, anything allowed (lockout after 20 wrong tries in 10 min) |
 | `migrations/0005_name_filter.sql` | `submit_run` also refuses team names with digits or blocked words, so a direct API call can't skip the game's filter |
+| `migrations/0006_blocklist_refresh.sql` | Refreshes the server's copy of the word list (adds "fk" and close variants) |
 
 Then set the facilitator passphrase (also clears a lockout):
 
