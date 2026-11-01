@@ -25,7 +25,7 @@ export function PipelineStrip({ stage }: { stage: number }) {
             aria-current={state === 'current' ? 'step' : undefined}
           >
             <span className={styles.track} aria-hidden="true">
-              <span className={styles.stop}>{state === 'done' && <Icon name="check" size={12} strokeWidth={2.5} />}</span>
+              <span className={`${styles.stop} icon-only`}>{state === 'done' && <Icon name="check" size={12} strokeWidth={2.5} />}</span>
             </span>
             <span className={styles.label}>
               {s.short}

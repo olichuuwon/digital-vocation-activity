@@ -37,7 +37,7 @@ export function StarResult({
         {[1, 2, 3].map((n) => (
           <m.span
             key={n}
-            className={n <= stars ? s.starOn : s.starOff}
+            className={`${n <= stars ? s.starOn : s.starOff} icon-only`}
             initial={still ? false : { scale: 0.8, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             transition={still ? { duration: 0 } : { delay: 0.12 * n, duration: 0.4, ease: [0.22, 1, 0.36, 1] }}

@@ -11,7 +11,7 @@ export function BriefingCard({ briefing, stage, onGo }: { briefing: Briefing; st
   return (
     <section className={s.screen} style={style}>
       <div className={s.briefing}>
-        <span className={s.bigIcon}>
+        <span className={`${s.bigIcon} icon-only`}>
           <Icon name={stage.icon} size={28} />
         </span>
         <span className={s.tag}>{stage.specialisation}</span>

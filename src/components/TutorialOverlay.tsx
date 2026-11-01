@@ -42,7 +42,7 @@ export function TutorialOverlay({
     <section className={`${s.tutorial} ${compact ? s.tutorialCompact : ''}`} aria-label={t.tutorialLabel}>
       {children}
       <m.span
-        className={s.hand}
+        className={`${s.hand} icon-only`}
         aria-hidden="true"
         animate={reduce ? undefined : { x: p.x, y: p.y }}
         transition={{ duration: 1.1, repeat: Infinity, repeatType: 'loop', ease: 'easeInOut', repeatDelay: 0.3 }}

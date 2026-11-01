@@ -272,8 +272,9 @@ dialog.settings::backdrop {
   margin-inline-end: 0.375em;
 }
 
-.icon:last-child,
-:is(button, li, p, span, strong, div):where([class]) > .icon:only-child {
+/* Icon-only boxes (no label beside the icon). */
+.icon-only > .icon,
+button[aria-label] > .icon:only-child {
   margin-inline-end: 0;
 }
 

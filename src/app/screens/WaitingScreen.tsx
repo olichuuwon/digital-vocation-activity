@@ -77,7 +77,7 @@ export function WaitingScreen() {
   return (
     <main className={s.waiting} data-testid="waiting-screen" data-stage={stage} data-main={mainName}>
       <div className={s.waitHead}>
-        <span className={s.waitIcon} aria-hidden="true">
+        <span className={`${s.waitIcon} icon-only`} aria-hidden="true">
           <Icon name={content?.icon ?? (stage === 5 ? 'truck' : 'play')} size={28} />
         </span>
         <h1 ref={headingRef} tabIndex={-1} data-testid="now-playing">

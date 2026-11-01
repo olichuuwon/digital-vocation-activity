@@ -38,7 +38,7 @@ export function HandOff({ stage, nextName: demoName, onReady, demo = false }: { 
   return (
     <section className={s.screen} style={style}>
       <div className={s.briefing}>
-        <span className={s.bigIcon}>
+        <span className={`${s.bigIcon} icon-only`}>
           <Icon name={stage.icon} size={28} />
         </span>
         <h1 ref={headingRef} tabIndex={-1}>
