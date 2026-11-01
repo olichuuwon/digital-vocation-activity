@@ -3,7 +3,8 @@
 // nothing reaches the real leaderboard.
 //
 // Usage (against a local build that has .env.local):
-//   npm run build && npx vite preview --port 4173 &
+//   VITE_ALLOW_DEBUG_SUBMIT=1 npm run build   (it plays with ?debug=1; this keeps the rank reveal)
+//   npx vite preview --port 4173              (in a second terminal tab)
 //   LIVE_URL=http://localhost:4173 node e2e-live/capture-flows.mjs [solo|stage3|replay|board|2|3|4|drop ...]
 // Without LIVE_URL it runs against the deployed site.
 import { createRequire } from 'node:module';

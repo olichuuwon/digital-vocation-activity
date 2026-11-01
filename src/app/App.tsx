@@ -19,6 +19,7 @@ import { SettingsDialog } from './SettingsDialog';
 import ui from './ui.module.css';
 import { useTheme } from './useTheme';
 import { Icon } from '../components/Icon';
+import { markTeamDone } from '../state/soloLock';
 
 // Booth screen code (incl. the QR encoder) only loads on /host.
 const Host = lazy(() => import('./screens/Host'));
@@ -115,7 +116,20 @@ function GameApp() {
       // Only jump if not already there, so reloading mid-stage still resumes the level.
       if (useGame.getState().run?.stage !== params.stage) useGame.getState().jumpToStage(params.stage);
     }
+    if (!params.debug) return;
+    // Debug can jump stages and shows Live Ops answers: mark every run it touches as unranked.
+    const mark = () => {
+      const r = useGame.getState().run;
+      if (r && !r.debug) useGame.setState({ run: { ...r, debug: true } });
+    };
+    mark();
+    return useGame.subscribe(mark);
   }, [params]);
+
+  // A finished team game opens Solo on this phone.
+  useEffect(() => {
+    if (group.active && run?.finishedAt) markTeamDone();
+  }, [group.active, run?.finishedAt]);
 
   // Group play (§3.5): rejoin from this device's token after a reload; drop ?join from the
   // address bar so a later reload doesn't reopen Join.

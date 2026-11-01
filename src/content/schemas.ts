@@ -35,7 +35,7 @@ export const stagesFileSchema = z.object({
 const text = z.string().min(1);
 export const copySchema = z.object({
   home: z.object({
-    title: text, tagline: text, playSolo: text, playTeam: text, teamBody: text, createGroup: text, joinGroup: text,
+    title: text, tagline: text, playSolo: text, soloLocked: text, playTeam: text, teamBody: text, createGroup: text, joinGroup: text,
     leaderboard: text, resume: text, newRun: text, replayStage: text, back: text,
   }),
   /** Free play after a finished run: replays unlock the bonus levels. */

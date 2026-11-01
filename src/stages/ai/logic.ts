@@ -263,8 +263,6 @@ export function createLabelState(deck: readonly AiImage[]): LabelLevelState {
   };
 }
 
-export const labelStreakActive = (s: { streak: number }): boolean => s.streak >= STREAK_MIN;
-
 export function labelReducer(state: LabelLevelState, action: LabelAction): LabelLevelState {
   if (state.done) return state;
   if (action.type === 'timeUp') return { ...state, done: true, endReason: 'timeUp' };

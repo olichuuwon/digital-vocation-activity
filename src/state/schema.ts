@@ -24,6 +24,7 @@ export const gameStateSchema = z.object({
   /** Chapter-select replays of this run (varies the Live Ops deal). */
   replays: count.optional(),
   replaying: z.union([z.literal(1), z.literal(2), z.literal(3), z.literal(4)]).optional(),
+  debug: z.boolean().optional(),
 });
 
 export const settingsSchema = z.object({

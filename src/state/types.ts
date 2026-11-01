@@ -25,6 +25,8 @@ export interface GameState {
   replays?: number;
   /** Set while replaying one stage: when it ends, the run goes back to its debrief. */
   replaying?: Stage;
+  /** Played with ?debug=1 on a phone: stage jumps make the score meaningless, so never ranked. */
+  debug?: boolean;
 }
 
 export type Theme = 'system' | 'light' | 'dark';

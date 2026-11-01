@@ -136,6 +136,7 @@ function getEngine(): GroupEngine | null {
       announce(snap);
     },
     submit: (payload) => void getGroupSubmitQueue().enqueue(payload),
+    allowDebugSubmit: import.meta.env.VITE_ALLOW_DEBUG_SUBMIT === '1',
     // Every phone remembers the row id, so the board highlights "Your group" (§3.6).
     onResult: (r) => r.kind === 'ok' && rememberOwnRun(r.id),
   });

@@ -26,7 +26,9 @@ export function GroupRank() {
           ? t.notRankedQuick
           : r.reason === 'name'
             ? t.notRankedName
-            : t.notRanked
+            : r.reason === 'debug'
+              ? t.notRankedDebug
+              : t.notRanked
         : g.connected
           ? t.submitting
           : t.retrying;

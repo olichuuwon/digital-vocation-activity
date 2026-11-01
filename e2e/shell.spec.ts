@@ -2,7 +2,7 @@ import { expect, test } from '@playwright/test';
 
 test.beforeEach(async ({ page }) => {
   await page.goto('/');
-  await page.evaluate(() => localStorage.clear());
+  await page.evaluate(() => (localStorage.clear(), localStorage.setItem('ship-it-team-done', '1')));
   await page.reload();
 });
 
@@ -83,5 +83,15 @@ test('Play as a team offers Create and Join', async ({ page }) => {
   await expect(page.getByRole('button', { name: 'Create a team' })).toBeVisible();
   await expect(page.getByRole('button', { name: 'Join a team' })).toBeVisible();
   await page.getByRole('button', { name: 'Back' }).click();
+  await expect(page.getByRole('button', { name: 'Play solo' })).toBeVisible();
+});
+
+test('solo opens only after a team game on this phone; ?debug=1 always opens it', async ({ page }) => {
+  await page.evaluate(() => localStorage.removeItem('ship-it-team-done'));
+  await page.reload();
+  await expect(page.getByRole('button', { name: 'Play solo' })).toHaveCount(0);
+  await expect(page.getByText('Solo opens after your first team game.')).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Play as a team' })).toBeVisible();
+  await page.goto('/?debug=1');
   await expect(page.getByRole('button', { name: 'Play solo' })).toBeVisible();
 });

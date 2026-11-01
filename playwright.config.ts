@@ -7,6 +7,8 @@ export default defineConfig({
   reporter: 'list',
   use: {
     baseURL: 'http://localhost:4173',
+    // Most specs start a solo run; solo opens after a team game (shell.spec checks the lock).
+    storageState: { cookies: [], origins: [{ origin: 'http://localhost:4173', localStorage: [{ name: 'ship-it-team-done', value: '1' }] }] },
     trace: 'retain-on-failure',
     // Sandboxes with a pre-installed Chromium can point at it (PW_CHROMIUM_PATH=/opt/pw-browsers/chromium/...).
     launchOptions: process.env.PW_CHROMIUM_PATH ? { executablePath: process.env.PW_CHROMIUM_PATH } : {},
@@ -35,6 +37,8 @@ export default defineConfig({
         VITE_SUPABASE_URL: E2E_SUPABASE_URL,
         VITE_SUPABASE_ANON_KEY: 'sb_publishable_e2e',
         VITE_GROUP_RELAY_URL: `ws://localhost:${E2E_RELAY_PORT}`,
+        // Specs play with ?debug=1 and still check the rank reveal.
+        VITE_ALLOW_DEBUG_SUBMIT: '1',
       },
     },
   ],

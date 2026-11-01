@@ -329,6 +329,18 @@ describe('run', () => {
     expect(members[0]!.snap().mainLostSince).toBeNull();
   });
 
+  it('never submits a run played with ?debug=1, and tells every phone why', async () => {
+    const { leader, members, all } = await lobbyOf(2);
+    leader.engine.start();
+    await flush();
+    vi.advanceTimersByTime(9 * 60_000);
+    leader.game.local((r) => ({ ...r, stage: 5, debug: true, finishedAt: Date.now() }));
+    await flush();
+    expect(leader.submits).toHaveLength(0);
+    expect(members[0]!.submits).toHaveLength(0);
+    for (const d of all) expect(d.snap().result).toEqual({ kind: 'rejected', reason: 'debug' });
+  });
+
   it('submits once from the leader and shares the rank with everyone', async () => {
     const { leader, members, all } = await lobbyOf(3);
     // The leader moves a teammate to P1 (the IC): that phone plays the finale, the leader's submits.

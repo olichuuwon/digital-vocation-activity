@@ -126,6 +126,8 @@ export interface EngineDeps {
   uuid: () => string;
   /** Tick interval (ms); tests can shrink it. */
   tickMs?: number;
+  /** Rank runs played with ?debug=1 anyway (e2e/capture builds only, VITE_ALLOW_DEBUG_SUBMIT). */
+  allowDebugSubmit?: boolean;
 }
 
 /** Minimum gap between two sends of the same topic (ms). */
@@ -835,6 +837,10 @@ export class GroupEngine {
     const submitter = this.alive(s.leaderId) || s.leaderId === this.me ? s.leaderId : this.mainFor(5);
     if (submitter !== this.me) return;
     this.submitted = true;
+    if (run.debug && !this.deps.allowDebugSubmit) {
+      this.putLocal('result', { kind: 'rejected', reason: 'debug' });
+      return;
+    }
     if (!this.submitToken) this.submitToken = this.deps.uuid();
     this.save();
     this.deps.submit?.(runPayload(s, run, this.submitToken));

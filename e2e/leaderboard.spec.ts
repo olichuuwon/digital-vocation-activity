@@ -13,7 +13,7 @@ async function openBoard(page: import('@playwright/test').Page, query = '') {
 
 test.beforeEach(async ({ page }) => {
   await page.goto('/');
-  await page.evaluate(() => localStorage.clear());
+  await page.evaluate(() => (localStorage.clear(), localStorage.setItem('ship-it-team-done', '1')));
 });
 
 test('Today tab shows ranked rows with size, families and HH:MM SGT', async ({ page }) => {

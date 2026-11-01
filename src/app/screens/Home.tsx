@@ -8,6 +8,7 @@ import { useScreenHeading } from '../screenFocus';
 import ui from '../ui.module.css';
 import { Icon } from '../../components/Icon';
 import { CityMap } from './CityMap';
+import { soloUnlocked } from '../../state/soloLock';
 
 const t = copy.home;
 
@@ -32,6 +33,7 @@ export function Home({
   const canReplay = useGame((s) => !!s.run?.finishedAt);
   const replayFrom = useGame((s) => s.replayFrom);
   const [screen, setScreen] = useState<'main' | 'replay' | 'team'>('main');
+  const soloOpen = soloUnlocked();
   const headingRef = useScreenHeading<HTMLHeadingElement>(
     // The replay picker names its own screen.
     screen === 'replay' ? '' : screen === 'team' ? t.playTeam : t.title,
@@ -115,10 +117,12 @@ export function Home({
               {t.resume}
             </button>
           )}
-          <button type="button" className={`${ui.btn} ${hasRun ? '' : ui.primary}`} onClick={playSolo}>
-            {hasRun ? t.newRun : t.playSolo}
-          </button>
-          <button type="button" className={ui.btn} onClick={() => setScreen('team')}>
+          {soloOpen && (
+            <button type="button" className={`${ui.btn} ${hasRun ? '' : ui.primary}`} onClick={playSolo}>
+              {hasRun ? t.newRun : t.playSolo}
+            </button>
+          )}
+          <button type="button" className={`${ui.btn} ${soloOpen || hasRun ? '' : ui.primary}`} onClick={() => setScreen('team')}>
             {t.playTeam}
           </button>
           {canReplay && (
@@ -130,6 +134,7 @@ export function Home({
           <button type="button" className={ui.btn} onClick={onLeaderboard}>
             {t.leaderboard}
           </button>
+          {!soloOpen && <p className={ui.muted}>{t.soloLocked}</p>}
         </div>
       )}
     </main>

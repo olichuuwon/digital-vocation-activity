@@ -66,7 +66,7 @@ export type Session = z.infer<typeof sessionSchema>;
 export const resultSchema = z.union([
   z.object({ kind: z.literal('ok'), id: z.number().int().positive(), rankToday: z.number().int().positive().nullable() }),
   /** `reason` tells the team why (older phones may send none). */
-  z.object({ kind: z.literal('rejected'), reason: z.enum(['tooQuick', 'name', 'other']).optional() }),
+  z.object({ kind: z.literal('rejected'), reason: z.enum(['tooQuick', 'name', 'debug', 'other']).optional() }),
 ]);
 export type GroupResult = z.infer<typeof resultSchema>;
 
