@@ -86,12 +86,16 @@ test('Play as a team offers Create and Join', async ({ page }) => {
   await expect(page.getByRole('button', { name: 'Play solo' })).toBeVisible();
 });
 
-test('solo opens only after a team game on this phone; ?debug=1 always opens it', async ({ page }) => {
+test('before a team game, Solo needs the typed phrase play-solo', async ({ page }) => {
   await page.evaluate(() => localStorage.removeItem('ship-it-team-done'));
   await page.reload();
-  await expect(page.getByRole('button', { name: 'Play solo' })).toHaveCount(0);
-  await expect(page.getByText('Solo opens after your first team game.')).toBeVisible();
-  await expect(page.getByRole('button', { name: 'Play as a team' })).toBeVisible();
-  await page.goto('/?debug=1');
-  await expect(page.getByRole('button', { name: 'Play solo' })).toBeVisible();
+  await page.getByRole('button', { name: 'Play solo' }).click();
+  const start = page.getByRole('button', { name: 'Start solo' });
+  await expect(start).toHaveAttribute('aria-disabled', 'true'); // not until the phrase is typed
+  await page.getByLabel(/type play-solo/).fill('play solo');
+  await page.keyboard.press('Enter');
+  await expect(page.getByRole('heading', { name: 'Play solo' })).toBeVisible(); // wrong phrase: still here
+  await page.getByLabel(/type play-solo/).fill(' Play-Solo ');
+  await start.click();
+  await expect(page.getByTestId('prologue-heading')).toBeVisible();
 });

@@ -10,7 +10,9 @@
     "newRun": "New run",
     "replayStage": "Replay with bonus levels",
     "playTeam": "Play as a team",
-    "soloLocked": "Solo opens after your first team game.",
+    "soloLocked": "Solo is for after a team game. To play alone now, type play-solo below.",
+    "soloField": "Type play-solo",
+    "soloStart": "Start solo",
     "teamBody": "Take turns: one of you plays each stage while the rest watch and help. 2–4 players.",
     "back": "Back"
   },

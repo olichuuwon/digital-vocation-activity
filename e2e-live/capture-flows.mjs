@@ -3,8 +3,9 @@
 // nothing reaches the real leaderboard.
 //
 // Usage (against a local build that has .env.local):
-//   VITE_ALLOW_DEBUG_SUBMIT=1 npm run build   (it plays with ?debug=1; this keeps the rank reveal)
-//   npx vite preview --port 4173              (in a second terminal tab)
+//   Tab 1: VITE_ALLOW_DEBUG_SUBMIT=1 npm run build && npx vite preview --port 4173
+//   Tab 2: VITE_ALLOW_DEBUG_SUBMIT=1 LIVE_URL=http://localhost:4173 node e2e-live/capture-flows.mjs …
+// (Teams play with ?debug=1; without the flag the debrief shows the debug notice, not a rank.)
 //   LIVE_URL=http://localhost:4173 node e2e-live/capture-flows.mjs [solo|stage3|replay|board|2|3|4|drop ...]
 // Without LIVE_URL it runs against the deployed site.
 import { createRequire } from 'node:module';
@@ -24,6 +25,9 @@ const log = (...a) => console.log(...a);
 
 const browser = await chromium.launch();
 const PHONE = { viewport: { width: 360, height: 740 }, deviceScaleFactor: 1.5, isMobile: true, hasTouch: true, serviceWorkers: 'block', reducedMotion: 'reduce' };
+
+/** Set when the local build was made with VITE_ALLOW_DEBUG_SUBMIT=1 (debug runs ranked). */
+const RANKED = process.env.VITE_ALLOW_DEBUG_SUBMIT === '1';
 
 async function newPhone() {
   const ctx = await browser.newContext(PHONE);
@@ -124,12 +128,16 @@ async function solo() {
   await p.evaluate(() => localStorage.clear());
   await p.reload();
   const start = [{ file: await shot(p, 'solo-home'), label: '1. Home' }];
+  // A first-time phone: Solo asks for the phrase until it has played a team game.
   await click(p, 'Play solo');
-  start.push({ file: await shot(p, 'solo-prologue'), label: '2. Prologue (straight in)' });
+  await p.getByLabel(/type play-solo/).fill('play-solo');
+  start.push({ file: await shot(p, 'solo-phrase'), label: '2. Solo before a team game: type play-solo' });
+  await click(p, 'Start solo');
+  start.push({ file: await shot(p, 'solo-prologue'), label: '3. Prologue' });
   await click(p, 'Start the mission');
-  start.push({ file: await shot(p, 's1-briefing'), label: '3. Stage 1 briefing (the hook)' });
+  start.push({ file: await shot(p, 's1-briefing'), label: '4. Stage 1 briefing (the hook)' });
   await click(p, 'Start sorting');
-  start.push({ file: await shot(p, 's1-first'), label: '4. First card within seconds' });
+  start.push({ file: await shot(p, 's1-first'), label: '5. First card within seconds' });
   await strip('solo-start', start);
 
   const s1 = [];
@@ -370,7 +378,9 @@ async function team(n) {
   await click(ann, 'Start shift');
   await strip(`team${n}-finale`, await all('finale', (i) => (i === 0 ? 'Live Ops (leader)' : 'watches + calls out teams')));
   await playLiveOps(ann);
-  for (const p of ps) await expect(p.getByTestId('group-rank')).toContainText('#2', { timeout: 30_000 });
+  // Teams here play with ?debug=1, so the deployed site shows the debug notice; a local build made
+  // with VITE_ALLOW_DEBUG_SUBMIT=1 shows the (intercepted) rank instead.
+  for (const p of ps) await expect(p.getByTestId('group-rank')).toContainText(RANKED ? '#2' : 'Test run', { timeout: 30_000 });
   await strip(`team${n}-debrief`, await all('debrief', () => 'debrief + team rank'));
 
   if (n === 3) {

@@ -9,9 +9,13 @@ node e2e-live/capture-flows.mjs [solo|replay|board|2|3|4|drop]   # screenshots f
 ```
 
 - Score submission is intercepted, so nothing is written to the real leaderboard. Lobbies expire on their own.
-- By default these run against the deployed site. To check a local build first (it reads `.env.local`):
+- By default these run against the deployed site. The phones play with `?debug=1`, and debug runs are never ranked, so the deployed site checks that nothing is submitted and the debrief says "Test run".
+- To check the real submit path and the rank reveal, use a local build made with `VITE_ALLOW_DEBUG_SUBMIT=1` (it reads `.env.local`). Use two terminal tabs: a server started with `&` gets paused by the shell and stops answering.
   ```
-  npm run build && npx vite preview --port 4173 &
-  LIVE_URL=http://localhost:4173 npm run live:groups
+  # Tab 1 (leave it running)
+  VITE_ALLOW_DEBUG_SUBMIT=1 npm run build && npx vite preview --port 4173
+  # Tab 2
+  VITE_ALLOW_DEBUG_SUBMIT=1 LIVE_URL=http://localhost:4173 npm run live:groups
   ```
+- Team play needs Supabase awake. If teammates get "Can't find that team", check the project isn't paused (Supabase dashboard).
 - Check screenshots land in `test-results/`; flow screenshots in `docs/flows/`.

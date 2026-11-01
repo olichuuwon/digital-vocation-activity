@@ -8,7 +8,8 @@ import { useScreenHeading } from '../screenFocus';
 import ui from '../ui.module.css';
 import { Icon } from '../../components/Icon';
 import { CityMap } from './CityMap';
-import { soloUnlocked } from '../../state/soloLock';
+import { isSoloPhrase, soloUnlocked } from '../../state/soloLock';
+import g from './Group.module.css';
 
 const t = copy.home;
 
@@ -32,11 +33,12 @@ export function Home({
   // Free play (§8.3): once a run is finished, replay any stage of it with the bonus levels.
   const canReplay = useGame((s) => !!s.run?.finishedAt);
   const replayFrom = useGame((s) => s.replayFrom);
-  const [screen, setScreen] = useState<'main' | 'replay' | 'team'>('main');
+  const [screen, setScreen] = useState<'main' | 'replay' | 'team' | 'solo'>('main');
+  const [typed, setTyped] = useState('');
   const soloOpen = soloUnlocked();
   const headingRef = useScreenHeading<HTMLHeadingElement>(
     // The replay picker names its own screen.
-    screen === 'replay' ? '' : screen === 'team' ? t.playTeam : t.title,
+    screen === 'replay' ? '' : screen === 'team' ? t.playTeam : screen === 'solo' ? t.playSolo : t.title,
   );
 
   const playSolo = () => {
@@ -55,6 +57,48 @@ export function Home({
             onEnter();
           }}
         />
+      </main>
+    );
+  }
+
+  if (screen === 'solo') {
+    const ok = isSoloPhrase(typed);
+    return (
+      <main className={ui.screen}>
+        <h1 className={ui.hero} ref={headingRef} tabIndex={-1}>
+          {t.playSolo}
+        </h1>
+        <form
+          className={ui.screen}
+          onSubmit={(e) => {
+            e.preventDefault();
+            if (ok) playSolo();
+          }}
+        >
+          <label htmlFor="solo-phrase" className={ui.muted}>
+            {t.soloLocked}
+          </label>
+          <input
+            id="solo-phrase"
+            className={g.input}
+            value={typed}
+            onChange={(e) => setTyped(e.target.value)}
+            placeholder={t.soloField}
+            autoComplete="off"
+            autoCapitalize="none"
+            autoCorrect="off"
+            spellCheck={false}
+          />
+          <div className={ui.actions}>
+            <button type="submit" className={`${ui.btn} ${ui.primary}`} aria-disabled={!ok || undefined}>
+              {t.soloStart}
+            </button>
+            <button type="button" className={ui.btn} onClick={() => setScreen('main')}>
+              <Icon name="back" />
+              {t.back}
+            </button>
+          </div>
+        </form>
       </main>
     );
   }
@@ -117,14 +161,25 @@ export function Home({
               {t.resume}
             </button>
           )}
-          {soloOpen && (
+          {soloOpen ? (
             <button type="button" className={`${ui.btn} ${hasRun ? '' : ui.primary}`} onClick={playSolo}>
               {hasRun ? t.newRun : t.playSolo}
             </button>
+          ) : (
+            // Team first: Solo still works, after typing the phrase (never a dead end).
+            <button type="button" className={`${ui.btn} ${hasRun ? '' : ui.primary}`} onClick={() => setScreen('team')}>
+              {t.playTeam}
+            </button>
           )}
-          <button type="button" className={`${ui.btn} ${soloOpen || hasRun ? '' : ui.primary}`} onClick={() => setScreen('team')}>
-            {t.playTeam}
-          </button>
+          {soloOpen ? (
+            <button type="button" className={ui.btn} onClick={() => setScreen('team')}>
+              {t.playTeam}
+            </button>
+          ) : (
+            <button type="button" className={ui.btn} onClick={() => setScreen('solo')}>
+              {t.playSolo}
+            </button>
+          )}
           {canReplay && (
             <button type="button" className={ui.btn} data-testid="home-replay" onClick={() => setScreen('replay')}>
               <Icon name="unlock" />
@@ -134,7 +189,6 @@ export function Home({
           <button type="button" className={ui.btn} onClick={onLeaderboard}>
             {t.leaderboard}
           </button>
-          {!soloOpen && <p className={ui.muted}>{t.soloLocked}</p>}
         </div>
       )}
     </main>

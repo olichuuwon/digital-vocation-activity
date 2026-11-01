@@ -8,6 +8,8 @@ const { chromium, devices, expect } = require('@playwright/test');
 const N = Number(process.argv[2] ?? 3);
 const OUT = process.argv[3] ?? 'test-results';
 const SITE = process.env.LIVE_URL ?? 'https://digital-vocation-activity.vercel.app';
+/** Phones play with ?debug=1, which is never ranked unless the build was made with this flag. */
+const RANKED = process.env.VITE_ALLOW_DEBUG_SUBMIT === '1';
 const NAMES = ['Ann', 'Ben', 'Cai', 'Dee'].slice(0, N);
 const t0 = Date.now();
 const log = (...a) => console.log(`[${N}p ${((Date.now() - t0) / 1000).toFixed(1)}s]`, ...a);
@@ -199,8 +201,9 @@ try {
     }
   });
 
-  await check('score submitted exactly once, with no nicknames', async () => {
-    await expect.poll(() => submits, { timeout: 10_000 }).toBe(1);
+  await check(RANKED ? 'score submitted exactly once, with no nicknames' : 'debug run kept off the board (nothing submitted)', async () => {
+    if (!RANKED) for (const p of phones) await expect(p.getByTestId('group-rank')).toContainText('Test run', T);
+    await expect.poll(() => submits, { timeout: 10_000 }).toBe(RANKED ? 1 : 0);
   });
 
   await check('free play: a teammate replays a stage solo, with bonus levels', async () => {
