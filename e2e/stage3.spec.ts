@@ -4,7 +4,7 @@ import { seedRun, startReplay } from './replay';
 const block = (page: Page, name: string) => page.getByRole('group', { name: 'Blocks' }).getByRole('button', { name, exact: false });
 
 async function runAndWait(page: Page) {
-  await page.getByRole('button', { name: /▶ Run/ }).click();
+  await page.getByRole('button', { name: /^Run$/ }).click();
   // The truck animates one step at a time; wait until the run ends (Run is clickable again or solved).
   await expect(page.getByRole('button', { name: /Running/ })).toHaveCount(0, { timeout: 15_000 });
 }
@@ -36,7 +36,7 @@ test('Stage 3 booth: build the tutorial by taps, finish the rest, reach Stage 4'
     await block(page, b).click();
   }
   await expect(page.getByTestId('block-count')).toContainText('4');
-  await expect(page.getByTestId('coach')).toContainText('Tap ▶ Run');
+  await expect(page.getByTestId('coach')).toContainText('Tap Run');
   await runAndWait(page);
   await expect(page.getByTestId('truck')).toHaveAttribute('data-pos', '2,3,S');
   await page.getByRole('button', { name: 'Continue' }).click();
@@ -114,7 +114,7 @@ test('Stage 3 replay: Bonus: Debug It swaps a block, and Bonus: Ask the AI runs'
   await expect(page.getByRole('heading', { name: 'That was programming' })).toBeVisible();
 });
 
-test('Stage 3: one failed run brings the 💡 ghost step, and tapping it builds the program', async ({ page }) => {
+test('Stage 3: one failed run brings the ghost step, and tapping it builds the program', async ({ page }) => {
   test.setTimeout(60_000);
   await page.goto('/?debug=1&stage=3');
   await page.getByRole('button', { name: 'Start building' }).click();

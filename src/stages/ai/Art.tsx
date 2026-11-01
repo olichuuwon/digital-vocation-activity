@@ -154,7 +154,7 @@ const item: Record<Label, Draw> = {
       <path d="M14 62 h66" stroke={INK} strokeWidth="2" strokeDasharray="4 4" />
       <circle cx="20" cy="86" r="10" fill="#2d3436" stroke={INK} strokeWidth="3" />
       <circle cx="76" cy="86" r="10" fill="#2d3436" stroke={INK} strokeWidth="3" />
-      <text x="32" y="46" fontSize="16" fill="#f1c40f" fontWeight="800">⚡</text>
+      <path d="M36 30 l-5 10 h5 l-3 10 l9 -13 h-5 l3 -7 z" fill="#f1c40f" />
     </>
   ),
   'clear-road': (style) => (

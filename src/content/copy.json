@@ -15,8 +15,8 @@
   },
   "replay": {
     "heading": "Pick a stage",
-    "intro": "There's more! Replays add bonus levels. Play one stage, then come back here. Not ranked.",
-    "teaser": "There's more! Replay any stage to unlock bonus levels.",
+    "intro": "There's more. Replays add bonus levels. Play one stage, then come back here. Not ranked.",
+    "teaser": "There's more. Replay any stage to unlock bonus levels.",
     "bonusOne": "+1 bonus level",
     "bonusMany": "+{n} bonus levels"
   },
@@ -92,7 +92,7 @@
   "components": {
     "timeLeft": "Time left",
     "secondsLeft": "{n} seconds left",
-    "timeUp": "Time's up!",
+    "timeUp": "Time's up",
     "paused": "Paused",
     "starsLabel": "{n} of 3 stars",
     "continue": "Continue",
@@ -101,7 +101,7 @@
     "cardOf": "Card {n} of {total}",
     "gotIt": "Got it",
     "tutorialLabel": "How to play",
-    "handoffHeading": "Nice work! Next turn",
+    "handoffHeading": "Nice work. Next turn",
     "handoffSoloHeading": "Next up",
     "handoffBody": "{name}, it's your turn: {stage}.",
     "handoffSoloBody": "Next team: {stage}.",
@@ -130,15 +130,15 @@
     "tipsHeading": "How to play",
     "tips": [
       {
-        "icon": "⏱️",
+        "icon": "timer",
         "text": "Each stage has short, timed levels. Beat the clock."
       },
       {
-        "icon": "💡",
+        "icon": "hint",
         "text": "Stuck? A hint appears after 2 misses, the answer after 3."
       },
       {
-        "icon": "🔗",
+        "icon": "link",
         "text": "Every stage feeds the next. Good data makes a better AI."
       }
     ],

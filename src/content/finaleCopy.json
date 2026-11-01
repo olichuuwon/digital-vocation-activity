@@ -15,11 +15,11 @@
     "start": "Start shift",
     "incidentOf": "Incident {n} of {total}",
     "route": "Which team fixes this?",
-    "right": "Sorted! +{n} families reached.",
+    "right": "Sorted. +{n} families reached.",
     "wrong": "Not quite. {team} fixes this one.",
-    "timeout": "Too slow! {team} would have fixed it.",
+    "timeout": "Too slow. {team} would have fixed it.",
     "families": "{n} families",
-    "done": "Shift over. Every team played its part!",
+    "done": "Shift over. Every team played its part.",
     "next": "Next incident",
     "finish": "See results"
   },
@@ -37,7 +37,7 @@
       "why": "The route program has a bug, a mistake in its steps. Developers fix it."
     },
     "inc04": {
-      "text": "Traffic spike! A news broadcast sent thousands of people to the app.",
+      "text": "Traffic spike. A news broadcast sent thousands of people to the app.",
       "why": "Cloud engineers scale up, adding more copies of the app to share the load."
     },
     "inc05": {
@@ -98,7 +98,7 @@
   "debrief": {
     "heading": "Mission complete",
     "familiesOf": "{n} of 1,200 families reached",
-    "newBest": "New best!",
+    "newBest": "New best",
     "rankLabel": "Rank: {rank}",
     "ranks": {
       "rookie": "Relief rookie",

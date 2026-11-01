@@ -3,6 +3,7 @@ import { copy } from '../../content';
 import type { DataRecord } from '../../content/stage1Schema';
 import { c } from './content';
 import s from './data.module.css';
+import { Icon } from '../../components/Icon';
 
 /** Quick-fix picker (§4.2 L2): 2–3 options for the field that needs fixing. */
 export function FixPicker({
@@ -33,11 +34,11 @@ export function FixPicker({
       {options.map((o, i) => (
         <button key={o} type="button" className={s.option} onClick={() => onPick(i)}>
           {o}
-          {suggest === i && <strong> ✓ {c.suggested}</strong>}
+          {suggest === i && <strong> <Icon name="check" />{c.suggested}</strong>}
         </button>
       ))}
       <button type="button" className={`${s.action} ${s.back}`} onClick={onCancel}>
-        <span aria-hidden="true">← </span>
+        <Icon name="back" /> 
         {copy.home.back}
       </button>
     </section>

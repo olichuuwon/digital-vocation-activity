@@ -3,6 +3,7 @@ import { useScreenHeading } from '../../app/screenFocus';
 import { c } from './content';
 import s from './data.module.css';
 import ui from '../../components/components.module.css';
+import { Icon } from '../../components/Icon';
 
 type OptionId = keyof typeof c.automate.options;
 
@@ -32,7 +33,7 @@ export function Automate({
             disabled={picked !== null && picked.id !== o.id}
             onClick={() => !picked && setPicked(o)}
           >
-            {picked?.id === o.id && <span aria-hidden="true">{o.correct ? '✓ ' : '✗ '}</span>}
+            {picked?.id === o.id && <Icon name={o.correct ? 'check' : 'wrong'} />}
             {c.automate.options[o.id as OptionId] ?? o.id}
           </button>
         ))}

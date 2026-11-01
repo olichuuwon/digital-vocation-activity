@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { copy, rulebook } from '../content';
 import type { Rule } from '../content/schemas';
 import s from './components.module.css';
+import { Icon } from './Icon';
 
 const t = copy.components;
 
@@ -56,7 +57,7 @@ export function NewRuleCard({ ruleId }: { ruleId: number }) {
 }
 
 /**
- * Pinned "📘 Rulebook" button + bottom sheet (§4.1). Native <dialog> gives focus trapping and Esc.
+ * Pinned "Rulebook" button + bottom sheet (§4.1). Native <dialog> gives focus trapping and Esc.
  * `rulesInPlay` limits the list to the rules unlocked so far.
  */
 export function RulebookButton({
@@ -86,7 +87,7 @@ export function RulebookButton({
   return (
     <>
       <button type="button" className={s.rulebookBtn} onClick={() => setOpen(true)} aria-haspopup="dialog">
-        <span aria-hidden="true">📘 </span>
+        <Icon name="book" />
         {t.rulebook}
       </button>
       <dialog ref={ref} className={s.sheet} aria-labelledby="rulebook-heading" onClose={() => setOpen(false)}>

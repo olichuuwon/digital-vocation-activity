@@ -135,7 +135,7 @@ async function solo() {
   await playCards(p);
   s1.push({ file: await shot(p, 's1-intro'), label: 'Level 1 intro: one new rule' });
   await click(p, 'Start');
-  await playCards(p, { wrong: 2, onCard: async (g) => g === 3 && s1.push({ file: await shot(p, 's1-counter'), label: 'Level 1: 💧 people reached' }) });
+  await playCards(p, { wrong: 2, onCard: async (g) => g === 3 && s1.push({ file: await shot(p, 's1-counter'), label: 'Level 1: people reached' }) });
   await click(p, 'Start');
   await playCards(p, { onCard: async (g) => g === 1 && s1.push({ file: await shot(p, 's1-l2'), label: 'Level 2: Keep, Fix or Trash' }) });
   await strip('solo-stage1', s1);
@@ -182,7 +182,7 @@ async function solo() {
   await expect(p.getByRole('heading', { name: 'Mission complete' })).toBeVisible();
   f.push({ file: await shot(p, 'f-debrief'), label: 'Debrief card' });
   await p.getByTestId('more-teaser').scrollIntoViewIfNeeded();
-  f.push({ file: await shot(p, 'f-more'), label: "🔓 There's more! (replays)" });
+  f.push({ file: await shot(p, 'f-more'), label: "There's more (replays)" });
   await strip('solo-finale', f);
   await p.context().close();
 }
@@ -356,7 +356,7 @@ async function team(n) {
       await next.getByTestId('up-next').waitFor({ timeout: 20_000 });
       await strip(`team${n}-handoff`, [
         { file: await shot(main, `t${n}-handoff-main`), label: lbl(m, 'hand-off card') },
-        { file: await shot(next, `t${n}-handoff-next`), label: lbl(mainIndex(2, n), "You're up next!") },
+        { file: await shot(next, `t${n}-handoff-next`), label: lbl(mainIndex(2, n), "You're up next") },
       ]);
       await next.getByTestId('up-next').getByRole('button').click();
       await next.waitForTimeout(1500);
@@ -376,7 +376,7 @@ async function team(n) {
     // Free play on a teammate's own phone, with the bonus levels.
     const ben = ps[1];
     await ben.getByTestId('more-teaser').scrollIntoViewIfNeeded();
-    const fp = [{ file: await shot(ben, 't3-more'), label: "Ben: There's more!" }];
+    const fp = [{ file: await shot(ben, 't3-more'), label: "Ben: there's more" }];
     await ben.getByTestId('replay-stage').click();
     fp.push({ file: await shot(ben, 't3-picker'), label: 'Ben picks a stage' });
     await click(ben, /Build the Logic/);

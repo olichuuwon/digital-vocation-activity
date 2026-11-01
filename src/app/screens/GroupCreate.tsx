@@ -5,6 +5,7 @@ import { checkGroupName, checkNickname, generateNames, MAX_GROUP_NAME, MAX_NICKN
 import { useScreenHeading } from '../screenFocus';
 import ui from '../ui.module.css';
 import s from './Group.module.css';
+import { Icon } from '../../components/Icon';
 
 const t = groupCopy.create;
 const e = groupCopy.errors;
@@ -70,7 +71,8 @@ export function GroupCreate({ onBack }: { onBack: () => void }) {
                   setPicked(0);
                 }}
               >
-                {t.moreNames} <span aria-hidden="true">🔀</span>
+                <Icon name="shuffle" />
+                {t.moreNames}
               </button>
               <button
                 type="button"
@@ -82,7 +84,8 @@ export function GroupCreate({ onBack }: { onBack: () => void }) {
                   setCustom('');
                 }}
               >
-                {t.ownName} <span aria-hidden="true">✏️</span>
+                <Icon name="edit" />
+                {t.ownName}
               </button>
             </div>
           </fieldset>
@@ -148,7 +151,8 @@ export function GroupCreate({ onBack }: { onBack: () => void }) {
             {t.create}
           </button>
           <button type="button" className={ui.btn} onClick={onBack}>
-            <span aria-hidden="true">←</span> {t.back}
+            <Icon name="back" />
+            {t.back}
           </button>
         </div>
       </form>

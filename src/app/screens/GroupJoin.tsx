@@ -6,6 +6,7 @@ import { checkNickname, MAX_NICKNAME, tidy, type TextProblem } from '../../net/g
 import { useScreenHeading } from '../screenFocus';
 import ui from '../ui.module.css';
 import s from './Group.module.css';
+import { Icon } from '../../components/Icon';
 
 const t = groupCopy.join;
 const e = groupCopy.errors;
@@ -101,7 +102,8 @@ export function GroupJoin({ initialCode, onBack }: { initialCode: string; onBack
               onBack();
             }}
           >
-            <span aria-hidden="true">←</span> {t.back}
+            <Icon name="back" />
+            {t.back}
           </button>
         </div>
       </form>

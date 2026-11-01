@@ -17,18 +17,18 @@
 }
 
 .progress {
-  font-weight: 700;
+  font-weight: 600;
   color: var(--text-muted);
 }
 
 .reached {
   display: inline-block;
-  font-weight: 800;
+  font-weight: 600;
   color: var(--data-ink);
 }
 
 .streak {
-  font-weight: 800;
+  font-weight: 600;
   color: var(--data-ink);
 }
 
@@ -45,11 +45,13 @@
   width: 100%;
   max-width: 22rem;
   background: var(--surface);
-  border: 2px solid var(--border);
-  border-top: 8px solid var(--data);
-  border-radius: 18px;
-  padding: 16px;
-  box-shadow: 0 8px 24px rgb(0 0 0 / 0.12);
+  border: 1px solid var(--hairline);
+  border-top: 4px solid var(--data);
+  border-radius: var(--radius);
+  padding: 20px;
+  box-shadow:
+    0 1px 2px rgb(20 24 31 / 0.06),
+    var(--shadow-float);
   cursor: grab;
   user-select: none;
 }
@@ -80,12 +82,12 @@
 
 .fields dt {
   color: var(--text-muted);
-  font-weight: 600;
+  font-weight: 500;
 }
 
 .fields dd {
   margin: 0;
-  font-weight: 700;
+  font-weight: 600;
   font-family: ui-monospace, Menlo, monospace;
   white-space: nowrap;
 }
@@ -100,7 +102,7 @@
 .stamp {
   position: absolute;
   top: 12px;
-  font-weight: 900;
+  font-weight: 600;
   font-size: 1.25rem;
   padding: 2px 10px;
   border: 3px solid currentColor;
@@ -139,10 +141,10 @@
 
 .action {
   min-height: 56px;
-  border-radius: var(--radius);
-  border: 2px solid var(--border);
+  border-radius: var(--radius-control);
+  border: 1px solid var(--border);
   background: var(--surface);
-  font-weight: 800;
+  font-weight: 600;
   font-size: 1.0625rem;
   cursor: pointer;
   display: flex;
@@ -171,7 +173,7 @@
 
 .dir {
   font-size: 0.8125rem;
-  font-weight: 600;
+  font-weight: 500;
   color: var(--text-muted);
 }
 
@@ -207,7 +209,7 @@
   width: 100%;
   min-height: var(--tap);
   border-radius: 10px;
-  border: 2px solid var(--border);
+  border: 1px solid var(--border);
   background: var(--surface);
   cursor: pointer;
   display: grid;
@@ -215,7 +217,7 @@
   align-items: center;
   gap: 8px;
   padding: 4px 10px;
-  font-weight: 700;
+  font-weight: 600;
   text-align: left;
 }
 
@@ -245,7 +247,7 @@
 
 .flag {
   color: var(--danger);
-  font-weight: 900;
+  font-weight: 600;
 }
 
 .choices {

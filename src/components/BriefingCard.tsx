@@ -2,6 +2,7 @@ import type { CSSProperties } from 'react';
 import { useScreenHeading } from '../app/screenFocus';
 import type { Briefing, StageContent } from '../content/schemas';
 import s from './components.module.css';
+import { Icon } from './Icon';
 
 /** Stage intro (§2 rhythm): ≤25 words and one button, so there's an action within 5 seconds. */
 export function BriefingCard({ briefing, stage, onGo }: { briefing: Briefing; stage: StageContent; onGo: () => void }) {
@@ -10,8 +11,8 @@ export function BriefingCard({ briefing, stage, onGo }: { briefing: Briefing; st
   return (
     <section className={s.screen} style={style}>
       <div className={s.briefing}>
-        <span className={s.bigIcon} aria-hidden="true">
-          {stage.icon}
+        <span className={s.bigIcon}>
+          <Icon name={stage.icon} size={28} />
         </span>
         <span className={s.tag}>{stage.specialisation}</span>
         <h1 ref={headingRef} tabIndex={-1}>

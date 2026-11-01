@@ -13,6 +13,7 @@ import ui from '../ui.module.css';
 import { useBoard } from '../useBoard';
 import s from './Host.module.css';
 import g from './Group.module.css';
+import { Icon } from '../../components/Icon';
 
 const t = copy.host;
 const POLL_MS = 10_000;
@@ -99,7 +100,7 @@ function PlayingNow() {
             <li key={x.id} className={g.hostRow} data-testid="host-group">
               <strong>{x.name}</strong>
               <span className={ui.muted}>
-                <span aria-hidden="true">👥 </span>
+                <Icon name="team" size={16} /> 
                 {fill(groupCopy.host.size, { n: x.size })} · {where(x)}
               </span>
             </li>

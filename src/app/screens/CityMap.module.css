@@ -1,0 +1,101 @@
+/* Home city map. Neutral city, blue floodwater, ink route; colour only on the four team stops. */
+.map {
+  display: block;
+  width: 100%;
+  height: auto;
+  margin-block: auto;
+  /* At large text sizes the map shrinks (then disappears) so the actions stay on screen. */
+  max-height: max(0px, calc(100dvh - 33rem));
+  min-height: 0;
+  border-radius: var(--radius);
+  overflow: hidden;
+  --ground: #e8ecf1;
+  --road: #ffffff;
+  --house: #cfd6df;
+  --water: #9cc8ee;
+  --wave: #e9f4fd;
+}
+
+:global([data-theme='dark']) .map {
+  --ground: #1b2029;
+  --road: #2a313d;
+  --house: #343c49;
+  --water: #1f4f7a;
+  --wave: #4f86b8;
+}
+
+@media (prefers-color-scheme: dark) {
+  :global(:root:not([data-theme='light'])) .map {
+    --ground: #1b2029;
+    --road: #2a313d;
+    --house: #343c49;
+    --water: #1f4f7a;
+    --wave: #4f86b8;
+  }
+}
+
+.ground {
+  fill: var(--ground);
+}
+
+.road path {
+  stroke: var(--road);
+  stroke-width: 10;
+  fill: none;
+}
+
+.house {
+  fill: var(--house);
+}
+
+.water {
+  fill: var(--water);
+}
+
+.wave path {
+  stroke: var(--wave);
+  stroke-width: 1.5;
+  stroke-linecap: round;
+  fill: none;
+}
+
+.routeCasing,
+.route {
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.routeCasing {
+  stroke: var(--road);
+  stroke-width: 7;
+}
+
+.route {
+  stroke: var(--text);
+  stroke-width: 3;
+  stroke-dasharray: 6 5;
+}
+
+.depot {
+  fill: var(--text);
+}
+
+.depotIcon {
+  color: var(--surface);
+}
+
+.goal {
+  fill: var(--surface);
+  stroke: var(--text);
+  stroke-width: 2.5;
+}
+
+.goalIcon {
+  color: var(--text);
+}
+
+.stop {
+  stroke: var(--surface);
+  stroke-width: 3;
+}

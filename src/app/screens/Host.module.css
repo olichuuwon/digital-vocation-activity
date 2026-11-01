@@ -56,7 +56,7 @@
 
 .url {
   margin: 0;
-  font-weight: 700;
+  font-weight: 600;
   overflow-wrap: anywhere;
 }
 
@@ -70,7 +70,7 @@
   display: flex;
   flex-direction: column;
   gap: 4px;
-  font-weight: 600;
+  font-weight: 500;
 }
 
 .pin {
@@ -115,7 +115,7 @@
 }
 
 .modName {
-  font-weight: 700;
+  font-weight: 600;
   overflow-wrap: anywhere;
   display: flex;
   flex-wrap: wrap;
@@ -126,7 +126,7 @@
 .hiddenTag {
   font-size: 0.8125rem;
   padding: 1px 8px;
-  border-radius: 999px;
+  border-radius: 6px;
   border: 1px solid var(--danger);
   color: var(--danger);
 }
@@ -140,7 +140,7 @@
 .message {
   margin: 0;
   min-height: 1.45em;
-  font-weight: 600;
+  font-weight: 500;
 }
 
 .head h1:focus,

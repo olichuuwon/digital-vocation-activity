@@ -1,11 +1,11 @@
 {
   "levelIntro": {
-    "logic-tutorial": "A program is a list of steps. Tap blocks to build one: drive to the house, then drop supplies. Tap Run to go!",
+    "logic-tutorial": "A program is a list of steps. Tap blocks to build one: drive to the house, then drop supplies. Then tap Run.",
     "logic-l1": "Two houses need supplies, and order matters. Plan which one to visit first so your program fits the block limit.",
     "logic-l2": "Same kind of trip, fewer blocks allowed. The Repeat block does the steps inside it several times. Use it to say it shorter.",
     "logic-l3": "One of two roads floods, and it changes every run. The If block is already in place: fill in both roads.",
-    "logic-l4": "Bonus! This program has a bug (a mistake in the steps). Run it, watch where the truck goes wrong, then swap the bad block.",
-    "logic-l5": "Bonus! Each house needs water, food or a medical kit. “Ask the AI” uses the model you trained earlier to pick the right one."
+    "logic-l4": "Bonus level: this program has a bug (a mistake in the steps). Run it, watch where the truck goes wrong, then swap the bad block.",
+    "logic-l5": "Bonus level: each house needs water, food or a medical kit. “Ask the AI” uses the model you trained earlier to pick the right one."
   },
   "levelHint": {
     "logic-tutorial": "Count the squares to each corner. Turn where the road turns, then Drop supplies at the house.",
@@ -47,7 +47,7 @@
     "swapPrompt": "Now pick a block to swap in.",
     "editsLeft": "Swaps left: {n}",
     "guideStep": "Step {n} of {total}: tap {block}",
-    "guideRun": "Your program is ready. Tap ▶ Run!",
+    "guideRun": "Your program is ready. Tap Run.",
     "ghostAdd": "Tap to add {block}",
     "ghostSwap": "Tap to change this to {block}",
     "ghostCount": "Tap to set Repeat ×{n}",
@@ -61,16 +61,16 @@
     "reset": "Reset",
     "running": "Running…",
     "showAnswer": "Show me",
-    "success": "Delivered! Every house got its supplies.",
+    "success": "Delivered. Every house got its supplies.",
     "crash": "Oops, the truck drove off the road. Check your turns and moves.",
     "stuck": "The truck drove into flood water. Find a dry road.",
-    "noHouse": "No house here! Drop supplies only when the truck reaches a house.",
+    "noHouse": "No house here. Drop supplies only when the truck reaches a house.",
     "wrongSupply": "This house needs something specific. Use “Ask the AI, then drop” here.",
     "unfinished": "The program ended, but some houses still need supplies.",
     "aiWrong": "Wrong drops: {n}. Your AI guessed wrong. Better Stage 2 training means fewer mistakes.",
     "overLimit": "Too many blocks for this puzzle. Look for a shorter way and remove some.",
-    "nextTry": "Every bug you find gets you closer. Tweak and run again!",
-    "lucky": "Lucky! It worked this time, but the other road could flood. Make it work both ways."
+    "nextTry": "Every bug you find gets you closer. Tweak and run again.",
+    "lucky": "That was lucky. It worked this time, but the other road could flood. Make it work both ways."
   },
   "map": {
     "label": "Map, {size} by {size}",
@@ -96,18 +96,18 @@
   },
   "hint": "Hint: {text}",
   "answer": "Here's a working program, loaded and ready. Tap Run to watch it. Using it costs some points.",
-  "timeUp": "Time's up! On to the next puzzle.",
+  "timeUp": "Time's up. On to the next puzzle.",
   "result": {
-    "heading3": "Master route planner!",
-    "heading2": "Smooth driving!",
-    "heading1": "Supplies on the move. Good start!",
-    "heading0": "Logic is tricky. Have another go!",
+    "heading3": "Master route planner",
+    "heading2": "Smooth driving",
+    "heading1": "Supplies on the move. Good start.",
+    "heading0": "Logic is tricky. Have another go.",
     "solved": "{n} of {total} puzzles solved",
     "hints": "Help used: {n}",
     "blocks": "Extra blocks: {n}",
     "tests": "{passed} of {total} test maps passed"
   },
-  "learned": "You solved {count} puzzles by breaking problems into steps, repeating, deciding and debugging (fixing mistakes). That's programming!",
+  "learned": "You solved {count} puzzles by breaking problems into steps, repeating, deciding and debugging (fixing mistakes). That's programming.",
   "a11y": {
     "inside": "inside {block}",
     "atEnd": "at the end",

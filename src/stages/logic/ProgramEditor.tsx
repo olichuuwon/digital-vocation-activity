@@ -27,6 +27,7 @@ import {
   type NextStep,
 } from './program';
 import s from './logic.module.css';
+import { Icon } from '../../components/Icon';
 
 const sameList = (a: ListPath, b: ListPath) => a.length === b.length && a.every((x, i) => x === b[i]);
 /** Stable DOM key for a block address, used to put focus back after edits. */
@@ -62,7 +63,7 @@ function cursorLabel(program: Program, cur: Cursor): string {
  * - Tap a program block: select it, then Move up / Move down / Remove / More or fewer times.
  * - Tap an "Add blocks here" slot to add inside a Repeat or If.
  * Debug It (`swap`): tap a block, then a palette block to swap it in (limited swaps).
- * Guided help: `ghost` shows the suggested next step as a dashed "💡 Tap to…" row in the program
+ * Guided help: `ghost` shows the suggested next step as a dashed "Tap to…" row in the program
  * (one tap applies it); `guideOp` highlights a palette block and `coach` says what to tap
  * (the step-by-step tutorial).
  * Every edit is announced once (one live region), and focus never falls back to <body> (§10).
@@ -199,9 +200,9 @@ export function ProgramEditor({
 
   const ghostText = (g: NextStep) =>
     g.kind === 'add'
-      ? fill(c.editor.ghostAdd, { block: `${ICON[g.block.op]} ${blockText(g.block)}` })
+      ? fill(c.editor.ghostAdd, { block: blockText(g.block) })
       : g.kind === 'swap'
-        ? fill(c.editor.ghostSwap, { block: `${ICON[g.op]} ${c.blocks[g.op]}` })
+        ? fill(c.editor.ghostSwap, { block: c.blocks[g.op] })
         : g.kind === 'count'
           ? fill(c.editor.ghostCount, { n: g.n })
           : c.editor.ghostRemove;
@@ -223,7 +224,7 @@ export function ProgramEditor({
     ghost ? (
       <li key="ghost" className={s.row} style={{ paddingLeft: `${depth * 18}px` }}>
         <button type="button" className={s.ghost} data-testid="ghost" data-kind={ghost.kind} aria-disabled={locked || undefined} onClick={takeGhost}>
-          <span aria-hidden="true">💡 </span>
+          <Icon name="hint" />
           <span className="visually-hidden">{c.editor.ghostLabel}: </span>
           {ghostText(ghost)}
         </button>
@@ -282,7 +283,7 @@ export function ProgramEditor({
                       setCursor({ list, index: getList(program, list)?.length ?? 0 });
                     }}
                   >
-                    <span aria-hidden="true">{on ? '➕ ' : '＋ '}</span>
+                    <Icon name="add" />
                     {on ? cursorLabel(program, cursor) : c.editor.addHere}
                   </button>
                 </li>
@@ -308,8 +309,8 @@ export function ProgramEditor({
                   data-key={addrKey(r.addr)}
                   onClick={() => !locked && setSelected(isSel ? null : r.addr)}
                 >
-                  {failedHere ? <span aria-hidden="true">✗</span> : active && <span aria-hidden="true">▶</span>}
-                  <span aria-hidden="true">{ICON[b.op]}</span>
+                  {failedHere ? <Icon name="wrong" /> : active && <Icon name="start" size={14} filled />}
+                  <Icon name={ICON[b.op]} />
                   {blockText(b)}
                   {b.op === 'ifFlooded' && <span aria-hidden="true">:</span>}
                   {where && <span className="visually-hidden">, {where}</span>}
@@ -335,7 +336,7 @@ export function ProgramEditor({
                   setCursor(rootEnd);
                 }}
               >
-                <span aria-hidden="true">{cursorIsRootEnd ? '➕ ' : '＋ '}</span>
+                <Icon name="add" />
                 {c.editor.addHere}
               </button>
             </li>
@@ -350,15 +351,15 @@ export function ProgramEditor({
           {!swap && (
             <>
               <button type="button" className={s.tool} onClick={() => move(-1)} aria-disabled={selected.index === 0 || undefined}>
-                <span aria-hidden="true">⬆ </span>
+                <Icon name="up" />
                 {c.editor.moveUp}
               </button>
               <button type="button" className={s.tool} onClick={() => move(1)} aria-disabled={selected.index >= listLen - 1 || undefined}>
-                <span aria-hidden="true">⬇ </span>
+                <Icon name="down" />
                 {c.editor.moveDown}
               </button>
               <button type="button" className={s.tool} onClick={remove} data-testid="remove-block">
-                <span aria-hidden="true">🗑 </span>
+                <Icon name="trash" />
                 {c.editor.remove}
               </button>
             </>
@@ -406,7 +407,7 @@ export function ProgramEditor({
             aria-disabled={locked || (!swap && full) || (swap && !selected) || undefined}
             onClick={() => add(op)}
           >
-            <span aria-hidden="true">{ICON[op]} </span>
+            <Icon name={ICON[op]} />
             {c.blocks[op]}
           </button>
         ))}

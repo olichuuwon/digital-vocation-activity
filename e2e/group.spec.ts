@@ -92,7 +92,7 @@ async function playLiveOps(main: Page) {
     const text = await card.textContent();
     const team = (await card.getAttribute('data-team'))!;
     await main.locator(`button[data-team="${team}"]`).click();
-    await expect(main.getByTestId('feedback')).toContainText('✓');
+    await expect(main.getByTestId('feedback')).toHaveAttribute('data-ok', 'true');
     await expect(main.getByTestId('incident').filter({ hasText: text ?? '' })).toHaveCount(0, { timeout: 10_000 });
   }
 }
@@ -194,7 +194,7 @@ test('3 phones: create, join by QR link and by code, reorder, play a team run, r
   // Everyone reaches the debrief and sees the shared rank instead of the solo note.
   for (const p of [ann, ben, cai]) {
     await expect(p.getByRole('heading', { name: 'Mission complete' })).toBeVisible();
-    await expect(p.getByTestId('group-rank')).toContainText("You're #3 today!");
+    await expect(p.getByTestId('group-rank')).toContainText("You're #3 today");
     await expect(p.getByTestId('group-rank')).toContainText(`${name} · 3 players`);
     await expect(p.getByText(/Solo runs aren't ranked/)).toHaveCount(0);
   }

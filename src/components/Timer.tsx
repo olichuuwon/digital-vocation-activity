@@ -4,6 +4,7 @@ import { copy, fill } from '../content';
 import { useGame, useRelaxed } from '../state/store';
 import { ANNOUNCE_AT, canExtend, EXTEND_BY_SECONDS, formatClock, levelSeconds, secondsLeft } from '../state/timer';
 import s from './components.module.css';
+import { Icon } from './Icon';
 
 const t = copy.components;
 const TICK_MS = 200;
@@ -101,7 +102,7 @@ export function Timer({
   };
   return (
     <div className={`${s.timer} ${urgent ? s.urgent : ''}`} data-testid="timer">
-      <span aria-hidden="true">{urgent ? '⏰' : '⏱️'}</span>
+      <Icon name={urgent ? 'alarm' : 'timer'} />
       <span role="timer">
         <span className="visually-hidden">{t.timeLeft} </span>
         {formatClock(left)}

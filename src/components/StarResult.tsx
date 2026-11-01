@@ -4,10 +4,11 @@ import { useAnnouncer, useScreenHeading } from '../app/screenFocus';
 import { copy, fill } from '../content';
 import type { StarCount } from '../state/types';
 import s from './components.module.css';
+import { Icon } from './Icon';
 
 const t = copy.components;
 
-/** Stage result (§3.3): 0–3 stars. Filled ★ vs outline ☆, so stars don't rely on colour. */
+/** Stage result (§3.3): 0–3 stars. Filled vs outline stars, so stars don't rely on colour. */
 export function StarResult({
   stars,
   heading,
@@ -37,11 +38,11 @@ export function StarResult({
           <m.span
             key={n}
             className={n <= stars ? s.starOn : s.starOff}
-            initial={still ? false : { scale: 0.3, opacity: 0 }}
+            initial={still ? false : { scale: 0.8, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
-            transition={still ? { duration: 0 } : { delay: 0.15 * n, type: 'spring', stiffness: 400, damping: 15 }}
+            transition={still ? { duration: 0 } : { delay: 0.12 * n, duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
           >
-            {n <= stars ? '★' : '☆'}
+            <Icon name="star" size={48} filled={n <= stars} />
           </m.span>
         ))}
       </div>

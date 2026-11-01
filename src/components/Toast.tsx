@@ -3,8 +3,9 @@ import { useEffect } from 'react';
 import { useRelaxed } from '../state/store';
 import { toastMs, useToast, type Kind } from './toastStore';
 import s from './components.module.css';
+import { Icon, type IconName } from './Icon';
 
-const ICON: Record<Kind, string> = { success: '✓', error: '✗', info: 'ℹ︎' };
+const ICON: Record<Kind, IconName> = { success: 'check', error: 'wrong', info: 'info' };
 
 export function ToastHost() {
   const { id, message, kind, clear } = useToast();
@@ -26,7 +27,7 @@ export function ToastHost() {
             animate={{ y: 0, opacity: 1 }}
             exit={{ opacity: 0 }}
           >
-            <span aria-hidden="true">{ICON[kind]} </span>
+            <Icon name={ICON[kind]} />
             {message}
           </m.p>
         )}

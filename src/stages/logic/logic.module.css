@@ -14,7 +14,7 @@
   justify-content: space-between;
   gap: 8px;
   flex-wrap: wrap;
-  font-weight: 700;
+  font-weight: 600;
 }
 
 .count {
@@ -53,7 +53,7 @@
 
 /* Program: part of the page (no box scrolling inside the page); the dock stays at the bottom. */
 .programBox {
-  border: 2px solid var(--border);
+  border: 1px solid var(--hairline);
   border-radius: 12px;
   background: var(--surface);
   padding: 6px;
@@ -80,7 +80,7 @@
   gap: 8px;
   margin: 0 0 4px;
   font-size: 0.9375rem;
-  font-weight: 800;
+  font-weight: 600;
 }
 
 .rows {
@@ -104,7 +104,7 @@
   border-radius: 10px;
   border: 2px solid var(--logic-ink);
   background: var(--logic-soft, var(--surface));
-  font-weight: 800;
+  font-weight: 600;
   font-size: 1rem;
   text-align: left;
   padding: 6px 10px;
@@ -138,7 +138,7 @@
 }
 
 .label {
-  font-weight: 800;
+  font-weight: 600;
   font-size: 0.9375rem;
   color: var(--logic-ink);
   padding: 2px 6px;
@@ -151,7 +151,7 @@
   border-radius: 10px;
   background: transparent;
   font-size: 0.875rem;
-  font-weight: 600;
+  font-weight: 500;
   color: var(--text-muted);
   cursor: pointer;
   text-align: left;
@@ -162,7 +162,7 @@
   border-color: var(--logic-ink);
   border-style: solid;
   color: var(--text);
-  font-weight: 800;
+  font-weight: 600;
 }
 
 .empty {
@@ -185,9 +185,9 @@
   min-height: var(--tap);
   min-width: var(--tap);
   border-radius: 10px;
-  border: 2px solid var(--border);
+  border: 1px solid var(--border);
   background: var(--surface);
-  font-weight: 700;
+  font-weight: 600;
   font-size: 0.9375rem;
   padding: 4px 6px;
   cursor: pointer;
@@ -210,7 +210,7 @@
   border-radius: 10px;
   border: 2px solid var(--logic-ink);
   background: var(--surface);
-  font-weight: 800;
+  font-weight: 600;
   font-size: 0.9375rem;
   line-height: 1.15;
   padding: 4px 6px;
@@ -231,10 +231,10 @@
 
 .runBtn {
   min-height: 52px;
-  border-radius: var(--radius);
-  border: 2px solid var(--border);
+  border-radius: var(--radius-control);
+  border: 1px solid var(--border);
   background: var(--surface);
-  font-weight: 800;
+  font-weight: 600;
   font-size: 1.0625rem;
   cursor: pointer;
 }
@@ -252,7 +252,7 @@
 
 .status {
   margin: 0;
-  font-weight: 700;
+  font-weight: 600;
   min-height: 1.5em;
 }
 
@@ -266,7 +266,7 @@
   background: var(--logic-soft, var(--surface));
   color: var(--text);
   font-size: 0.9375rem;
-  font-weight: 800;
+  font-weight: 600;
   text-align: left;
   padding: 4px 10px;
   cursor: pointer;
@@ -275,7 +275,7 @@
 
 .coach {
   margin: 0 0 6px;
-  font-weight: 800;
+  font-weight: 600;
   color: var(--logic-ink);
 }
 

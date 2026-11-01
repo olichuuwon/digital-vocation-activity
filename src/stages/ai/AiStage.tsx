@@ -63,6 +63,7 @@ import { CoveredBoard } from './CoveredBoard';
 import { FieldGuideButton } from './FieldGuide';
 import { stage2For, useStage2Progress, type AiOutcome, type EndPhase } from './progress';
 import s from './ai.module.css';
+import { Icon } from '../../components/Icon';
 
 type Phase = 'briefing' | 'intro' | 'play' | EndPhase;
 type LevelId = 'ai-tutorial' | 'ai-l1' | 'ai-l2' | 'ai-l3' | 'ai-l4';
@@ -250,7 +251,7 @@ function LevelTop({
         </span>
         {streak !== undefined && streak >= STREAK_MIN && (
           <span className={s.streak}>
-            <span aria-hidden="true">🔥 </span>
+            <Icon name="streak" size={16} /> 
             {fill(c.toast.streak, { n: streak })}
           </span>
         )}
@@ -288,7 +289,7 @@ function LabelButtons({
             aria-disabled={off || undefined}
             onClick={() => !off && onPick(l)}
           >
-            {isSuggested && <span aria-hidden="true">✓ </span>}
+            {isSuggested && <Icon name="check" />}
             {labelName(l)}
             {isSuggested && <span className="visually-hidden"> {c.a11y.suggested}</span>}
             {off && <span className="visually-hidden"> {c.a11y.ruledOut}</span>}
@@ -499,7 +500,7 @@ function CoveredPlay({ salt, debug, onDone }: { salt: number; debug: boolean; on
           aria-disabled={cs.charges <= 0 || shown >= total || undefined}
           onClick={() => setCs((st) => coveredReducer(st, { type: 'reveal' }))}
         >
-          <span aria-hidden="true">👁️ </span>
+          <Icon name="eye" /> 
           {c.covered.reveal} ({fill(c.covered.revealLeft, { n: cs.charges })})
         </button>
       </div>
@@ -690,8 +691,8 @@ function AuditPlay({ salt, debug, onDone }: { salt: number; debug: boolean; onDo
             data-suggested={state.hint === 'answer' && answer === v ? true : undefined}
             onClick={() => judge(v)}
           >
-            {state.hint === 'answer' && answer === v && <span aria-hidden="true">✓ </span>}
-            <span aria-hidden="true">{v === 'right' ? '👍 ' : '🚩 '}</span>
+            {state.hint === 'answer' && answer === v && v !== 'right' && <Icon name="check" />}
+            <Icon name={v === 'right' ? 'checkCircle' : 'flag'} />
             {v === 'right' ? c.audit.right : c.audit.flag}
           </button>
         ))}

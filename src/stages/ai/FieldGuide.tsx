@@ -3,9 +3,10 @@ import { LABELS } from '../../content/stage2Schema';
 import ui from '../../components/components.module.css';
 import { c, t } from './content';
 import s from './ai.module.css';
+import { Icon } from '../../components/Icon';
 
 /**
- * "📖 Field guide" (a sheet): what each class looks like. Native <dialog> gives focus trapping and Esc. Stages pause their timer while it's open.
+ * "Field guide" (a sheet): what each class looks like. Native <dialog> gives focus trapping and Esc. Stages pause their timer while it's open.
  */
 export function FieldGuideButton({ onOpenChange }: { onOpenChange?: (open: boolean) => void }) {
   const [open, setOpenState] = useState(false);
@@ -24,7 +25,7 @@ export function FieldGuideButton({ onOpenChange }: { onOpenChange?: (open: boole
   return (
     <>
       <button type="button" className={s.guideBtn} onClick={() => setOpen(true)} aria-haspopup="dialog">
-        <span aria-hidden="true">📖 </span>
+        <Icon name="book" /> 
         {c.fieldGuide.button}
       </button>
       <dialog ref={ref} className={ui.sheet} aria-labelledby="guide-heading" onClose={() => setOpen(false)}>

@@ -9,6 +9,7 @@ import { useAnnouncer, useScreenHeading } from '../screenFocus';
 import ui from '../ui.module.css';
 import { useBoard } from '../useBoard';
 import s from './Leaderboard.module.css';
+import { Icon } from '../../components/Icon';
 
 const t = copy.leaderboard;
 type Tab = 'today' | 'all';
@@ -95,10 +96,8 @@ export function Leaderboard({ onBack, debug }: { onBack: () => void; debug: bool
       <div className={ui.actions}>
         {debug && import.meta.env.DEV && <DebugSubmit onDone={board.reload} />}
         <button type="button" className={ui.btn} onClick={onBack}>
-          <span>
-            <span aria-hidden="true">← </span>
-            {t.back}
-          </span>
+          <Icon name="back" />
+          {t.back}
         </button>
       </div>
     </main>

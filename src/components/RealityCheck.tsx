@@ -54,8 +54,8 @@ export function RealityCheck({
 
   return (
     <section className={s.screen}>
-      <p className={s.muted} aria-hidden="true">
-        💡 {kicker}
+      <p className={s.kicker} aria-hidden="true">
+        {kicker}
       </p>
       <h1 ref={headingRef} tabIndex={-1}>
         {check.heading}

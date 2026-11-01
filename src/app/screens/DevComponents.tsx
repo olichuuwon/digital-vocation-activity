@@ -69,7 +69,7 @@ function Gallery({ onPick }: { onPick: (d: Demo) => void }) {
       <h1 ref={headingRef} tabIndex={-1}>
         {copy.components.devHeading}
       </h1>
-      {group('Briefing', stages.map((s) => item(`${s.icon} ${s.title}`, { kind: 'briefing', stage: s.stage })))}
+      {group('Briefing', stages.map((s) => item(s.title, { kind: 'briefing', stage: s.stage })))}
       {group('Reality Check', realityChecks.map((c) => item(`${c.heading}${c.needsApproval ? ' (needs approval)' : ''}`, { kind: 'reality', id: c.id })))}
       {group('Results and flow', [
         item('Stars: 0', { kind: 'stars', stars: 0 }),
@@ -101,7 +101,7 @@ function DemoView({ demo, onBack }: { demo: Demo; onBack: () => void }) {
       return (
         <StarResult
           stars={demo.stars}
-          heading={demo.stars === 3 ? 'Spotless data!' : 'Data still messy'}
+          heading={demo.stars === 3 ? 'Spotless data' : 'Data still messy'}
           lines={['Accuracy 90%', '2 records fixed']}
           onContinue={onBack}
         />
@@ -148,7 +148,7 @@ function DemoShell({ title, onBack, children }: { title: string; onBack: () => v
       {children}
       <div className={ui.actions}>
         <button type="button" className={ui.btn} onClick={onBack}>
-          <span aria-hidden="true">←</span> Back to gallery
+          Back to gallery
         </button>
       </div>
     </main>
@@ -204,7 +204,7 @@ function HintsDemo({ onBack }: { onBack: () => void }) {
           className={ui.btn}
           onClick={() => {
             setFails(0);
-            toast('Correct!', 'success');
+            toast('Correct', 'success');
           }}
         >
           Right answer

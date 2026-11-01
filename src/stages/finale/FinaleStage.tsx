@@ -25,13 +25,16 @@ import { c, finale, t } from './content';
 import { dealIncidents, liveOpsFamilies, matchRanking, pipeline, rankFor, routeResult, type LiveItem, type RouteResult } from './logic';
 import { finaleFor, useFinaleProgress } from './progress';
 import s from './finale.module.css';
+import { Icon, Stars } from '../../components/Icon';
+import type { IconName } from '../../components/Icon';
+import { MAX_FAMILIES } from '../../state/scoring';
 
 const nf = new Intl.NumberFormat('en-SG');
 /** Finale progress belongs to one play-through: a chapter replay (run.replays) starts fresh. */
 const finaleKey = (run: GameState) => run.startedAt * 100 + Math.min(99, run.replays ?? 0);
 /** Rounded down, so 99.7% uptime never shows as a perfect 100%. */
 const pct = (x: number) => Math.floor(x * 100 + 1e-9);
-const TEAM_ICON: Record<Team, string> = { data: '📊', ai: '🧠', logic: '🧩', cloud: '☁️' };
+const TEAM_ICON: Record<Team, IconName> = { data: 'data', ai: 'ai', logic: 'logic', cloud: 'cloud' };
 
 /**
  * A caption under a big number: the number itself is shown big just above, so the caption
@@ -113,13 +116,13 @@ function Reveal({ p, logicPlayed, onGo }: { p: ReturnType<typeof pipeline>; logi
   const relaxed = useRelaxed();
   const reduce = useReducedMotion();
   const headingRef = useScreenHeading<HTMLHeadingElement>(c.reveal.heading);
-  const links: [string, string][] = [
-    ['📊', fill(c.reveal.data, { pct: pct(p.data) })],
-    ['🧠', fill(c.reveal.model, { pct: pct(p.model) })],
+  const links: [IconName, string][] = [
+    ['data', fill(c.reveal.data, { pct: pct(p.data) })],
+    ['ai', fill(c.reveal.model, { pct: pct(p.model) })],
     // Display only: the formula still uses logicScore (1 with no hints), but "100%" for a stage
     // nobody played would mislead.
-    ['🧩', logicPlayed ? fill(c.reveal.logic, { pct: pct(p.logic) }) : c.reveal.notPlayed],
-    ['☁️', fill(c.reveal.uptime, { pct: pct(p.uptime) })],
+    ['logic', logicPlayed ? fill(c.reveal.logic, { pct: pct(p.logic) }) : c.reveal.notPlayed],
+    ['cloud', fill(c.reveal.uptime, { pct: pct(p.uptime) })],
   ];
   return (
     <section className={ui.screen}>
@@ -130,7 +133,7 @@ function Reveal({ p, logicPlayed, onGo }: { p: ReturnType<typeof pipeline>; logi
       <ol className={s.chain} data-testid="pipeline" role="list">
         {links.map(([icon, text], i) => (
           <m.li key={text} initial={reduce ? false : { opacity: 0, x: -12 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.4 + i * 0.8 }}>
-            <span aria-hidden="true">{icon}</span> {text}
+            <Icon name={icon} />{text}
             {i < links.length - 1 && (
               <span className={s.arrow} aria-hidden="true">
                 ↓
@@ -146,8 +149,7 @@ function Reveal({ p, logicPlayed, onGo }: { p: ReturnType<typeof pipeline>; logi
         <UnderBigNumber template={c.reveal.families} n={nf.format(p.families)} />
       </p>
       <p className={ui.body} data-testid="liveops-intro">
-        <span aria-hidden="true">🚨 </span>
-        {fill(c.liveOps.intro, { s: levelSeconds(finale.liveOps.secondsEach, relaxed) })}
+        <Icon name="incident" />{fill(c.liveOps.intro, { s: levelSeconds(finale.liveOps.secondsEach, relaxed) })}
       </p>
       <div className={ui.actions}>
         <button type="button" className={`${ui.btn} ${ui.primary}`} onClick={onGo}>
@@ -263,14 +265,13 @@ function LiveOps({ run, base, onDone }: { run: GameState; base: number; onDone: 
         data-testid="incident"
         data-team={new URLSearchParams(window.location.search).get('debug') === '1' ? incident.team : undefined}
       >
-        <span aria-hidden="true">🚨 </span>
-        {itemText(incident)}
+        <Icon name="incident" />{itemText(incident)}
       </m.article>
       {feedback ? (
         // Already spoken via the announcer; shown here for sighted players.
         <div className={s.feedback} data-ok={feedback.ok} aria-hidden="true" data-testid="feedback">
           <strong>
-            {feedback.ok ? '✓ ' : '✗ '}
+            <Icon name={feedback.ok ? 'check' : 'wrong'} />
             {feedback.text}
           </strong>
           {feedback.why && <span>{feedback.why}</span>}
@@ -286,7 +287,7 @@ function LiveOps({ run, base, onDone }: { run: GameState; base: number; onDone: 
       <div className={s.teams} role="group" aria-label={c.liveOps.route} data-waiting={feedback ? true : undefined}>
         {TEAMS.map((team) => (
           <button key={team} type="button" className={s.team} data-team={team} onClick={() => route(team)}>
-            <span aria-hidden="true">{TEAM_ICON[team]} </span>
+            <Icon name={TEAM_ICON[team]} />
             {c.teamButtons[team]}
           </button>
         ))}
@@ -335,6 +336,7 @@ function Debrief({
   onLeaderboard: () => void;
   onReplay: (stage: Stage) => void;
 }) {
+  const reduce = useReducedMotion();
   const saved = finaleFor(finaleKey(run));
   const families = saved.families ?? run.scores.finale.familiesReached;
   const rank = rankFor(families, finale.ranks);
@@ -371,20 +373,33 @@ function Debrief({
         <p className={s.of} data-testid="families">
           <UnderBigNumber template={c.debrief.familiesOf} n={nf.format(families)} />
         </p>
+        <div className={s.gauge} aria-hidden="true">
+          <div className={s.gaugeTrack}>
+            <m.div
+              className={s.gaugeFill}
+              style={{ width: `${(100 * families) / MAX_FAMILIES}%` }}
+              initial={reduce ? false : { scaleX: 0 }}
+              animate={{ scaleX: 1 }}
+              transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1], delay: 0.2 }}
+            />
+          </div>
+          <div className={s.gaugeScale}>
+            <span>0</span>
+            <span>{nf.format(MAX_FAMILIES)}</span>
+          </div>
+        </div>
         <p className={s.rank}>{fill(c.debrief.rankLabel, { rank: c.debrief.ranks[rank] ?? rank })}</p>
         {saved.newBest && (
           <p className={s.best}>
-            <span aria-hidden="true">🏆 </span>
-            {c.debrief.newBest}
+            <Icon name="trophy" />{c.debrief.newBest}
           </p>
         )}
         <ul className={s.stars} role="list">
           {stages.map((st) => (
             <li key={st.stage}>
-              <span aria-hidden="true">{st.icon}</span> {st.short}{' '}
+              <Icon name={st.icon} />{st.short}{' '}
               <span role="img" aria-label={fill(t.starsLabel, { n: run.stars[st.discipline] })}>
-                {'★'.repeat(run.stars[st.discipline])}
-                {'☆'.repeat(3 - run.stars[st.discipline])}
+                <Stars n={run.stars[st.discipline]} />
               </span>
             </li>
           ))}
@@ -403,7 +418,7 @@ function Debrief({
             return (
               <li key={m.team}>
                 <strong>
-                  <span aria-hidden="true">{TEAM_ICON[m.team]} </span>
+                  <Icon name={TEAM_ICON[m.team]} /> 
                   {st.specialisation}
                 </strong>
                 <span>{c.debrief.roles[m.team]}</span>
@@ -418,7 +433,7 @@ function Debrief({
         <ul className={s.learned}>
           {learnedLines(run).map((l, i) => (
             <li key={i}>
-              <span aria-hidden="true">{TEAM_ICON[(['data', 'ai', 'logic', 'cloud'] as const)[i]!]} </span>
+              <Icon name={TEAM_ICON[(['data', 'ai', 'logic', 'cloud'] as const)[i]!]} />
               {l}
             </li>
           ))}
@@ -440,12 +455,11 @@ function Debrief({
           since picking a stage leaves the team. */}
       {canReplay && (
         <p className={s.more} data-testid="more-teaser">
-          <span aria-hidden="true">🔓 </span>
-          {copy.replay.teaser}
+          <Icon name="unlock" />{copy.replay.teaser}
         </p>
       )}
       <div className={s.buttons}>
-        {/* The replay (there's more!) leads; a new run starts over from the beginning. */}
+        {/* The replay (there's more) leads; a new run starts over from the beginning. */}
         {canReplay && (
           <button type="button" className={`${ui.btn} ${ui.primary}`} data-testid="replay-stage" onClick={() => setChapters(true)}>
             {copy.home.replayStage}

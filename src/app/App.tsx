@@ -18,6 +18,7 @@ import { Prologue } from './screens/Prologue';
 import { SettingsDialog } from './SettingsDialog';
 import ui from './ui.module.css';
 import { useTheme } from './useTheme';
+import { Icon } from '../components/Icon';
 
 // Booth screen code (incl. the QR encoder) only loads on /host.
 const Host = lazy(() => import('./screens/Host'));
@@ -172,7 +173,7 @@ function GameApp() {
           aria-label="Settings"
           onClick={() => setSettingsOpen(true)}
         >
-          <span aria-hidden="true">⚙️</span>
+          <Icon name="settings" size={20} />
         </button>
       </header>
       <ScreenBoundary>

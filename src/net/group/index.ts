@@ -38,7 +38,7 @@
  *   is gone, the finale's main phone) queues one submit_run (retrying, idempotent per token).
  *   That token is the submitting phone's own and never goes over the channel, so someone who
  *   joins with the code can't submit under it first.
- *   The result (rank today) is broadcast so every phone shows "You're #3 today!".
+ *   The result (rank today) is broadcast so every phone shows "You're #3 today".
  */
 export { useGroup, useTopic, useActions, useHandOff, useHandOffSync, deriveView, nextMain, HANDOFF_TOPIC, HANDOFF_READY } from './hooks';
 export type { GroupView, Member, HandOffInfo } from './hooks';

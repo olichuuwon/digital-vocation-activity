@@ -1,6 +1,7 @@
 import { copy } from '../content';
 import type { HintLevel } from '../state/hints';
 import s from './components.module.css';
+import { Icon } from './Icon';
 
 const t = copy.components;
 
@@ -13,7 +14,7 @@ export function HintBox({ level, hint, answer, quiet }: { level: HintLevel; hint
     <div role={quiet ? undefined : 'status'} data-testid="hint">
       {level !== 'none' && (
         <p className={s.hintBox}>
-          <span aria-hidden="true">💡 </span>
+          <Icon name="hint" /> 
           <strong>{level === 'hint' ? t.hint : t.answer}:</strong> {level === 'hint' ? hint : answer}
         </p>
       )}

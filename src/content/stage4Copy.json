@@ -1,6 +1,6 @@
 {
   "levelIntro": {
-    "cloud-manual": "Traffic surges to ×10! Keep 3 servers (computers running your app) alive: Boost busy ones, Restart crashed ones, Roll back bad updates. Good luck!",
+    "cloud-manual": "Traffic surges to ×10. Keep 3 servers (computers running your app) alive: Boost busy ones, Restart crashed ones, Roll back bad updates.",
     "cloud-configure": "Now let Kubernetes do the work. Pick your settings and keep the cost under budget.",
     "cloud-replay": "Same storm, new setup. Sit back and watch Kubernetes handle it. You can still Roll back a bad update."
   },
@@ -12,22 +12,22 @@
     "rebooting": "Restarting…",
     "restart": "Restart",
     "boost": "Boost",
-    "boosted": "Boosted!",
+    "boosted": "Boosted",
     "cooling": "Cooling down",
     "rollback": "Roll back",
-    "badDeploy": "Bad update! Half your users are getting errors.",
+    "badDeploy": "Bad update. Half your users are getting errors.",
     "uptime": "Uptime {pct}%",
     "traffic": "Traffic ×{n}",
-    "crashToast": "Server {n} crashed! Tap Restart to bring it back.",
-    "deployToast": "A bad update went out. Tap Roll back!",
+    "crashToast": "Server {n} crashed. Tap Restart to bring it back.",
+    "deployToast": "A bad update went out. Tap Roll back.",
     "rolledBack": "Rolled back. Everything's working again.",
     "pause": "Pause",
     "resume": "Resume",
     "paused": "Paused. Tap Resume when you're ready.",
-    "overloaded": "Server {n} is overloaded!",
+    "overloaded": "Server {n} is overloaded",
     "stormLeft": "{s} seconds of storm left.",
     "stormOver": "Storm over. Uptime {pct}%.",
-    "faultToast": "Server {n}'s hardware failed! Tap Restart to bring it back."
+    "faultToast": "Server {n}'s hardware failed. Tap Restart to bring it back."
   },
   "configure": {
     "heading": "Set up Kubernetes",
@@ -49,7 +49,7 @@
     "cost": "Cost: {n} credits/min",
     "budget": "Budget: {n} credits/min",
     "overBudget": "Over budget. Fewer pods will cost less.",
-    "underBudget": "Under budget. Nice!",
+    "underBudget": "Under budget",
     "go": "Replay the storm",
     "thresholdLabel": "Add pods when busier than",
     "changed": "{setting}: {value}."
@@ -68,7 +68,7 @@
     "tweak": "Tweak settings",
     "accept": "Keep this result",
     "pod": "Pod {n}",
-    "podCrashed": "Pod {n} crashed! Tap Restart to bring it back.",
+    "podCrashed": "Pod {n} crashed. Tap Restart to bring it back.",
     "podsSummary": "Pods: {start} at the start, {peak} at the peak.",
     "stormOver": "Storm over. By hand {manual}%, with Kubernetes {auto}%.",
     "fastForward": "Fast-forward",
@@ -77,7 +77,7 @@
     "faultNoHeal": "Pod {n}'s machine died. Without self-healing, it waits for a human."
   },
   "diagnosis": {
-    "perfect": "Spot on! Your pods handled the whole storm, and you stayed under budget.",
+    "perfect": "Spot on. Your pods handled the whole storm, and you stayed under budget.",
     "overBudget": "Rock solid, but pricey: too many pods blew the budget. Lower Min pods and let the autoscaler add more.",
     "tooFewPods": "Max pods was too low for the peak, so your pods got overloaded and crashed. Raise Max pods.",
     "thresholdHigh": "New pods arrived too late. They take 4 seconds to start, so set a lower busy level.",
@@ -88,12 +88,12 @@
     "overBudgetMinOne": "Over budget: pods get added too eagerly. Raise the busy level a little, or lower Max pods."
   },
   "hint": "Turn on all three switches. Keep Min pods low, allow enough Max pods, and add pods at around 60–70% busy.",
-  "timeUp": "Time's up! Let's see how it held up.",
+  "timeUp": "Time's up. Let's see how it held up.",
   "result": {
-    "heading3": "Unshakeable!",
-    "heading2": "Strong and steady!",
-    "heading1": "Still standing. Good start!",
-    "heading0": "Storms are tough. Have another go!",
+    "heading3": "Unshakeable",
+    "heading2": "Strong and steady",
+    "heading1": "Still standing. Good start.",
+    "heading0": "Storms are tough. Have another go.",
     "manual": "By hand: {pct}% uptime",
     "auto": "With Kubernetes: {pct}% uptime",
     "cost": "Cost: {n} of {budget} credits/min"

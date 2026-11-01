@@ -4,12 +4,24 @@ import s from './logic.module.css';
 
 /*
  * Top-down Stage 3 map (§6.1), one SVG so it scales to any phone. Each tile is 10×10 units.
- * Houses show their need as an icon (not colour alone); "might flood" roads show a ⚠ marker until
+ * Houses show their need as an icon (not colour alone); "might flood" roads show a warning marker until
  * the run reveals which road actually flooded.
  */
 
 const ANGLE: Record<Dir, number> = { N: 0, E: 90, S: 180, W: 270 };
-const NEED_ICON: Record<string, string> = { W: '💧', F: '🍚', M: '✚' };
+/** Need marks drawn as tiny paths (centred on cx, cy) so the map never depends on emoji fonts. */
+function NeedMark({ need, cx, cy }: { need: string; cx: number; cy: number }) {
+  if (need === 'W')
+    return <path d={`M${cx} ${cy - 1.4} q1.2 1.4 1.2 2.2 a1.2 1.2 0 0 1 -2.4 0 q0 -0.8 1.2 -2.2z`} fill="#2f7fd0" />;
+  if (need === 'F')
+    return (
+      <g>
+        <circle cx={cx} cy={cy - 0.1} r="0.9" fill="#e9d9a8" stroke="#1d2433" strokeWidth="0.25" />
+        <path d={`M${cx - 1.4} ${cy + 0.1} h2.8 a1.4 1.3 0 0 1 -2.8 0z`} fill="#b5523b" />
+      </g>
+    );
+  return <path d={`M${cx - 0.45} ${cy - 1.3} h0.9 v0.85 h0.85 v0.9 h-0.85 v0.85 h-0.9 v-0.85 h-0.85 v-0.9 h0.85z`} fill="#d63031" />;
+}
 
 export interface TruckPos {
   x: number;
@@ -51,9 +63,8 @@ function Tile({ ch, x, y, flooded }: { ch: string; x: number; y: number; flooded
       {!flooded && /[abc]/.test(ch) && (
         <g>
           <rect x={X + 0.6} y={Y + 0.6} width="8.8" height="8.8" fill="none" stroke="#f1c40f" strokeWidth="0.7" strokeDasharray="1.4 1" />
-          <text x={X + 5} y={Y + 6.8} fontSize="5" textAnchor="middle" fill="#ffe680">
-            ⚠
-          </text>
+          <path d={`M${X + 5} ${Y + 3} l2.2 3.8 h-4.4z`} fill="#ffe680" />
+          <path d={`M${X + 5} ${Y + 4.3} v1.3`} stroke="#3b2f1a" strokeWidth="0.45" />
         </g>
       )}
     </g>
@@ -71,15 +82,13 @@ function House({ x, y, need, delivered, wrong }: { x: number; y: number; need: s
       {need !== 'H' && !delivered && (
         <g>
           <circle cx={X + 8.2} cy={Y + 2} r="2" fill="#fff" stroke="#3b2f1a" strokeWidth="0.4" />
-          <text x={X + 8.2} y={Y + 3.1} fontSize="2.8" textAnchor="middle" fill={need === 'M' ? '#d63031' : '#1d2433'}>
-            {NEED_ICON[need]}
-          </text>
+          <NeedMark need={need} cx={X + 8.2} cy={Y + 2} />
         </g>
       )}
       {delivered && (
         <g>
           <circle cx={X + 8.2} cy={Y + 2} r="2" fill={wrong ? '#fff3cd' : '#1e8e3e'} stroke="#1d2433" strokeWidth="0.4" />
-          <text x={X + 8.2} y={Y + 3.1} fontSize="2.8" textAnchor="middle" fontWeight="900" fill={wrong ? '#8a5a00' : '#fff'}>
+          <text x={X + 8.2} y={Y + 3.1} fontSize="2.8" textAnchor="middle" fontWeight="700" fill={wrong ? '#8a5a00' : '#fff'}>
             {wrong ? '!' : '✓'}
           </text>
         </g>

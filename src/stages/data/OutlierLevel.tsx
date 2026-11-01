@@ -2,6 +2,7 @@ import { useState } from 'react';
 import type { OutlierChart } from '../../content/stage1Schema';
 import { c } from './content';
 import s from './data.module.css';
+import { Icon } from '../../components/Icon';
 
 /**
  * Bonus L3 "Spot the Outlier" (§4.2): 20 households as horizontal bars. Tap the errors
@@ -48,7 +49,7 @@ export function OutlierBoard({
                   {on && (
                     <span className={s.flag} aria-hidden="true">
                       {' '}
-                      ✗
+                      <Icon name="wrong" size={14} />
                     </span>
                   )}
                 </span>

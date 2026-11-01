@@ -1,7 +1,7 @@
 {
   "levelIntro": {
     "data-tutorial": "Good record? Swipe right. Broken? Swipe left. Or tap the buttons.",
-    "data-l1": "Keep good records and trash broken ones. The rules show above each card. Beat the clock!",
+    "data-l1": "Keep good records and trash broken ones. The rules show above each card. Beat the clock.",
     "data-l2": "New move: swipe up or tap Fix to correct small slips. Only trash what can't be saved.",
     "data-l3": "Tap the bars that are errors. Unusual isn't wrong, so leave possible values alone."
   },
@@ -30,17 +30,17 @@
     "5": "unusual but possible"
   },
   "toast": {
-    "correct": "Nice sort!",
+    "correct": "Nice sort",
     "wrongKeep": "Broken rule: {short}",
-    "wrongTrashValid": "That record was fine. Keep it!",
-    "wrongTrashFixable": "Fixable! Fix it, don't trash it.",
+    "wrongTrashValid": "That record was fine. Keep it.",
+    "wrongTrashFixable": "Fixable. Fix it, don't trash it.",
     "wrongFix": "Wrong fix. Check the Fix rule's examples.",
-    "outlierKept": "Unusual but possible. Good keep!",
-    "streak": "{n} in a row!"
+    "outlierKept": "Unusual but possible. Good keep.",
+    "streak": "{n} in a row"
   },
   "hint": "Stuck? Check the rule: {short}.",
   "answer": "This one's a {action}: {short}.",
-  "timeUp": "Time's up! Let's see how you did.",
+  "timeUp": "Time's up. Let's see how you did.",
   "counter": "{n} people reached",
   "outlier": {
     "instruction": "Tap only the bars that are impossible. Big but possible values are outliers, not errors. Then tap Done.",
@@ -66,10 +66,10 @@
     "wrong": "Good thinking, but that bins good data: big households are real, typos are fixable. Blank fields are safest."
   },
   "result": {
-    "heading3": "Squeaky clean data!",
-    "heading2": "Nicely sorted!",
-    "heading1": "Data cleaned. Good start!",
-    "heading0": "Messy data is tricky. Have another go!",
+    "heading3": "Squeaky clean data",
+    "heading2": "Nicely sorted",
+    "heading1": "Data cleaned. Good start.",
+    "heading0": "Messy data is tricky. Have another go.",
     "accuracy": "Accuracy {pct}%",
     "fixed": "{n} records fixed",
     "reached": "{n} people will get clean water",

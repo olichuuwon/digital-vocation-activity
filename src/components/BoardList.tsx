@@ -3,6 +3,7 @@ import { copy, fill } from '../content';
 import type { BoardRow } from '../net/leaderboard';
 import { formatBoardDate, formatSgtTime } from '../net/sgtTime';
 import s from './BoardList.module.css';
+import { Icon } from './Icon';
 
 const t = copy.leaderboard;
 const nf = new Intl.NumberFormat('en-SG');
@@ -21,7 +22,7 @@ function Row({ row, own, showDate }: { row: BoardRow; own: boolean; showDate: bo
         </span>
         <span className={s.meta}>
           <span>
-            <span aria-hidden="true">👥 </span>
+            <Icon name="team" size={16} /> 
             {row.groupSize}
             <span className="visually-hidden"> {t.players}</span>
           </span>
@@ -39,7 +40,7 @@ function Row({ row, own, showDate }: { row: BoardRow; own: boolean; showDate: bo
   );
 }
 
-/** Ranked group rows (§3.6): rank · name · 👥 size · families · HH:MM SGT. */
+/** Ranked group rows (§3.6): rank · name · size · families · HH:MM SGT. */
 export function BoardList({
   rows,
   ownIds = [],

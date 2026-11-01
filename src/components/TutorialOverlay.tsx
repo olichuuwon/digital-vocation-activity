@@ -2,6 +2,7 @@ import { m, useReducedMotion } from 'framer-motion';
 import { useId, type ReactNode } from 'react';
 import { copy } from '../content';
 import s from './components.module.css';
+import { Icon } from './Icon';
 
 const t = copy.components;
 
@@ -46,7 +47,7 @@ export function TutorialOverlay({
         animate={reduce ? undefined : { x: p.x, y: p.y }}
         transition={{ duration: 1.1, repeat: Infinity, repeatType: 'loop', ease: 'easeInOut', repeatDelay: 0.3 }}
       >
-        👆
+        <Icon name="tap" size={32} />
       </m.span>
       <p className={s.body} id={textId}>
         {text}

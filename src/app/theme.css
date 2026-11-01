@@ -5,7 +5,7 @@
   --surface-2: #eceff3;
   --text: #14181f;
   --text-muted: #4a5361;
-  --border: #8a93a0;
+  --border: #7d8693;
   --focus: #1a56db;
   --primary: #14181f;
   --on-primary: #ffffff;
@@ -27,10 +27,17 @@
   --on-tile-bad: #ffffff;
   --tile-new: #145ea8;
 
-  --radius: 14px;
+  /* Nested radii: panels/cards 16, controls 12, tags 6. */
+  --radius: 16px;
+  --radius-control: 12px;
+  /* Hairline for non-interactive surfaces (cards). Controls keep --border (≥3:1, WCAG 1.4.11). */
+  --hairline: rgb(20 24 31 / 0.1);
+  --shadow-float: 0 8px 24px rgb(20 24 31 / 0.08);
+  --ease: cubic-bezier(0.22, 1, 0.36, 1);
   --gutter: 16px;
   --tap: 48px;
-  --font-display: ui-rounded, 'SF Pro Rounded', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --font-display: 'Bricolage Grotesque Variable', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --font-mono: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
   --font-body: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
   color-scheme: light;
 }
@@ -47,6 +54,8 @@
     --primary: #eef1f5;
     --on-primary: #0e1116;
     --danger: #ff8a80;
+    --hairline: rgb(238 241 245 / 0.1);
+    --shadow-float: 0 8px 24px rgb(0 0 0 / 0.3);
     --data-ink: #3fd4c3;
     --ai-ink: #b49cff;
     --logic-ink: #ffbe55;
@@ -71,6 +80,8 @@
   --primary: #eef1f5;
   --on-primary: #0e1116;
   --danger: #ff8a80;
+  --hairline: rgb(238 241 245 / 0.1);
+  --shadow-float: 0 8px 24px rgb(0 0 0 / 0.3);
   --data-ink: #3fd4c3;
   --ai-ink: #b49cff;
   --logic-ink: #ffbe55;
@@ -122,8 +133,13 @@ h1,
 h2,
 h3 {
   font-family: var(--font-display);
+  font-weight: 600;
   line-height: 1.15;
   margin: 0;
+}
+
+h1 {
+  letter-spacing: -0.01em;
 }
 
 button {
@@ -163,11 +179,12 @@ button {
 dialog.settings {
   width: min(100% - 2 * var(--gutter), 448px);
   max-height: calc(100dvh - 2 * var(--gutter));
-  border: 1px solid var(--border);
+  border: 1px solid var(--hairline);
   border-radius: var(--radius);
   background: var(--surface);
   color: var(--text);
   padding: 20px;
+  box-shadow: var(--shadow-float);
 }
 
 dialog.settings::backdrop {
@@ -183,7 +200,7 @@ dialog.settings::backdrop {
 }
 
 .settings-group legend {
-  font-weight: 700;
+  font-weight: 600;
   margin-bottom: 4px;
 }
 
@@ -245,4 +262,23 @@ dialog.settings::backdrop {
   margin: 0;
   font-size: 0.875rem;
   color: var(--text-muted);
+}
+
+/* Icons (src/components/Icon.tsx): one set, sized by prop, coloured by their text. Inline they
+   keep a small gap to the label; in flex rows the container's gap does that instead. */
+.icon {
+  flex: none;
+  vertical-align: -0.2em;
+  margin-inline-end: 0.375em;
+}
+
+.icon:last-child,
+:is(button, li, p, span, strong, div):where([class]) > .icon:only-child {
+  margin-inline-end: 0;
+}
+
+/* Flex rows that already space their children with gap. */
+[style*='gap'] > .icon,
+.icon-row > .icon {
+  margin-inline-end: 0;
 }

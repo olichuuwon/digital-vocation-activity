@@ -45,6 +45,7 @@ import {
 import { OutlierBoard } from './OutlierLevel';
 import { stage1For, useStage1Progress } from './progress';
 import { RecordCard, CardActions, type CardAction } from './RecordCard';
+import { Icon } from '../../components/Icon';
 
 type Phase = 'briefing' | 'intro' | 'play' | 'reality' | 'automate' | 'result' | 'handoff';
 
@@ -286,16 +287,16 @@ function CardPlay({ run, level, debug, onDone }: { run: GameState; level: CardLe
           key={reached}
           className={s.reached}
           data-testid="people-reached"
-          initial={{ scale: reached > before ? 1.35 : 1 }}
+          initial={{ scale: reached > before ? 1.15 : 1 }}
           animate={{ scale: 1 }}
-          transition={{ type: 'spring', stiffness: 400, damping: 15 }}
+          transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
         >
-          <span aria-hidden="true">💧 </span>
+          <Icon name="water" size={16} /> 
           {fill(c.counter, { n: reached })}
         </m.span>
         {state.streak >= STREAK_MIN && (
           <span className={s.streak}>
-            <span aria-hidden="true">🔥 </span>
+            <Icon name="streak" size={16} /> 
             {fill(c.toast.streak, { n: state.streak })}
           </span>
         )}

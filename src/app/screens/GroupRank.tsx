@@ -4,12 +4,13 @@ import { useAnnouncer } from '../screenFocus';
 import { groupCopy } from '../../content/groupSchema';
 import { useGroup } from '../../net/group';
 import s from './Group.module.css';
+import { Icon } from '../../components/Icon';
 
 const t = groupCopy.debrief;
 
 /**
  * Debrief in team mode (§8.3): replaces the solo note with the leaderboard rank reveal. The
- * leader's phone submits; the result is shared, so every phone shows "You're #3 today!".
+ * leader's phone submits; the result is shared, so every phone shows "You're #3 today".
  */
 export function GroupRank() {
   const g = useGroup();
@@ -40,7 +41,7 @@ export function GroupRank() {
     <div data-testid="group-rank">
       <p className={s.rankNote}>{fill(t.groupLine, { name: session.name, size: session.sizeAtStart ?? g.members.length })}</p>
       <p className={s.rank} data-ranked={r?.kind === 'ok' || undefined}>
-        {r?.kind === 'ok' && <span aria-hidden="true">🏆 </span>}
+        {r?.kind === 'ok' && <Icon name="trophy" />}
         {text}
       </p>
     </div>

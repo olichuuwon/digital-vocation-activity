@@ -6,6 +6,8 @@ import { groupActions, groupAvailable, useGroup } from '../../net/group';
 import { useGame } from '../../state/store';
 import { useScreenHeading } from '../screenFocus';
 import ui from '../ui.module.css';
+import { Icon } from '../../components/Icon';
+import { CityMap } from './CityMap';
 
 const t = copy.home;
 
@@ -76,7 +78,8 @@ export function Home({
             <p className={ui.muted}>{groupCopy.home.unavailable}</p>
           )}
           <button type="button" className={ui.btn} onClick={() => setScreen('main')}>
-            <span aria-hidden="true">←</span> {t.back}
+            <Icon name="back" />
+            {t.back}
           </button>
         </div>
       </main>
@@ -89,8 +92,9 @@ export function Home({
         <h1 ref={headingRef} tabIndex={-1}>
           {t.title}
         </h1>
-        <p className={ui.muted}>{t.tagline}</p>
+        <p className={ui.lede}>{t.tagline}</p>
       </div>
+      <CityMap />
       {group.inGroup && groupName ? (
         // In a team (e.g. after a reload): rejoin at the current stage, or leave.
         <div className={ui.actions}>
@@ -119,7 +123,7 @@ export function Home({
           </button>
           {canReplay && (
             <button type="button" className={ui.btn} data-testid="home-replay" onClick={() => setScreen('replay')}>
-              <span aria-hidden="true">🔓 </span>
+              <Icon name="unlock" />
               {t.replayStage}
             </button>
           )}

@@ -40,7 +40,7 @@ test('Finale: reveal, route every incident, debrief card fits one screen, then a
   await expect(page.getByTestId('families')).toHaveText(families ?? '');
 
   // There's more: replays unlock bonus levels, and the picker says how many per stage.
-  await expect(page.getByTestId('more-teaser')).toContainText("There's more!");
+  await expect(page.getByTestId('more-teaser')).toContainText("There's more");
   await page.getByRole('button', { name: 'Replay with bonus levels' }).click();
   await expect(page.getByRole('heading', { name: 'Pick a stage' })).toBeVisible();
   await expect(page.getByRole('button', { name: /Build the Logic/ })).toContainText('+2 bonus levels');

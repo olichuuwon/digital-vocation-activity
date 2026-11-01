@@ -8,6 +8,7 @@ import { moveMember, shuffled } from '../../net/group/rotation';
 import { useAnnouncer, useScreenHeading } from '../screenFocus';
 import ui from '../ui.module.css';
 import s from './Group.module.css';
+import { Icon } from '../../components/Icon';
 
 const t = groupCopy.lobby;
 
@@ -146,7 +147,7 @@ export function GroupLobby() {
                     aria-label={fill(t.moveUp, { name: m.nick })}
                     onClick={() => i > 0 && move(i, -1)}
                   >
-                    <span aria-hidden="true">↑</span>
+                    <Icon name="up" />
                   </button>
                   <button
                     type="button"
@@ -155,7 +156,7 @@ export function GroupLobby() {
                     aria-label={fill(t.moveDown, { name: m.nick })}
                     onClick={() => i < g.members.length - 1 && move(i, 1)}
                   >
-                    <span aria-hidden="true">↓</span>
+                    <Icon name="down" />
                   </button>
                 </span>
               )}
@@ -169,7 +170,8 @@ export function GroupLobby() {
           <>
             {g.members.length > 2 && (
               <button type="button" className={ui.btn} onClick={() => groupActions.setRotation(shuffled(g.rotation))}>
-                {t.shuffle} <span aria-hidden="true">🔀</span>
+                <Icon name="shuffle" />
+                {t.shuffle}
               </button>
             )}
             <p className={canStart ? ui.muted : s.hint} id="start-note" role="status">
@@ -187,7 +189,7 @@ export function GroupLobby() {
                 if (!groupActions.start()) setStartMsg(t.needTwo);
               }}
             >
-              {t.start} <span aria-hidden="true">🚀</span>
+              {t.start}
             </button>
             {startMsg && !canStart && <p className={s.error}>{startMsg}</p>}
           </>

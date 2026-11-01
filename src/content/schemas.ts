@@ -1,4 +1,8 @@
 import { z } from 'zod';
+import { ICON_NAMES } from '../components/icons';
+
+/** A lucide icon name from src/components/Icon.tsx (never an emoji). */
+export const iconName = z.enum(ICON_NAMES);
 
 const hex = z.string().regex(/^#[0-9A-Fa-f]{6}$/);
 
@@ -19,7 +23,7 @@ export const stageSchema = z.object({
   ]),
   short: z.string().min(1).max(10),
   title: z.string().min(1),
-  icon: z.string().min(1),
+  icon: iconName,
   colour: hex,
   levels: z.array(levelSchema).min(1),
 });
@@ -47,7 +51,7 @@ export const copySchema = z.object({
     heading: text,
     body: text.refine((s) => s.trim().split(/\s+/).length <= 30, 'max 30 words'),
     tipsHeading: text,
-    tips: z.array(z.object({ icon: text, text: text.refine((s) => s.trim().split(/\s+/).length <= 14, 'max 14 words') })).length(3),
+    tips: z.array(z.object({ icon: iconName, text: text.refine((s) => s.trim().split(/\s+/).length <= 14, 'max 14 words') })).length(3),
     go: text,
   }),
   leaderboard: z.object({

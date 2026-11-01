@@ -5,6 +5,7 @@ import type { StageContent } from '../content/schemas';
 import { groupActions, useGroup, useHandOff, useHandOffSync } from '../net/group';
 import type { Stage } from '../state/types';
 import s from './components.module.css';
+import { Icon } from './Icon';
 
 const t = copy.components;
 
@@ -37,8 +38,8 @@ export function HandOff({ stage, nextName: demoName, onReady, demo = false }: { 
   return (
     <section className={s.screen} style={style}>
       <div className={s.briefing}>
-        <span className={s.bigIcon} aria-hidden="true">
-          {stage.icon}
+        <span className={s.bigIcon}>
+          <Icon name={stage.icon} size={28} />
         </span>
         <h1 ref={headingRef} tabIndex={-1}>
           {heading}
@@ -57,7 +58,7 @@ export function HandOff({ stage, nextName: demoName, onReady, demo = false }: { 
         ) : (
           <>
             <p className={s.handoffWaiting} data-testid="handoff-waiting" role="status">
-              <span aria-hidden="true">⏳ </span>
+              <Icon name="hourglass" /> 
               {fill(t.handoffWaiting, { name: nextName ?? '' })}
             </p>
             {!nextPresent && (

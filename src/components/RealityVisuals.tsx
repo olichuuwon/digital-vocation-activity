@@ -1,6 +1,7 @@
 import { animate, m, useReducedMotion } from 'framer-motion';
 import { useEffect, useState, type ReactNode } from 'react';
 import type { RealityVisual } from '../content/schemas';
+import { Icon } from './Icon';
 
 /*
  * Small decorative animations for Reality Check cards (§4.3, §5.3, §6.4, §7.2, §7.6).
@@ -46,7 +47,7 @@ function Pods({ count, colour = 'var(--cloud)', highlight }: { count: number; co
             fontWeight: 700,
           }}
         >
-          {i === highlight ? '✗' : ''}
+          {i === highlight ? <Icon name="wrong" size={14} /> : ''}
         </m.span>
       ))}
     </div>
@@ -118,11 +119,11 @@ export function RealityVisualView({ visual, vars = {} }: { visual: RealityVisual
             transition={{ duration: 1.8 }}
           />
           <text x="196" y="80" fontSize="12" fill="currentColor" textAnchor="end">
-            accuracy ↑ with labels
+            accuracy rises with labels
           </text>
           <m.g initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: reduce ? 0 : 1.2 }}>
             <rect x="16" y="8" width="84" height="22" rx="11" fill="var(--ai)" />
-            <text x="58" y="23" fontSize="11" fontWeight="800" fill="#fff" textAnchor="middle" data-testid="labelled-count">
+            <text x="58" y="23" fontSize="11" fontWeight="600" fill="#fff" textAnchor="middle" data-testid="labelled-count">
               {vars.labelled ?? 20} from you
             </text>
           </m.g>
@@ -131,8 +132,12 @@ export function RealityVisualView({ visual, vars = {} }: { visual: RealityVisual
     case 'night-road':
       return (
         <div style={{ width: '100%', background: '#0b1630', color: '#fff', borderRadius: 8, padding: 12, textAlign: 'center' }}>
-          <div style={{ fontSize: '2.5rem' }}>🌙🛣️🌊</div>
-          <div style={{ marginTop: 6, fontWeight: 700, border: '2px solid #fff', borderRadius: 6, display: 'inline-block', padding: '2px 8px' }}>
+          <div style={{ display: 'flex', justifyContent: 'center', gap: 16 }}>
+            <Icon name="moon" size={32} />
+            <Icon name="truck" size={32} />
+            <Icon name="flood" size={32} />
+          </div>
+          <div style={{ marginTop: 6, fontWeight: 600, border: '2px solid #fff', borderRadius: 6, display: 'inline-block', padding: '2px 8px' }}>
             AI: clear road · 91%
           </div>
         </div>
@@ -147,7 +152,7 @@ export function RealityVisualView({ visual, vars = {} }: { visual: RealityVisual
               </span>
             ))}
           </div>
-          <span style={{ fontSize: '1.375rem' }}>→</span>
+          <Icon name="next" size={24} />
           <m.pre initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.6 }} style={{ margin: 0, fontSize: '0.75rem' }}>
             {'for i in range(3):\n    move()\ndrop()'}
           </m.pre>
@@ -174,7 +179,7 @@ export function RealityVisualView({ visual, vars = {} }: { visual: RealityVisual
                 background: i < 100 - failing ? 'var(--tile-ok)' : 'var(--tile-bad)',
               }}
             >
-              {i < 100 - failing ? '✓' : '✗'}
+              <Icon name={i < 100 - failing ? 'check' : 'wrong'} size={12} />
             </m.span>
           ))}
         </div>
@@ -185,15 +190,15 @@ export function RealityVisualView({ visual, vars = {} }: { visual: RealityVisual
     case 'load-balancer':
       return (
         <Box>
-          <span style={{ fontSize: '1.75rem' }}>👥👥👥</span>
-          <span>⚖️ ↓ ↓ ↓</span>
+          <Icon name="team" size={32} />
+          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}><Icon name="balance" />split evenly</span>
           <Pods count={3} />
         </Box>
       );
     case 'autoscaler':
       return (
         <Box>
-          <span>📈 busy → more pods</span>
+          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}><Icon name="trendUp" />busy, so more pods</span>
           <Pods count={8} />
         </Box>
       );
@@ -201,7 +206,7 @@ export function RealityVisualView({ visual, vars = {} }: { visual: RealityVisual
       return (
         <Box>
           <Pods count={4} highlight={2} />
-          <span>↻ replaced automatically</span>
+          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}><Icon name="refresh" />replaced automatically</span>
           <Pods count={4} />
         </Box>
       );
@@ -209,13 +214,13 @@ export function RealityVisualView({ visual, vars = {} }: { visual: RealityVisual
       return (
         <Box>
           <RollingUpdate />
-          <span>v1 → v2, a few at a time</span>
+          <span>v1 to v2, a few at a time</span>
         </Box>
       );
     case 'sre-alerts':
       return (
         <Box>
-          <span style={{ fontSize: '2.5rem' }}>📱🔕</span>
+          <span style={{ display: 'inline-flex', gap: 8 }}><Icon name="phone" size={32} /><Icon name="silent" size={32} /></span>
           <span>most problems fixed automatically · only the rare one wakes a human</span>
         </Box>
       );

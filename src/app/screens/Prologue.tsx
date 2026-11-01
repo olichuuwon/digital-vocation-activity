@@ -1,6 +1,7 @@
 import { copy } from '../../content';
 import { useScreenHeading } from '../screenFocus';
 import ui from '../ui.module.css';
+import { Icon } from '../../components/Icon';
 
 const pr = copy.prologue;
 
@@ -10,7 +11,6 @@ export function Prologue({ onGo }: { onGo: () => void }) {
   return (
     <main className={ui.screen}>
       <h1 ref={headingRef} tabIndex={-1} data-testid="prologue-heading">
-        <span aria-hidden="true">🌊 </span>
         {pr.heading}
       </h1>
       <p>{pr.body}</p>
@@ -20,9 +20,9 @@ export function Prologue({ onGo }: { onGo: () => void }) {
         </h2>
         <ul role="list" style={{ listStyle: 'none', margin: 0, padding: 0, display: 'flex', flexDirection: 'column', gap: 8 }}>
           {pr.tips.map((tip) => (
-            <li key={tip.text}>
-              <span aria-hidden="true">{tip.icon} </span>
-              {tip.text}
+            <li key={tip.text} style={{ display: 'flex', gap: 12 }}>
+              <Icon name={tip.icon} />
+              <span>{tip.text}</span>
             </li>
           ))}
         </ul>

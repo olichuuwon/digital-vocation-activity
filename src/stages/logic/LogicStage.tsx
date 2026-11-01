@@ -21,10 +21,11 @@ import { c, stage3, t } from './content';
 import { GridMap } from './GridMap';
 import { logicStars, nextAssist, SCORED_LEVEL_IDS, stageScore, toLogicScores, type LevelOutcome } from './logic';
 import { blockCount, blocksChanged, flatten, getBlock, nextStep } from './program';
-import { blockText, ICON } from './blocks';
+import { blockText } from './blocks';
 import { ProgramEditor } from './ProgramEditor';
 import { stage3For, useStage3Progress, type EndPhase } from './progress';
 import s from './logic.module.css';
+import { Icon } from '../../components/Icon';
 
 type Phase = 'briefing' | 'intro' | 'play' | EndPhase;
 
@@ -181,7 +182,7 @@ function BlocksToPython({ program }: { program: Program }) {
               alignSelf: 'flex-start',
             }}
           >
-            {r.kind === 'label' ? c.blocks.otherwise : `${ICON[r.block!.op]} ${blockText(r.block!)}`}
+            {r.kind === 'label' ? c.blocks.otherwise : blockText(r.block!)}
           </li>
         ))}
       </ul>
@@ -271,7 +272,7 @@ function PlayLevel({
   const coach = isTutorial && !solved
     ? next
       ? guideOp
-        ? fill(c.editor.guideStep, { n: Math.min(used + 1, blockCount(level.solution)), total: blockCount(level.solution), block: `${ICON[guideOp]} ${c.blocks[guideOp]}` })
+        ? fill(c.editor.guideStep, { n: Math.min(used + 1, blockCount(level.solution)), total: blockCount(level.solution), block: c.blocks[guideOp] })
         : undefined
       : c.editor.guideRun
     : undefined;
@@ -478,7 +479,13 @@ function PlayLevel({
                     aria-disabled={isRunning || program.length === 0 || undefined}
                     onClick={() => !isRunning && program.length > 0 && start(true)}
                   >
-                    {isRunning ? c.run.running : `▶ ${c.run.run}`}
+                    {isRunning ? (
+                      c.run.running
+                    ) : (
+                      <>
+                        <Icon name="start" size={16} filled />{c.run.run}
+                      </>
+                    )}
                   </button>
                   <button
                     type="button"

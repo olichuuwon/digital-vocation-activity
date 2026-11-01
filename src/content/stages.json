@@ -6,7 +6,7 @@
       "specialisation": "Data Science",
       "short": "Data",
       "title": "Clean the Data",
-      "icon": "📊",
+      "icon": "data",
       "colour": "#0FA595",
       "levels": [
         {
@@ -37,7 +37,7 @@
       "specialisation": "Artificial Intelligence Engineering",
       "short": "AI",
       "title": "Teach the Machine to See",
-      "icon": "🧠",
+      "icon": "ai",
       "colour": "#7C4DFF",
       "levels": [
         {
@@ -73,7 +73,7 @@
       "specialisation": "Software Development",
       "short": "Software",
       "title": "Build the Logic",
-      "icon": "🧩",
+      "icon": "logic",
       "colour": "#E8950C",
       "levels": [
         {
@@ -114,7 +114,7 @@
       "specialisation": "Cloud Engineering",
       "short": "Cloud",
       "title": "Keep It Alive",
-      "icon": "☁️",
+      "icon": "cloud",
       "colour": "#2E8FE8",
       "levels": [
         {

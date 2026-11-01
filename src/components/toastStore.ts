@@ -36,7 +36,7 @@ export const toast = (message: string, kind?: Kind, spoken?: string) => useToast
 
 /**
  * A new screen clears feedback left over from the last one, so a toast never covers the next
- * screen's heading or buttons. One that has only just appeared (e.g. "Time's up!", shown as a
+ * screen's heading or buttons. One that has only just appeared (e.g. "Time's up", shown as a
  * level ends) is kept long enough to read.
  */
 onScreenChange(() => {

@@ -17,12 +17,12 @@
 }
 
 .progress {
-  font-weight: 700;
+  font-weight: 600;
   color: var(--text-muted);
 }
 
 .streak {
-  font-weight: 800;
+  font-weight: 600;
   color: var(--ai-ink);
 }
 
@@ -46,7 +46,7 @@
 
 .question {
   margin: 0;
-  font-weight: 800;
+  font-weight: 600;
   text-align: center;
 }
 
@@ -64,10 +64,10 @@
 
 .option {
   min-height: 52px;
-  border-radius: var(--radius);
+  border-radius: var(--radius-control);
   border: 2px solid var(--ai);
   background: var(--surface);
-  font-weight: 800;
+  font-weight: 600;
   font-size: 1.0625rem;
   cursor: pointer;
   padding: 6px 10px;
@@ -88,11 +88,11 @@
 
 .guideBtn {
   min-height: var(--tap);
-  border-radius: 999px;
+  border-radius: var(--radius-control);
   border: 2px solid var(--ai);
   background: var(--surface);
   padding: 8px 16px;
-  font-weight: 700;
+  font-weight: 600;
   cursor: pointer;
 }
 
@@ -104,14 +104,14 @@
 }
 
 .guideItem {
-  border: 1px solid var(--border);
+  border: 1px solid var(--hairline);
   border-radius: 12px;
   padding: 10px 12px;
   background: var(--surface);
 }
 
 .guideItem dt {
-  font-weight: 800;
+  font-weight: 600;
 }
 
 .guideItem dd {
@@ -140,11 +140,11 @@
 
 .revealBtn {
   min-height: var(--tap);
-  border-radius: 999px;
+  border-radius: var(--radius-control);
   border: 2px solid var(--ai);
   background: var(--surface);
   padding: 8px 14px;
-  font-weight: 700;
+  font-weight: 600;
   cursor: pointer;
 }
 
@@ -168,9 +168,9 @@
   min-height: var(--tap);
   min-width: 0;
   border-radius: 10px;
-  border: 2px solid var(--border);
+  border: 1px solid var(--border);
   background: var(--surface);
-  font-weight: 700;
+  font-weight: 600;
   font-size: 0.9375rem;
   cursor: pointer;
   padding: 4px;
@@ -181,7 +181,7 @@
   grid-column: 1 / -1;
   margin: 2px 0 0;
   font-size: 0.875rem;
-  font-weight: 700;
+  font-weight: 600;
   color: var(--text-muted);
 }
 
@@ -197,13 +197,13 @@
   justify-content: center;
   gap: 10px;
   flex-wrap: wrap;
-  font-weight: 800;
+  font-weight: 600;
   font-size: 1.125rem;
 }
 
 .conf {
   border: 2px solid var(--ai);
-  border-radius: 999px;
+  border-radius: 6px;
   padding: 0 10px;
   font-variant-numeric: tabular-nums;
 }
@@ -222,10 +222,10 @@
 
 .verdict {
   min-height: 56px;
-  border-radius: var(--radius);
-  border: 2px solid var(--border);
+  border-radius: var(--radius-control);
+  border: 1px solid var(--border);
   background: var(--surface);
-  font-weight: 800;
+  font-weight: 600;
   font-size: 1.0625rem;
   cursor: pointer;
 }

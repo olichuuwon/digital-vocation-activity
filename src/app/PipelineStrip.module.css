@@ -1,3 +1,4 @@
+/* The supply route: one line through four stops (the game's signature, also on the Home map). */
 .strip {
   list-style: none;
   margin: 0;
@@ -7,36 +8,86 @@
   /* 4 across at normal text; 2 per row at large text (200%), so words never split. */
   grid-template-columns: repeat(auto-fit, minmax(min(100%, 3.8rem), 1fr));
   min-width: 0;
-  gap: 4px;
+  row-gap: 4px;
 }
 
 .seg {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 2px;
-  font-size: 0.6875rem;
-  font-weight: 600;
+  gap: 4px;
+  font-size: 0.75rem;
   color: var(--text-muted);
 }
 
-.bar {
+/* The road: a line across the whole cell, so cells join into one route. */
+.track {
+  position: relative;
   width: 100%;
-  height: 8px;
-  border-radius: 4px;
-  background: var(--surface-2);
-  border: 1px solid var(--border);
+  height: 20px;
+  display: grid;
+  place-items: center;
 }
 
-.done .bar,
-.current .bar {
+.track::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  height: 3px;
+  margin-top: -1.5px;
+  background: var(--border);
+  opacity: 0.5;
+}
+
+.seg:first-child .track::before {
+  left: 50%;
+}
+
+.seg:last-child .track::before {
+  right: 50%;
+}
+
+.done .track::before {
   background: var(--c);
-  border-color: var(--c);
+  opacity: 1;
 }
 
-.current .bar {
-  /* Striped = in progress; never rely on colour alone. */
-  background-image: repeating-linear-gradient(45deg, transparent 0 4px, rgb(255 255 255 / 0.45) 4px 8px);
+/* Current: the road is driven up to this stop. */
+.current .track::before {
+  background: linear-gradient(to right, var(--c) 50%, var(--border) 50%);
+  opacity: 1;
+}
+
+.current:first-child .track::before {
+  background: var(--border);
+  opacity: 0.5;
+}
+
+.stop {
+  position: relative;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  border: 2px solid var(--border);
+  background: var(--bg);
+  display: grid;
+  place-items: center;
+}
+
+.done .stop {
+  background: var(--ink);
+  border-color: var(--ink);
+  color: var(--bg);
+}
+
+.current .stop {
+  width: 20px;
+  height: 20px;
+  background: var(--c);
+  border: 3px solid var(--bg);
+  box-shadow: 0 0 0 2px var(--ink);
 }
 
 .done,
@@ -51,12 +102,8 @@
 }
 
 .current .label {
-  font-weight: 800;
+  font-weight: 600;
   text-decoration: underline;
+  text-decoration-thickness: 2px;
   text-underline-offset: 3px;
-}
-
-.current .bar {
-  outline: 2px solid var(--ink);
-  outline-offset: 1px;
 }

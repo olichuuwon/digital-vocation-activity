@@ -33,18 +33,32 @@
 .btn {
   min-height: var(--tap);
   min-width: var(--tap);
-  padding: 12px 18px;
-  border-radius: var(--radius);
-  border: 2px solid var(--border);
+  padding: 12px 20px;
+  border-radius: var(--radius-control);
+  border: 1px solid var(--border);
   background: var(--surface);
-  font-weight: 600;
+  font-weight: 500;
   font-size: 1.0625rem;
   cursor: pointer;
   text-align: left;
   display: flex;
   align-items: center;
   justify-content: flex-start;
-  gap: 8px;
+  gap: 10px;
+  transition:
+    background-color 150ms var(--ease),
+    border-color 150ms var(--ease),
+    transform 120ms var(--ease);
+}
+
+.btn:active:not(:disabled, [aria-disabled='true']) {
+  transform: scale(0.98);
+}
+
+@media (hover: hover) {
+  .btn:hover:not(:disabled, [aria-disabled='true'], .primary) {
+    background: var(--surface-2);
+  }
 }
 
 .btn:disabled,
@@ -64,10 +78,10 @@
   flex-shrink: 0;
   min-height: var(--tap);
   min-width: var(--tap);
-  border-radius: 50%;
-  border: 2px solid var(--border);
+  border-radius: var(--radius-control);
+  border: 1px solid var(--border);
   background: var(--surface);
-  font-size: 1.25rem;
+  color: var(--text-muted);
   cursor: pointer;
   display: grid;
   place-items: center;
@@ -87,7 +101,17 @@
 }
 
 .hero {
-  padding-top: 8vh;
+  padding-top: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.lede {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 1.0625rem;
+  max-width: 30ch;
 }
 
 .screen h1 {
@@ -100,12 +124,25 @@
 }
 
 .hero h1 {
-  font-size: clamp(2.5rem, 12vw, 3.5rem);
+  font-size: clamp(2.5rem, 12vw, 3.25rem);
+  line-height: 1.04;
+  letter-spacing: -0.02em;
 }
 
 .card {
   background: var(--surface);
-  border: 1px solid var(--border);
+  border: 1px solid var(--hairline);
   border-radius: var(--radius);
   padding: 16px;
+}
+
+.btn > :global(.icon) {
+  margin-inline-end: 0;
+}
+
+/* Toggle buttons (e.g. Fast forward): a visible pressed state, not colour alone. */
+.btn[aria-pressed='true']:not(.primary) {
+  border-width: 2px;
+  border-color: var(--text);
+  background: var(--surface-2);
 }

@@ -9,6 +9,7 @@ import { z } from 'zod';
 import { useAnnouncer, useScreenHeading } from '../screenFocus';
 import ui from '../ui.module.css';
 import s from './Group.module.css';
+import { Icon, Stars } from '../../components/Icon';
 
 const t = groupCopy.waiting;
 const handoffSchema = z.object({ stage: z.number().int().min(0).max(5), nextId: z.string().nullable() });
@@ -77,7 +78,7 @@ export function WaitingScreen() {
     <main className={s.waiting} data-testid="waiting-screen" data-stage={stage} data-main={mainName}>
       <div className={s.waitHead}>
         <span className={s.waitIcon} aria-hidden="true">
-          {content?.icon ?? (stage === 5 ? '🚚' : '🎮')}
+          <Icon name={content?.icon ?? (stage === 5 ? 'truck' : 'play')} size={28} />
         </span>
         <h1 ref={headingRef} tabIndex={-1} data-testid="now-playing">
           {heading}
@@ -99,7 +100,7 @@ export function WaitingScreen() {
 
       <div className={ui.card}>
         <p style={{ margin: 0 }}>
-          <span aria-hidden="true">🗣️ </span>
+          <Icon name="talk" /> 
           {fill(t.tip, { name: mainName })}
         </p>
       </div>
@@ -114,9 +115,9 @@ export function WaitingScreen() {
               const n = run.stars[st.discipline as Discipline];
               return (
                 <li key={st.stage} aria-label={`${st.title}: ${n} of 3`}>
-                  <span aria-hidden="true">
-                    {st.icon} {'★'.repeat(n)}
-                    {'☆'.repeat(3 - n)}
+                  <span aria-hidden="true" style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                    <Icon name={st.icon} />
+                    <Stars n={n} />
                   </span>
                 </li>
               );

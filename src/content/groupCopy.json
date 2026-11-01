@@ -82,8 +82,8 @@
   "debrief": {
     "groupLine": "{name} · {size} players",
     "submitting": "Adding your team to today's board…",
-    "rank": "You're #{rank} today!",
-    "onBoard": "You're on the board!",
+    "rank": "You're #{rank} today",
+    "onBoard": "You're on the board",
     "notRanked": "This run couldn't go on the board.",
     "retrying": "No connection yet. We'll keep trying.",
     "notRankedQuick": "Too quick for the board: the run was under the minimum time.",
@@ -102,13 +102,13 @@
     "prologue": "{name} is starting the mission",
     "finale": "Finale: Mission Live",
     "level": "Level {n} of {total}",
-    "tip": "Watch {name}'s screen and talk it through together!",
+    "tip": "Watch {name}'s screen and talk it through together",
     "yourTurn": "Your turn: {stage}",
-    "turnsDone": "Your turns are done. Cheer your team on!",
+    "turnsDone": "Your turns are done. Cheer your team on.",
     "stars": "Team stars so far",
     "paused": "Waiting for {name}'s phone… {s}s",
     "promoted": "{name} is playing now.",
-    "upNext": "You're up next!",
+    "upNext": "You're up next",
     "upNextBody": "Get ready to play {stage}.",
     "ready": "I'm ready"
   }

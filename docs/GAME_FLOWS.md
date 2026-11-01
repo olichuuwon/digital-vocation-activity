@@ -14,7 +14,7 @@ Home ── Play solo ─────────────┐
                                                          ▼
 Prologue → Stage 1 Data → Stage 2 AI → Stage 3 Software → Stage 4 Cloud → Finale → Debrief
                                                                                      │
-                                         🔓 "There's more!" Replay with bonus levels ◄┘
+                                           "There's more" → Replay with bonus levels ◄┘
 ```
 
 - **One run length:** about 16 minutes of play, which fits a 20-minute booth rotation.
@@ -38,7 +38,7 @@ Home → **Play solo** → the mission → the Stage 1 briefing → the first ca
 ![Solo start](flows/solo-start.png)
 
 ### Stage 1: Clean the Data (the hook)
-The tutorial opens on a clean card, so the first swipe is a win. Level 1 teaches **one** new rule (numbers must make sense). Every good card adds to the **💧 people reached** counter. Level 2 adds just one thing: the **Fix** button. The rules in play always show as chips above the card.
+The tutorial opens on a clean card, so the first swipe is a win. Level 1 teaches **one** new rule (numbers must make sense). Every good card adds to the **people reached** counter. Level 2 adds just one thing: the **Fix** button. The rules in play always show as chips above the card.
 ![Stage 1](flows/solo-stage1.png)
 After the stars, a solo player goes straight on to the next stage's briefing (teams get a hand-off card instead). The Reality Check can't be skipped: every card shows, and Next unlocks after a moment.
 ![Stage 1 end](flows/solo-stage1-end.png)
@@ -48,12 +48,12 @@ Every briefing goes straight into its tutorial.
 ![Stage 2](flows/solo-stage2.png)
 ![Stage 3](flows/solo-stage3.png)
 
-**Stage 3 is guided.** The tutorial highlights each block to tap ("Step 1 of 4"), then Run. After one failed run, a dashed **💡 next step** appears in the program; one tap adds it. In Choose the Road the If block is already in place. Every level has 30 s more than before, and 3★ needs 80%.
+**Stage 3 is guided.** The tutorial highlights each block to tap ("Step 1 of 4"), then Run. After one failed run, a dashed **next step** appears in the program; one tap adds it. In Choose the Road the If block is already in place. Every level has 30 s more than before, and 3★ needs 80%.
 ![Stage 3 guided](flows/solo-stage3-guided.png)
 ![Stage 4](flows/solo-stage4.png)
 
 ### Finale and debrief
-The pipeline shows your numbers, then you route 8 live incidents to the right team (**Next incident** skips the pause after each answer). The debrief card fits one screen for a screenshot. Underneath, a **🔓 There's more!** callout and the main button, **Replay with bonus levels**, invite a replay; **New run** starts over.
+The pipeline shows your numbers, then you route 8 live incidents to the right team (**Next incident** skips the pause after each answer). The debrief card fits one screen for a screenshot. Underneath, a **There's more** callout and the main button, **Replay with bonus levels**, invite a replay; **New run** starts over.
 ![Finale](flows/solo-finale.png)
 
 ### Replays unlock the bonus levels
@@ -163,7 +163,7 @@ After a finished run, Home and the debrief offer **Replay with bonus levels**. T
 | Suite | Command | What it covers |
 |---|---|---|
 | **Unit** (503 tests) | `npm run test` | Scoring formulas, the Stage 3 puzzle solver, the Stage 4 cluster sim, deck building, hints, timers, bonus levels on replays, the team engine and rotation, content checks, and the SQL security rules (in-memory Postgres) |
-| **End-to-end** (110 runs, iPhone 12 + Pixel 5) | `npm run e2e` | Each stage played well and badly, bonus levels on replays, resume, finale and the "There's more!" replay, leaderboard, `/host`, offline, privacy, team play with 3 phones (local relay), and an axe accessibility scan in light and dark |
+| **End-to-end** (114 runs, iPhone 12 + Pixel 5) | `npm run e2e` | Each stage played well and badly, bonus levels on replays, resume, finale and the "There's more" replay, leaderboard, `/host`, offline, privacy, team play with 3 phones (local relay), and an axe accessibility scan in light and dark |
 | **Live teams** (18 checks × 3 sizes) | `npm run live:groups` | 2, 3 and 4 phones with real Supabase Realtime: lobby, rotation, waiting screens, rejoin, late join refused, finale, debrief, one submission, free play, no third parties |
 | **Live Start race** | `npm run live:race` | The host taps Start the instant teammates join, 5 times. Nobody may be dropped. |
 | **Screenshots** | `node e2e-live/capture-flows.mjs` | Regenerates every image in this file |

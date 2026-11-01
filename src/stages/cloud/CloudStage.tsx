@@ -45,6 +45,7 @@ import { appQuality, diagnose } from './logic';
 import { stage4For, useStage4Progress, type EndPhase, type ReplayResult } from './progress';
 import { useSimLoop } from './useSimLoop';
 import s from './cloud.module.css';
+import { Icon } from '../../components/Icon';
 
 type LevelId = 'cloud-manual' | 'cloud-configure' | 'cloud-replay';
 type Phase = 'briefing' | 'k8s' | 'intro' | 'play' | EndPhase;
@@ -333,12 +334,12 @@ function StormBar({
       <div className={s.barButtons}>
       {onFast && (
         <button type="button" className={ui.btn} aria-pressed={!!fast} onClick={onFast}>
-          <span aria-hidden="true">⏩ </span>
+          <Icon name="fastForward" /> 
           {c.replay.fastForward}
         </button>
       )}
       <button type="button" className={ui.btn} aria-pressed={paused} onClick={onPause}>
-        <span aria-hidden="true">{paused ? '▶ ' : '⏸ '}</span>
+        <Icon name={paused ? 'start' : 'pause'} />
         {paused ? c.manual.resume : c.manual.pause}
       </button>
       <button
@@ -348,7 +349,7 @@ function StormBar({
         aria-disabled={!canRollback || undefined}
         onClick={() => canRollback && onRollback()}
       >
-        <span aria-hidden="true">↩ </span>
+        <Icon name="undo" /> 
         {c.manual.rollback}
       </button>
       </div>
@@ -372,8 +373,7 @@ function BadUpdate() {
   return (
     <div className={s.banner}>
       <span>
-        <span aria-hidden="true">⚠️ </span>
-        {c.manual.badDeploy}
+        <Icon name="warning" />{c.manual.badDeploy}
       </span>
     </div>
   );
@@ -465,7 +465,7 @@ function ServerCard({ pod, act }: { pod: Pod; act: (a: Action) => void }) {
   return (
     <li className={s.server} data-status={pod.status} data-testid="server">
       <span className={s.serverName}>
-        <span aria-hidden="true">{pod.status === 'crashed' ? '💥' : '🖥️'}</span>
+        <Icon name={pod.status === 'crashed' ? 'crash' : 'server'} />
         {name}
         <span className={s.serverState}>{state}</span>
       </span>
@@ -492,10 +492,11 @@ function Toggle({ value, onChange, labelledBy, describedBy }: { value: boolean; 
   return (
     <span className={s.toggle} role="group" aria-labelledby={labelledBy} aria-describedby={describedBy}>
       <button type="button" aria-pressed={value} onClick={() => onChange(true)}>
-        {value && <span aria-hidden="true">✓ </span>}
+        {value && <Icon name="check" />}
         {c.configure.on}
       </button>
       <button type="button" aria-pressed={!value} onClick={() => onChange(false)}>
+        {!value && <Icon name="check" />}
         {c.configure.off}
       </button>
     </span>
@@ -601,7 +602,7 @@ function Configure({
       {/* Compact cost meter near the top: always in view without covering the settings. */}
       <div className={s.meter} data-over={over || undefined} data-testid="cost-meter">
         <span>
-          <span aria-hidden="true">{over ? '⚠️ ' : '💰 '}</span>
+          <Icon name={over ? 'warning' : 'coins'} /> 
           {costText} · {over ? c.configure.overBudget : c.configure.underBudget}
         </span>
         <span className={s.bar} aria-hidden="true">
@@ -824,7 +825,7 @@ function LiveReplay({
           return (
             <li key={pod.id} className={s.pod} data-status={pod.status}>
               <span>
-                <span aria-hidden="true">{pod.status === 'crashed' ? '💥 ' : pod.status === 'starting' ? '⏳ ' : '✅ '}</span>
+                <Icon name={pod.status === 'crashed' ? 'crash' : pod.status === 'starting' ? 'hourglass' : 'checkCircle'} size={16} /> 
                 {name}:{' '}
                 {pod.status === 'crashed'
                   ? c.manual.crashed
