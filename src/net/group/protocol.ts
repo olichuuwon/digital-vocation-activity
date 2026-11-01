@@ -1,13 +1,16 @@
 import { z } from 'zod';
 import { gameStateSchema } from '../../state/schema';
 import { checkGroupName, MAX_GROUP_NAME, MAX_NICKNAME } from './moderation';
+import { PUBLIC_KEY_RE, SIGNATURE_RE } from './signing';
 
 // Wire format for group play. Everything received is untrusted (anyone who knows a code can
 // send to its channel), so every message and every replicated value is zod-validated, and
-// oversized messages are dropped before parsing. Nicknames only ever travel in presence and
+// oversized messages are dropped before parsing. Messages and entries are also signed by their
+// sender (signing.ts); the engine checks the signatures against the keys in the session. Nicknames only ever travel in presence and
 // are never written to a table.
 
-export const PROTOCOL = 1;
+/** 2 = signed messages. Phones on version 1 and 2 ignore each other (a reload fixes it). */
+export const PROTOCOL = 2;
 /** Drop anything bigger than this (JSON characters). A GameState is about 1 KB. */
 export const MAX_MESSAGE_CHARS = 16_000;
 /** Max size of a topic or action payload (JSON characters). */
@@ -29,6 +32,8 @@ export const MAIN_SILENT_MS = 15_000;
 export const JOIN_TIMEOUT_MS = 8_000;
 
 export const memberIdSchema = z.string().regex(/^[A-Za-z0-9-]{6,40}$/);
+export const publicKeySchema = z.string().regex(PUBLIC_KEY_RE);
+const signatureSchema = z.string().regex(SIGNATURE_RE);
 const nickname = z
   .string()
   .transform((s) => s.trim().replace(/\s+/g, ' '))
@@ -59,8 +64,11 @@ export const sessionSchema = z
      * stays on the submitting phone), so reading it off the channel gives nothing away.
      */
     token: z.uuid(),
+    /** Each member's public signing key (the leader adds it when the member joins). */
+    keys: z.record(memberIdSchema, publicKeySchema),
   })
-  .refine((s) => new Set(s.rotation).size === s.rotation.length, { message: 'duplicate member' });
+  .refine((s) => new Set(s.rotation).size === s.rotation.length, { message: 'duplicate member' })
+  .refine((s) => s.rotation.every((id) => s.keys[id]) && Object.keys(s.keys).length <= MAX_MEMBERS, { message: 'keys must match members' });
 export type Session = z.infer<typeof sessionSchema>;
 
 export const resultSchema = z.union([
@@ -78,15 +86,19 @@ export const entrySchema = z.object({
   v: z.number().int().min(0),
   by: memberIdSchema,
   d: z.unknown(),
+  /** Signature by `by` over {k, v, by, d}. */
+  s: signatureSchema,
 });
 export type Entry = z.infer<typeof entrySchema>;
 
-const base = { p: z.literal(PROTOCOL), from: memberIdSchema, sid: z.uuid().nullable() };
+/** `sig`: signature by `from` over the whole message without `sig`. */
+const base = { p: z.literal(PROTOCOL), from: memberIdSchema, sid: z.uuid().nullable(), sig: signatureSchema };
 const actionType = z.string().regex(/^[A-Za-z0-9_.:-]{1,40}$/);
 
 export const messageSchema = z.discriminatedUnion('t', [
   /** "I'm here, send me what you know." `join` = a new player asking to join the lobby. */
-  z.object({ ...base, t: z.literal('hello'), join: z.boolean() }),
+  /** `pk`: the sender's public key (the leader records it when it admits a new player). */
+  z.object({ ...base, t: z.literal('hello'), join: z.boolean(), pk: publicKeySchema }),
   z.object({ ...base, t: z.literal('put'), e: entrySchema }),
   z.object({ ...base, t: z.literal('sync'), es: z.array(entrySchema).max(64) }),
   /** Teammate → main phone. `id` de-duplicates resends. */
@@ -97,7 +109,7 @@ export const messageSchema = z.discriminatedUnion('t', [
 export type Message = z.infer<typeof messageSchema>;
 /** A message before `p`, `from` and `sid` are stamped on. */
 type DistOmit<T, K extends PropertyKey> = T extends unknown ? Omit<T, K> : never;
-export type OutMessage = DistOmit<Message, 'p' | 'from' | 'sid'>;
+export type OutMessage = DistOmit<Message, 'p' | 'from' | 'sid' | 'sig' | 'pk'>;
 
 const jsonSize = (x: unknown) => {
   try {

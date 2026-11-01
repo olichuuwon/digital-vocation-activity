@@ -1,6 +1,7 @@
 import { groupChannel } from './codes';
 import type { MemoryHub } from './memoryTransport';
 import { PROTOCOL, parseMessage } from './protocol';
+import { newSecretKey, publicKeyOf, sign } from './signing';
 
 // ?fakePeers=N (with ?debug=1): N pretend teammates on an in-memory channel, so one browser can
 // exercise team UI. Bots join the lobby and answer the hand-off "Ready" when it's their turn.
@@ -18,6 +19,7 @@ export function startBots(hub: MemoryHub, code: string, count: number, uuid: () 
     const id = uuid();
     ids.push(id);
     const nick = BOT_NAMES[i]!;
+    const sk = newSecretKey();
     let actSeq = 0;
     const seen = new Map<string, number>();
     const client = hub.connect(groupChannel(code), { id, nick }, {
@@ -38,7 +40,10 @@ export function startBots(hub: MemoryHub, code: string, count: number, uuid: () 
         }
       },
     });
-    const send = (msg: Record<string, unknown>) => hub.send(client, { p: PROTOCOL, from: id, sid: null, ...msg });
+    const send = (msg: Record<string, unknown>) => {
+      const body = { p: PROTOCOL, from: id, sid: null, ...msg, ...(msg.t === 'hello' ? { pk: publicKeyOf(sk) } : {}) };
+      hub.send(client, { ...body, sig: sign(body, sk) });
+    };
     const sendAction = (type: string) => send({ t: 'act', id: `${id.slice(0, 8)}-${++actSeq}`, type });
     stops.push(() => hub.remove(client));
   }

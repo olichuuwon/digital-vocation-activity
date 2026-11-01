@@ -24,6 +24,7 @@ import {
 } from './protocol';
 import { mainFor, nextMainCandidate } from './rotation';
 import type { Channel, ChannelStatus, GroupTransport } from './transport';
+import { newSecretKey, publicKeyOf, sign, verify } from './signing';
 
 /*
  * Group engine: one per device. Replicates a small key/value state across the group's
@@ -57,6 +58,8 @@ export interface StoredGroup {
    * the channel, so nobody who joins it can submit under this team's token first.
    */
   submitToken?: string;
+  /** This device's signing key (signing.ts). Device-only, never sent. */
+  sk: string;
   savedAt: number;
 }
 
@@ -164,6 +167,8 @@ export class GroupEngine {
   private submitted = false;
   /** This device's own leaderboard token; never broadcast (see maybeSubmit). */
   private submitToken: string | null = null;
+  /** This device's signing key; its public half is in the session (`keys`). */
+  private sk: string | null = null;
   private joinDeadline = 0;
   private timer: ReturnType<typeof setInterval> | null = null;
   private unsubGame: (() => void) | null = null;
@@ -185,6 +190,7 @@ export class GroupEngine {
   create(opts: { name: string; nick: string }) {
     this.reset();
     this.me = this.deps.uuid();
+    this.sk = newSecretKey();
     this.nick = opts.nick;
     const now = this.now();
     const session: Session = {
@@ -201,6 +207,7 @@ export class GroupEngine {
       // Legacy field, still sent so older app versions accept the session. NOT the leaderboard
       // token: that one stays on the submitting phone (submitToken).
       token: this.deps.uuid(),
+      keys: { [this.me]: publicKeyOf(this.sk) },
     };
     this.submitToken = this.deps.uuid();
     this.code = session.code;
@@ -213,6 +220,7 @@ export class GroupEngine {
   join(opts: { code: string; nick: string }) {
     this.reset();
     this.me = this.deps.uuid();
+    this.sk = newSecretKey();
     this.nick = opts.nick;
     this.code = opts.code;
     this.status = 'joining';
@@ -229,11 +237,12 @@ export class GroupEngine {
     if (!s && now - stored.savedAt > LOBBY_TTL_MS) return false;
     this.reset();
     this.me = stored.memberId;
+    this.sk = stored.sk;
     this.nick = stored.nick;
     this.code = stored.code;
     this.submitToken = stored.submitToken ?? null;
     if (s) {
-      this.entries.set('session', { k: 'session', v: 0, by: s.leaderId, d: s });
+      this.entries.set('session', this.signed({ k: 'session', v: 0, by: s.leaderId, d: s }));
       this.status = s.status === 'playing' ? 'playing' : 'lobby';
       const run = this.deps.game.getRun();
       if (s.status === 'playing' && run && run.startedAt === s.startedAt) this.held = run;
@@ -242,7 +251,7 @@ export class GroupEngine {
       this.joinDeadline = now + JOIN_TIMEOUT_MS;
     }
     if (stored.result) {
-      this.entries.set('result', { k: 'result', v: 0, by: this.me, d: stored.result });
+      this.entries.set('result', this.signed({ k: 'result', v: 0, by: this.me, d: stored.result }));
       this.submitted = true;
     }
     this.open();
@@ -298,7 +307,7 @@ export class GroupEngine {
   publish(topic: string, payload: unknown) {
     if (!this.session || !this.me) return;
     const k = `t:${topic}`;
-    const e: Entry = { k, v: ++this.clock, by: this.me, d: payload ?? null };
+    const e = this.signed({ k, v: ++this.clock, by: this.me, d: payload ?? null });
     this.entries.set(k, e);
     this.emit();
     // At most one send per topic every 150 ms (the latest value wins), so a stage that
@@ -408,6 +417,16 @@ export class GroupEngine {
 
   private get session(): Session | null {
     return (this.entries.get('session')?.d as Session | undefined) ?? null;
+  }
+
+  /** A member's public key from the session, or null for anyone who isn't a member. */
+  private keyOf(id: string): string | null {
+    return this.session?.keys[id] ?? null;
+  }
+
+  /** Signs an entry this device authored; other authors' entries keep an empty signature. */
+  private signed(e: Omit<Entry, 's'>): Entry {
+    return { ...e, s: e.by === this.me && this.sk ? sign(entryBody(e), this.sk) : '' };
   }
 
   private get isLeader() {
@@ -524,7 +543,9 @@ export class GroupEngine {
 
   private send(msg: OutMessage) {
     if (!this.me) return;
-    const full = { ...msg, p: PROTOCOL, from: this.me, sid: this.session?.sid ?? null } as Message;
+    if (!this.sk) return;
+    const body = { ...msg, ...(msg.t === 'hello' ? { pk: publicKeyOf(this.sk) } : {}), p: PROTOCOL, from: this.me, sid: this.session?.sid ?? null };
+    const full = { ...body, sig: sign(body, this.sk) } as Message;
     if (!this.connected || !this.channel) {
       if (msg.t === 'act') this.pending = [...this.pending.slice(-19), { msg, at: this.now() }];
       return;
@@ -555,6 +576,7 @@ export class GroupEngine {
       v: 1,
       code: this.code,
       memberId: this.me,
+      sk: this.sk!,
       nick: this.nick,
       session: this.session,
       result: (this.entries.get('result')?.d as GroupResult | undefined) ?? null,
@@ -577,7 +599,12 @@ export class GroupEngine {
 
   private putLocal(k: string, d: unknown) {
     if (!this.me) return;
-    const e: Entry = { k, v: ++this.clock, by: this.me, d };
+    // Keep only the current members' keys, so a left-out player's key stops counting.
+    if (k === 'session') {
+      const s = d as Session;
+      d = { ...s, keys: Object.fromEntries(s.rotation.map((id) => [id, s.keys[id]!])) };
+    }
+    const e = this.signed({ k, v: ++this.clock, by: this.me, d });
     this.entries.set(k, e);
     this.send({ t: 'put', e });
     if (k === 'session') this.save();
@@ -586,6 +613,13 @@ export class GroupEngine {
 
   /** Applies one received entry. Returns true if it changed anything. */
   private applyEntry(raw: Entry): boolean {
+    // A new session is checked against its own leader key only until we hold one (first come):
+    // after that the leader's key is pinned, so nobody else can rewrite the session.
+    const key =
+      raw.k === 'session'
+        ? (this.session?.keys[this.session.leaderId] ?? (raw.d as Session | null)?.keys?.[raw.by])
+        : this.keyOf(raw.by);
+    if (!key || !verify(entryBody(raw), raw.s, key)) return false;
     const d = parseEntryData(raw.k, raw.d);
     if (d === undefined) return false;
     const e: Entry = { ...raw, d };
@@ -705,11 +739,20 @@ export class GroupEngine {
     if (!m || m.from === this.me) return;
     const s = this.session;
     if (s && m.sid && m.sid !== s.sid) return; // another group that happens to share the code
-    this.lastHeard.set(m.from, this.now());
+    // Signed by `from`? A hello carries its own key (a joiner isn't in the session yet), but a
+    // member's hello must use the key the leader recorded. Unsigned put/sync messages still get
+    // their entries checked one by one (each is signed by its author), but don't count as `from`
+    // being alive.
+    const known = this.keyOf(m.from);
+    const key = m.t === 'hello' ? m.pk : known;
+    const { sig, ...body } = m;
+    const signed = !!key && (!known || known === key) && verify(body, sig, key);
+    if (!signed && m.t !== 'put' && m.t !== 'sync') return;
+    if (signed) this.lastHeard.set(m.from, this.now());
     let changed = false;
     switch (m.t) {
       case 'hello': {
-        if (this.isLeader && s && m.join) changed = this.admit(m.from);
+        if (this.isLeader && s && m.join && signed) changed = this.admit(m.from, m.pk);
         if (this.session) this.send({ t: 'sync', es: [...this.entries.values()] });
         break;
       }
@@ -747,10 +790,10 @@ export class GroupEngine {
   }
 
   /** Leader: let a new player into the lobby (if there's room and we haven't started). */
-  private admit(id: string): boolean {
+  private admit(id: string, pk: string): boolean {
     const s = this.session!;
     if (s.status !== 'lobby' || s.rotation.includes(id) || s.rotation.length >= MAX_MEMBERS) return false;
-    this.putLocal('session', { ...s, rotation: [...s.rotation, id] });
+    this.putLocal('session', { ...s, rotation: [...s.rotation, id], keys: { ...s.keys, [id]: pk } });
     return true;
   }
 
@@ -847,6 +890,9 @@ export class GroupEngine {
     this.emit();
   }
 }
+
+/** What an entry's signature covers. */
+const entryBody = (e: Omit<Entry, 's'>) => ({ k: e.k, v: e.v, by: e.by, d: e.d });
 
 /** The leaderboard row for a finished group run (§3.5.4). No nicknames. */
 export function runPayload(s: Session, run: GameState, token: string): RunPayload {

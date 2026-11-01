@@ -3,6 +3,7 @@ import type { GameState } from '../../state/types';
 import { GroupEngine, type GameAdapter, type GroupSnapshot, type StoredGroup, type TokenStore } from './engine';
 import { MemoryHub, memoryTransport, type MemoryClient } from './memoryTransport';
 import { groupChannel } from './codes';
+import { newSecretKey, publicKeyOf, sign } from './signing';
 import { GONE_AFTER_MS, LOBBY_TTL_MS, PROMOTE_AFTER_MS, PROTOCOL, RUN_TTL_MS } from './protocol';
 
 // Engine behaviour over an in-memory channel with fake timers: lobby, START, hand-off sync,
@@ -98,10 +99,11 @@ describe('lobby', () => {
 
   it('keeps nicknames out of the replicated state and the stored token', async () => {
     const { leader, members } = await lobbyOf(2);
-    const token = JSON.stringify(members[0]!.stored());
+    // Keys and signatures are random base64, which can spell "Ann" or "P1" by chance: leave them out.
+    const token = JSON.stringify({ ...members[0]!.stored()!, sk: undefined, session: undefined });
     expect(token).toContain('"nick":"P1"'); // the device's own nickname only
     expect(token).not.toContain('Ann');
-    expect(JSON.stringify(leader.snap().session)).not.toMatch(/Ann|P1/);
+    expect(JSON.stringify({ ...leader.snap().session!, keys: undefined })).not.toMatch(/Ann|P1/);
   });
 
   it('is capped at 4 players', async () => {
@@ -438,5 +440,59 @@ describe('run', () => {
     await flush();
     expect(members[0]!.snap().topics.x).toBeUndefined();
     expect(members[0]!.snap().status).toBe('playing');
+  });
+});
+
+describe('signed messages: someone who only knows the code', () => {
+  /** An outsider on the team's channel who signs with a key of their own. */
+  async function outsider(code: string) {
+    const sk = newSecretKey();
+    let heard: unknown[] = [];
+    const client = hub.connect(groupChannel(code), { id: 'outsider-1', nick: 'Eve' }, {
+      onStatus: () => {},
+      onPresence: () => {},
+      onMessage: (m) => void heard.push(m),
+    });
+    await flush();
+    const sendAs = (from: string, msg: Record<string, unknown>, sid: string | null) => {
+      const body = { p: PROTOCOL, from, sid, ...msg };
+      hub.send(client, { ...body, sig: sign(body, sk) });
+    };
+    const entry = (k: string, v: number, by: string, d: unknown) => ({ k, v, by, d, s: sign({ k, v, by, d }, sk) });
+    return { sendAs, entry, heard: () => heard, clear: () => void (heard = []) };
+  }
+
+  it("can't close the lobby, take over the main phone or move the run on by pretending to be a member", async () => {
+    const { leader, members, all, code } = await lobbyOf(3);
+    leader.engine.start();
+    await flush();
+    const s = leader.snap().session!;
+    const eve = await outsider(code);
+
+    // 1. A forged session from "the leader" that closes the game.
+    eve.sendAs(s.leaderId, { t: 'put', e: eve.entry('session', 999, s.leaderId, { ...s, status: 'closed' }) }, s.sid);
+    // 2. A forged "bye" from the main phone, to make the next player take over.
+    eve.sendAs(s.leaderId, { t: 'bye' }, s.sid);
+    // 3. A forged run that jumps to the finale.
+    const run = leader.game.run!;
+    eve.sendAs(s.leaderId, { t: 'put', e: eve.entry('run', 999, s.leaderId, { ...run, stage: 5 }) }, s.sid);
+    await vi.advanceTimersByTimeAsync(PROMOTE_AFTER_MS + 5_000);
+
+    for (const d of all) {
+      expect(d.snap().status).toBe('playing');
+      expect(d.snap().mainId).toBe(s.leaderId);
+      expect(d.game.run!.stage).toBe(run.stage);
+    }
+    expect(members[0]!.snap().promoted).toBeNull();
+  });
+
+  it("an outsider's own hello can't slip a different key in for an existing member", async () => {
+    const { leader, members, code } = await lobbyOf(2);
+    const s = leader.snap().session!;
+    const memberId = members[0]!.snap().meId!;
+    const eve = await outsider(code);
+    eve.sendAs(memberId, { t: 'hello', join: true, pk: publicKeyOf(newSecretKey()) }, s.sid);
+    await flush();
+    expect(leader.snap().session!.keys[memberId]).toBe(s.keys[memberId]);
   });
 });

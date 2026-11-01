@@ -31,6 +31,7 @@ const storedSchema = z.object({
   session: sessionSchema.nullable(),
   result: resultSchema.nullable(),
   submitToken: z.uuid().optional(),
+  sk: z.string().regex(/^[A-Za-z0-9+/]{43}=$/),
   savedAt: z.number(),
 });
 

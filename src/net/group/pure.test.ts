@@ -6,6 +6,9 @@ import { parseHostGroups } from './hostChannel';
 import { MAX_MESSAGE_CHARS, newer, parseEntryData, parseMessage, parsePresence, PROTOCOL } from './protocol';
 import { mainFor, moveMember, nextMainCandidate, nominalMainIndex, shuffled, stagesLedBy } from './rotation';
 
+const SIG = 'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==';
+const PK = 'BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB=';
+
 describe('group codes', () => {
   it('are 4 characters with no I, O, 0 or 1', () => {
     const rand = mulberry32(7);
@@ -144,10 +147,13 @@ describe('rotation', () => {
 });
 
 describe('protocol validation', () => {
-  const base = { p: PROTOCOL, from: 'member-1', sid: null };
+  const base = { p: PROTOCOL, from: 'member-1', sid: null, sig: SIG };
   it('accepts well-formed messages', () => {
-    expect(parseMessage({ ...base, t: 'hello', join: true })?.t).toBe('hello');
-    expect(parseMessage({ ...base, t: 'put', e: { k: 't:s1.rules', v: 3, by: 'member-1', d: { a: 1 } } })?.t).toBe('put');
+    expect(parseMessage({ ...base, t: 'hello', join: true, pk: PK })?.t).toBe('hello');
+    expect(parseMessage({ ...base, t: 'hello', join: true })).toBeNull(); // no key
+    expect(parseMessage({ ...base, t: 'put', e: { k: 't:s1.rules', v: 3, by: 'member-1', d: { a: 1 }, s: SIG } })?.t).toBe('put');
+    expect(parseMessage({ ...base, t: 'put', e: { k: 't:s1.rules', v: 3, by: 'member-1', d: { a: 1 } } })).toBeNull(); // unsigned entry
+    expect(parseMessage({ ...base, sig: undefined, t: 'beat' })).toBeNull(); // unsigned message
     expect(parseMessage({ ...base, t: 'act', id: 'x1', type: 'boost_server', d: 2 })?.t).toBe('act');
   });
 
@@ -184,7 +190,9 @@ describe('protocol validation', () => {
       startedAt: null,
       sizeAtStart: null,
       token: '00000000-0000-4000-8000-000000000002',
+      keys: { 'member-1': PK, 'member-2': PK },
     };
+    expect(parseEntryData('session', { ...session, keys: { 'member-1': PK } })).toBeUndefined(); // a member without a key
     expect(parseEntryData('session', session)).toMatchObject({ name: 'Bold Merlion' });
     for (const name of ['Big Cocks', 'Team 42', 'Bold\u200bMerlion']) expect(parseEntryData('session', { ...session, name })).toBeUndefined();
     const host = { id: session.sid, size: 2, stage: null };
