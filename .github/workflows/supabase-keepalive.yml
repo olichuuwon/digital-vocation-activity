@@ -1,0 +1,22 @@
+name: Supabase keep-alive
+# Free-tier Supabase pauses after ~7 days without activity, which breaks team play and the
+# leaderboard. This makes one read-only call a day (see e2e-live/keepalive.mjs). It writes
+# nothing and doesn't touch the game. A failed run means Supabase didn't answer: check the dashboard.
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '23 19 * * *' # daily, 03:23 Singapore time
+
+permissions:
+  contents: read
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: 22
+      - run: node e2e-live/keepalive.mjs

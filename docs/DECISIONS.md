@@ -92,6 +92,7 @@ How the game is built and why, where the spec (`docs/GAME_SPEC.md`) left room fo
   - **Copy:** no exclamation marks in player-facing text; short labels and headings have no trailing period.
   - **Motion:** one easing curve (`--ease`), a 0.98 press scale on buttons, no springs.
 - **Hosting.** Vercel, auto-deploying `main`. `vercel.json` adds the SPA rewrite for `/host`, no-cache on `sw.js`, immutable `/assets` and the security headers (CSP, no framing, nosniff, Referrer-Policy, Permissions-Policy); `vite preview` serves the same headers so e2e runs under them.
+- **Supabase keep-alive.** Free-tier Supabase pauses after ~7 idle days (it did on 1 Nov 2026, taking team play and the leaderboard down). `.github/workflows/supabase-keepalive.yml` runs `e2e-live/keepalive.mjs` daily: one read-only `leaderboard_today` call (no writes, no rate-limit count), so the game is unaffected. A failed run means Supabase didn't answer: restore it in the dashboard. GitHub stops scheduled workflows after 60 days with no commits; re-enable it from the Actions tab if that happens.
 
 ## 6. Content awaiting approval
 
@@ -125,3 +126,4 @@ These all have working defaults; they're worth revisiting after playtests.
 - **23 Oct 2026, owner check.** Blocklist adds "fk" (and fking, fkin, fkn, fcuk, fuq, mf, mofo); migration `0006` refreshes the server copy. Create team: focus moves in the same render as the name swap (a late focus could pull the nickname into the team name; this was the intermittent "rejoin" e2e failure).
 - **23 Oct 2026, leaderboard token kept on the device.** The submit token no longer travels in the shared session (assessment F2: anyone with the code could read it and claim the team's leaderboard slot first). The leader's phone keeps its own (saved with its rejoin data, so retries reuse it); a stand-in submitter makes its own. The session's `token` field stays only so older app versions still accept the session.
 - **1 Nov 2026, unslop visual pass.** Emoji replaced by one icon set; heading font; weights capped at 600; quieter borders and radii; exclamation marks removed from copy; Home gets a city map with the supply route; the stage strip became the route line; the debrief gets a families gauge. Gameplay, content order and scoring unchanged.
+- **1 Nov 2026, Supabase keep-alive.** Daily read-only ping workflow so the free-tier project stops pausing.
