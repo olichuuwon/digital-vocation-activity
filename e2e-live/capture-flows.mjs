@@ -188,11 +188,11 @@ async function solo() {
 }
 
 // ------------------------------------------------------------------------------------------
-// STAGE 3 GUIDED: step-by-step tutorial, the 💡 ghost after a failed run, the pre-placed If
+// STAGE 3 GUIDED: step-by-step tutorial, the ghost after a failed run, the pre-placed If
 // ------------------------------------------------------------------------------------------
 const block = (p, name) => p.getByRole('group', { name: 'Blocks' }).getByRole('button', { name, exact: false });
 async function runAndWait(p) {
-  await p.getByRole('button', { name: /▶ Run/ }).click();
+  await p.getByRole('button', { name: /^Run$/ }).click();
   await expect(p.getByRole('button', { name: /Running/ })).toHaveCount(0, { timeout: 15_000 });
 }
 async function stage3() {
@@ -204,14 +204,14 @@ async function stage3() {
   await click(p, 'Start building');
   const g = [{ file: await shot(p, 's3-guide-1'), label: 'Tutorial: tap the highlighted block' }];
   for (const b of ['Move forward', 'Turn right', 'Move forward', 'Drop supplies']) await block(p, b).click();
-  g.push({ file: await shot(p, 's3-guide-run'), label: 'Program ready: tap ▶ Run' });
+  g.push({ file: await shot(p, 's3-guide-run'), label: 'Program ready: tap Run' });
   await runAndWait(p);
   await click(p, 'Continue');
   await click(p, 'Start');
   await block(p, 'Turn left').click();
   await runAndWait(p);
   await p.waitForTimeout(2600);
-  g.push({ file: await shot(p, 's3-ghost'), label: '1 failed run: 💡 tap the next step' });
+  g.push({ file: await shot(p, 's3-ghost'), label: '1 failed run: tap the next step' });
   // Choose the Road, with the If block already in place.
   await p.evaluate(() => {
     const saved = JSON.parse(localStorage.getItem('ship-it'));

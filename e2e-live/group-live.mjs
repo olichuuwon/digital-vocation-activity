@@ -186,7 +186,7 @@ try {
       const text = await card.textContent();
       await ic.locator(`button[data-team="${await card.getAttribute('data-team')}"]`).click();
       routed++;
-      await expect(ic.getByTestId('feedback')).toContainText('✓', T);
+      await expect(ic.getByTestId('feedback')).toHaveAttribute('data-ok', 'true', T);
       await expect(ic.getByTestId('incident').filter({ hasText: text ?? '' })).toHaveCount(0, T);
     }
     log(`  routed ${routed}`);
